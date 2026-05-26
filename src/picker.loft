@@ -1,0 +1,73 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Palette picker — UI for selecting the active ground type.
+//
+// Software-only for E2 headless tests: draws a vertical stack of
+// coloured swatches on a graphics::Canvas, with a highlight on the
+// active row.  Text labels + hotkey hints will arrive when E1's
+// live GL window lands (gl_draw_text is GL-only).
+//
+// Plan 01 phase E2.
+
+use graphics;
+use palette;
+
+// Mutable picker state.  Holds the loaded palette + which row is
+// currently active (the type future paint actions will use).
+pub struct Picker {
+    palette: vector<GroundType>,
+    active:  integer not null,     // index into palette; 0..palette.len()-1
+}
+
+// Factory.  Active starts at 0 (sea — the implicit default; painting
+// sea = erase, so this is the natural starting state).
+pub fn picker_default(palette_path: text) -> Picker {
+    Picker { palette: load_palette(palette_path), active: 0 }
+}
+
+// Set the active index, clamped to a valid range.
+pub fn picker_set_active(p: &Picker, idx: integer) {
+    if idx >= 0 && idx < len(p.palette) {
+        p.active = idx;
+    }
+}
+
+// ─── Render ────────────────────────────────────────────────────
+
+pub const PICKER_SWATCH_PX: integer = 8;   // each swatch width = height
+pub const PICKER_GAP_PX:    integer = 2;   // vertical gap between swatches
+pub const PICKER_MARGIN_PX: integer = 4;   // border around swatch
+pub const PICKER_HL_COLOR:  integer = 0xffffff;   // white highlight
+
+// Draw the picker into the canvas at (x0, y0).
+//
+// Takes the palette + active index DIRECTLY (not a Picker
+// struct).  Workaround: passing a struct that contains a vector
+// by value into a function appears to lose the vector contents
+// in loft (the receiver sees len = 0); passing the vector itself
+// works fine.  Callers can call `render_picker(cv, p.palette,
+// p.active, x, y)`.
+//
+// Layout: vertical column of swatches starting at (x0, y0).  Each
+// row is PICKER_SWATCH_PX tall + PICKER_GAP_PX gap.  The active
+// row carries a white border to identify it at a glance.
+pub fn render_picker(
+    cv:      Canvas,
+    palette: vector<GroundType>,
+    active:  integer,
+    x0:      integer,
+    y0:      integer,
+) {
+    for rp_i in 0..len(palette) {
+        rp_entry = palette[rp_i];
+        rp_y = y0 + rp_i * (PICKER_SWATCH_PX + PICKER_GAP_PX);
+        rp_col = parse_hex_color(rp_entry.color);
+        cv.fill_rect(x0, rp_y, PICKER_SWATCH_PX, PICKER_SWATCH_PX, rp_col);
+        if rp_i == active {
+            cv.draw_rect(x0 - 1, rp_y - 1,
+                         PICKER_SWATCH_PX + 2, PICKER_SWATCH_PX + 2,
+                         PICKER_HL_COLOR);
+        }
+    }
+}

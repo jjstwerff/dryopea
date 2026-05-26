@@ -1,0 +1,57 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Palette loader.  GroundType mirrors `examples/palette.json`'s
+// fields verbatim — loft's JSON-cast (`text as vector<T>`) does
+// the parsing in one line.  Modders edit palette.json and
+// re-launch; no rebuild (DESIGN.md § 17 Moddability).
+//
+// Plan 01 phase E2.
+
+use graphics;     // rgb() for parse_hex_color output
+
+// Matches the JSON shape directly.  Field names = JSON keys.
+//   color stays as "#rrggbb" text; callers parse on demand via
+//   parse_hex_color so palette.json stays human-editable.
+pub struct GroundType {
+    name:            text not null,
+    color:           text not null,
+    sub_palette:     text not null,
+    slope:           integer,
+    drop:            integer,
+    drainage:        boolean,
+    walk_ground:     boolean,
+    walk_vehicle:    boolean,
+    buildable:       boolean,
+    // Optional fields present on some palette.json entries.
+    // Declared here because the language's text-as-vector<T>
+    // JSON cast silently returns an empty vector when the JSON
+    // has fields the struct doesn't declare (filed in
+    // QUESTIONS_FOR_LOFT.md).
+    variant:         text,
+    color_status:    text,
+    height_override: float,
+    end_drivable:    boolean,
+}
+
+pub fn load_palette(path: text) -> vector<GroundType> {
+    file(path).content() as vector<GroundType>
+}
+
+// ─── Hex-color parsing ─────────────────────────────────────────
+
+// Convert one ASCII hex digit (0-9, a-f, A-F) to its 0-15 value.
+pub fn hex_digit_value(c: integer) -> integer {
+    if c >= 48 && c <= 57  { c - 48 }       // '0'..'9'
+    else if c >= 97 && c <= 102 { c - 87 }  // 'a'..'f'
+    else if c >= 65 && c <= 70  { c - 55 }  // 'A'..'F'
+    else { 0 }
+}
+
+// Parse "#rrggbb" → packed integer color (graphics::rgb form).
+pub fn parse_hex_color(s: text) -> integer {
+    phc_r = hex_digit_value(s.byte_at(1)) * 16 + hex_digit_value(s.byte_at(2));
+    phc_g = hex_digit_value(s.byte_at(3)) * 16 + hex_digit_value(s.byte_at(4));
+    phc_b = hex_digit_value(s.byte_at(5)) * 16 + hex_digit_value(s.byte_at(6));
+    rgb(phc_r, phc_g, phc_b)
+}

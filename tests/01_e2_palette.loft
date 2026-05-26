@@ -1,0 +1,203 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 01 phase E2 — palette load + named picker.
+//
+// Headless tests: JSON loading, hex-color parsing, picker
+// state transitions, picker render on a canvas (golden-image).
+
+use dryopea;
+
+// ─────────────────────────────────────────────────────────────────
+// Hex-color parsing
+// ─────────────────────────────────────────────────────────────────
+
+fn test_hex_digit_value_numeric() {
+    assert(hex_digit_value(48) == 0, "'0' = 0");      // '0'
+    assert(hex_digit_value(53) == 5, "'5' = 5");      // '5'
+    assert(hex_digit_value(57) == 9, "'9' = 9");      // '9'
+}
+
+fn test_hex_digit_value_lowercase() {
+    assert(hex_digit_value(97)  == 10, "'a' = 10");
+    assert(hex_digit_value(99)  == 12, "'c' = 12");
+    assert(hex_digit_value(102) == 15, "'f' = 15");
+}
+
+fn test_hex_digit_value_uppercase() {
+    assert(hex_digit_value(65)  == 10, "'A' = 10");
+    assert(hex_digit_value(67)  == 12, "'C' = 12");
+    assert(hex_digit_value(70)  == 15, "'F' = 15");
+}
+
+fn test_parse_hex_color_sea() {
+    // "#0a2c5e" → rgb(0x0a, 0x2c, 0x5e)
+    thc_c = parse_hex_color("#0a2c5e");
+    assert(color_r(thc_c) == 0x0a, "sea r");
+    assert(color_g(thc_c) == 0x2c, "sea g");
+    assert(color_b(thc_c) == 0x5e, "sea b");
+}
+
+fn test_parse_hex_color_uppercase() {
+    thc_u = parse_hex_color("#FFD000");
+    assert(color_r(thc_u) == 0xff, "uppercase r");
+    assert(color_g(thc_u) == 0xd0, "uppercase g");
+    assert(color_b(thc_u) == 0x00, "uppercase b");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Palette JSON loader
+// ─────────────────────────────────────────────────────────────────
+
+fn test_load_palette_size() {
+    tlp = load_palette("examples/palette.json");
+    assert(len(tlp) == 11, "11 palette entries");
+}
+
+fn test_load_palette_names_in_order() {
+    tlp_n = load_palette("examples/palette.json");
+    assert(tlp_n[0].name  == "sea",        "0 = sea");
+    assert(tlp_n[1].name  == "water",      "1 = water");
+    assert(tlp_n[2].name  == "rapids",     "2 = rapids");
+    assert(tlp_n[3].name  == "waterfall",  "3 = waterfall");
+    assert(tlp_n[4].name  == "sand",       "4 = sand");
+    assert(tlp_n[5].name  == "grass",      "5 = grass");
+    assert(tlp_n[6].name  == "hill",       "6 = hill");
+    assert(tlp_n[7].name  == "rock",       "7 = rock");
+    assert(tlp_n[8].name  == "steep_rock", "8 = steep_rock");
+    assert(tlp_n[9].name  == "wall",       "9 = wall");
+    assert(tlp_n[10].name == "wall_high",  "10 = wall_high");
+}
+
+fn test_load_palette_sea_color() {
+    tlp_c = load_palette("examples/palette.json");
+    tlp_sea = tlp_c[0];
+    // color stays as "#rrggbb" text; parse on demand.
+    assert(tlp_sea.color == "#0a2c5e", "sea color text");
+    tlp_packed = parse_hex_color(tlp_sea.color);
+    assert(color_r(tlp_packed) == 0x0a, "sea r");
+    assert(color_g(tlp_packed) == 0x2c, "sea g");
+    assert(color_b(tlp_packed) == 0x5e, "sea b");
+}
+
+fn test_load_palette_sub_palettes() {
+    tlp_s = load_palette("examples/palette.json");
+    assert(tlp_s[0].sub_palette  == "water",     "sea = water sub_palette");
+    assert(tlp_s[3].sub_palette  == "water",     "waterfall = water sub_palette");
+    assert(tlp_s[4].sub_palette  == "land",      "sand = land");
+    assert(tlp_s[8].sub_palette  == "land",      "steep_rock = land");
+    assert(tlp_s[9].sub_palette  == "structure", "wall = structure");
+    assert(tlp_s[10].sub_palette == "structure", "wall_high = structure");
+}
+
+fn test_load_palette_slope_drop_nullability() {
+    tlp_x = load_palette("examples/palette.json");
+    // Water entries: slope null, drop integer
+    assert(tlp_x[0].slope == null, "sea slope is null");
+    assert(tlp_x[0].drop  == 0,    "sea drop = 0");
+    assert(tlp_x[1].drop  == 1,    "water drop = 1");
+    assert(tlp_x[3].drop  == 8,    "waterfall drop = 8");
+    // Land entries: slope integer, drop null
+    assert(tlp_x[4].slope ==  2,   "sand slope = 2");
+    assert(tlp_x[5].slope ==  6,   "grass slope = 6");
+    assert(tlp_x[8].slope == 40,   "steep_rock slope = 40");
+    assert(tlp_x[4].drop  == null, "sand drop is null");
+}
+
+fn test_load_palette_flags() {
+    tlp_f = load_palette("examples/palette.json");
+    assert(tlp_f[0].drainage,        "sea drainage = true");
+    assert(!tlp_f[0].walk_ground,    "sea walk_ground = false");
+    assert( tlp_f[0].walk_vehicle,   "sea walk_vehicle = true");
+    assert(!tlp_f[0].buildable,      "sea buildable = false");
+
+    assert(!tlp_f[8].drainage,       "steep_rock drainage = false");
+    assert(!tlp_f[8].walk_ground,    "steep_rock walk_ground = false");
+    assert( tlp_f[8].walk_vehicle,   "steep_rock walk_vehicle = true");
+    assert(!tlp_f[8].buildable,      "steep_rock buildable = false");
+
+    assert( tlp_f[5].walk_ground,    "grass walk_ground = true");
+    assert( tlp_f[5].buildable,      "grass buildable = true");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Picker state
+// ─────────────────────────────────────────────────────────────────
+
+fn test_picker_default_active_is_zero() {
+    tpd = picker_default("examples/palette.json");
+    assert(tpd.active == 0, "default active = 0 (sea)");
+    assert(len(tpd.palette) == 11, "palette is loaded");
+}
+
+fn test_picker_set_active_in_range() {
+    tps = picker_default("examples/palette.json");
+    picker_set_active(tps, 5);
+    assert(tps.active == 5, "active set to 5 (grass)");
+    picker_set_active(tps, 10);
+    assert(tps.active == 10, "active set to 10 (wall_high)");
+}
+
+fn test_picker_set_active_clamped() {
+    tpc = picker_default("examples/palette.json");
+    picker_set_active(tpc, 0);
+    picker_set_active(tpc, -1);
+    assert(tpc.active == 0, "negative index ignored, stays at 0");
+    picker_set_active(tpc, 99);
+    assert(tpc.active == 0, "out-of-range high ignored");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Picker render — golden images
+// ─────────────────────────────────────────────────────────────────
+
+const E2_W: integer = 96;
+const E2_H: integer = 128;     // tall enough for 11 swatches + margins
+const E2_PPM: float = 16.0;
+
+fn test_render_picker_active_sea() {
+    // Default state: active = 0 (sea).  Empty world.  Picker top-left.
+    tp1_p = picker_default("examples/palette.json");
+    tp1_cam = camera_default();
+    tp1_w = painted_empty();
+    tp1_cv = render_to_canvas(tp1_cam, tp1_w, E2_W, E2_H, E2_PPM);
+    render_picker(tp1_cv, tp1_p.palette, tp1_p.active, 4, 4);
+    assert_golden(tp1_cv, "01_e2_picker_active_sea");
+}
+
+fn test_render_picker_active_grass() {
+    tp2_p = picker_default("examples/palette.json");
+    picker_set_active(tp2_p, 5);     // grass
+    tp2_cam = camera_default();
+    tp2_w = painted_empty();
+    tp2_cv = render_to_canvas(tp2_cam, tp2_w, E2_W, E2_H, E2_PPM);
+    render_picker(tp2_cv, tp2_p.palette, tp2_p.active, 4, 4);
+    assert_golden(tp2_cv, "01_e2_picker_active_grass");
+}
+
+fn test_render_picker_active_wall_high() {
+    tp3_p = picker_default("examples/palette.json");
+    picker_set_active(tp3_p, 10);    // wall_high
+    tp3_cam = camera_default();
+    tp3_w = painted_empty();
+    tp3_cv = render_to_canvas(tp3_cam, tp3_w, E2_W, E2_H, E2_PPM);
+    render_picker(tp3_cv, tp3_p.palette, tp3_p.active, 4, 4);
+    assert_golden(tp3_cv, "01_e2_picker_active_wall_high");
+}
+
+fn test_render_picker_over_painted_world() {
+    // The picker overlays the rendered world.  Confirm it's still
+    // legible when the world has painted hexes underneath.
+    tp4_p = picker_default("examples/palette.json");
+    picker_set_active(tp4_p, 6);     // hill
+
+    tp4_cam = camera_default();
+    tp4_w = painted_empty();
+    paint(tp4_w, 1, 0, 5 as u8);     // grass to the right
+    paint(tp4_w, 0, 1, 6 as u8);     // hill below
+    paint(tp4_w, 2, 1, 9 as u8);     // wall lower-right
+
+    tp4_cv = render_to_canvas(tp4_cam, tp4_w, E2_W, E2_H, E2_PPM);
+    render_picker(tp4_cv, tp4_p.palette, tp4_p.active, 4, 4);
+    assert_golden(tp4_cv, "01_e2_picker_over_painted");
+}

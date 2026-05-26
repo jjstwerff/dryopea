@@ -55,6 +55,46 @@ fix / feature, move it to **Resolved**.
 - **Loft pointer:** unknown.  Warning emitted from somewhere
   in the parser / type-checker that flags every `/` site.
 
+### `text as vector<Struct>` returns empty vector on valid JSON (silent failure)
+
+- **Found while:** Plan 01 E2 — loading `examples/palette.json`
+  (3328 bytes, valid JSON, 11 entries) via
+  `file(path).content() as vector<GroundType>` returns
+  `vector<GroundType>` with `len == 0`.  No error to stderr;
+  `json_errors()` would presumably help but the silent-empty
+  result is hard to debug.
+- **Kind:** bug (JSON cast)
+- **Suspected cause:** the JSON entries carry **extra fields** the
+  target struct doesn't declare.  My `GroundType` has 9 fields;
+  each `palette.json` entry has 13 (4 extras: `variant`,
+  `color_status`, `height_override`, `end_drivable`).  The cast
+  may bail silently when JSON has fields the struct doesn't.
+  Adding fields to the struct, or trimming the JSON, may fix it
+  — but the **silent** behaviour is the bug.
+- **Reproducer:**
+  ```loft
+  struct Item { tag: text, amount: integer }
+
+  fn test_extra_field() {
+      // JSON has an "extra" key the struct doesn't declare.
+      items = `[{{"tag":"a","amount":1,"extra":"x"}}]` as vector<Item>;
+      println("len = {len(items)}");   // observed: 0 (expected: 1)
+  }
+  ```
+  Combined with the assert-doesn't-fail-tests bug below, the
+  failure presents as "all tests pass" while every payload
+  access reads null.
+- **What dryopea needs:** either (a) the cast accepts extra
+  fields and ignores them, or (b) the cast errors loudly when
+  the JSON has fields the struct doesn't.  Silent empty is
+  the worst combination.
+- **Workaround in dryopea:** add every extra JSON field to the
+  target struct, OR strip the extras from palette.json before
+  parsing.
+- **Loft pointer:** unknown — the `text as <T>` cast lowering
+  in the parser / typer + the JSON cast in
+  `src/state/codegen.rs` or wherever the cast runtime lives.
+
 ### Test runner doesn't surface assertion / runtime_error failures
 
 - **Found while:** Plan 01 E1 golden-image validation harness —

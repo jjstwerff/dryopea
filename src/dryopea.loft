@@ -12,3 +12,5 @@ use camera;
 use painted;
 use render;
 use golden;
+use palette;
+use picker;
