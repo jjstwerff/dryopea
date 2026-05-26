@@ -114,22 +114,31 @@ possible visual differentiation from the player.
   controlled by the game."  When workers get real art later it's
   free to diverge; the proxy doesn't pretend otherwise.
 
-**Worker behaviour (gameplay, captured here so the proxy can
+**Helper behaviour (gameplay, captured here so the proxy can
 exercise it).**
 
 - **Build orders** — when the player marks a structure
-  (wall / wall_high / tower) for construction, idle workers
+  (wall / wall_high / tower) for construction, idle helpers
   path to the build site and apply construction ticks until
   the structure is complete (DESIGN.md § Systems #2).
 - **Salvage path** — when an enemy dies, loot appears on its
-  death hex.  Idle workers path to the nearest loot, pick it up,
-  and carry it back to the core building.  Loot delivered to
-  the core becomes the **upgrade resource** pool (DESIGN.md
+  death hex.  Idle helpers path to the nearest loot, pick it
+  up, and carry it back to the core building.  Loot delivered
+  to the core becomes the **upgrade resource** pool (DESIGN.md
   § Systems #6).
-- **No combat role** — workers do not fight.  They are
+- **No combat role** — helpers do not fight.  They are
   noncombatants; if enemies reach them, they die without
-  resisting.  The player decides whether to defend worker paths
-  or let them run risk.
+  resisting.  The player decides whether to defend helper
+  paths or let them run risk.
+
+**Carry visibility — same rule as the player.**  Anything a
+helper is carrying — loot cube, tower-top, beacon, future
+carry objects — is **rendered above the helper as part of its
+geometry**.  At a glance the player can see which helpers are
+loaded vs. idle without any HUD: an NPC walking back toward the
+core with a gold cube floating above it is visibly carrying
+loot home; one en route to a build site with nothing above is
+visibly going to work.
 
 ### Tower beacon — carry object for placing new towers
 
@@ -502,38 +511,104 @@ same height, same pivot).
 
 The base centre (DESIGN.md § Match setup, § Scramble).  Purpose:
 **make the defend goal visible from any camera distance, with no
-ambiguity about which tower is the special one.**
+ambiguity about which structure is the special one.**
 
 | Property | Value |
 |---|---|
-| Footprint | **7 hexes** — same hex disc as a tower |
-| Shape | **Same truncated cone** as a tower |
-| Base / top dimensions | same as tower (3.9 m base, 1.7 m top, 6 m tall) |
-| Body colour | **`#1a3a85`** (dark blue) — the "dark blue version of a normal tower" |
-| Top colour | **`#1a3a85`** (same dark blue, uniform with body) — see open question |
+| Footprint | **7 hexes** — the centre hex + its 6 neighbours (same hex disc as a tower) |
+| Shape | **Hexagonal prism** — an upright pillar with **6 distinct flat sides**, one per outer hex of the footprint.  Distinct from the tower's truncated cone in silhouette. |
+| Diameter (flat-to-flat) | **~3.9 m** — matching the 7-hex footprint |
+| Height | **~8 m** — taller than a max-decay tower (~6 m) so the silhouette reads core-vs-tower even when both are uniformly black |
+| Body colour | **`#1a1a1a`** (uniform black) — placeholder per the simplification of 2026-05-26 |
+| Top | flat hexagonal face — **dynamic colour** signals NPC-order status (see § Top colour signal below) |
 | Origin / pivot | centre hex of the footprint |
 
-**Why this differs from a tower.**
+**Why a hexagonal prism, not a cone.**
 
-- **Colour swap is the only difference** — the core is
-  *visually* a tower, painted dark blue.  At any zoom the
-  player can see: "all the almost-black ones are mine; the dark
-  blue one is *the thing*."  Single hue, single object — the
-  defend goal can't be misidentified.
-- **Same footprint** means towers and the core trade slot-for-
-  slot inside the perimeter — the player chooses where to put
-  the core (DESIGN.md § Systems #0) and the rest of the build
-  budget goes to towers around it.
+- **Shape distinguishes core from tower at any colour state.**
+  A tower in salvaged or decayed state goes uniform `#1a1a1a`;
+  a uniform-black tower would otherwise be visually identical
+  to the core if both were cones.  Making the core a **prism**
+  (vertical flat sides, no taper) keeps the silhouettes
+  unambiguous even at silhouette-only zoom — the core is the
+  rocket-pillar shape; towers are the cone-on-pad shape.
+- **Six distinct sides** match the 6 outer hexes of the 7-hex
+  footprint — so each face *is* a hex-aligned interaction
+  surface (see § Six sides below).
+- **Prism silhouette also reads "rocket"** in placeholder
+  geometry without needing fins / nose-cone detail.
 
-**Open question — uniform vs accented top.**
+**The six sides — three functional, three plain.**
 
-Should the core's top stay dark blue (uniform) or carry the same
-red accent that a tower's top has?  Lean **uniform** for now (the
-user's "dark blue version of a normal tower" reads as a full
-colour-swap), but a thin red ring at the truncation (matching
-the tower top) could re-link the core silhouette visually to the
-tower family.  Pick when in-game.  Final art will resolve this
-naturally.
+The hexagonal prism has 6 faces.  **Three of them carry a
+function** (the player drives next to the corresponding outer
+hex to interact); **three are visually plain** (the same flat
+black surface, no markings, no interaction).  Per the spatial
+philosophy: the function of a face is read from its position +
+its visible icon, never from a menu.
+
+| Face role | What the face does | Player interaction |
+|---|---|---|
+| **Output / lift-off** | The opening from which the rocket lifts off at scramble; new NPCs emerge here when delivered by a lander; landed loot / supplies arrive here | Force-launch trigger: drive *into* the core's footprint (any hex) — the launch animation plays from this face.  No pickup interaction at this face. |
+| **Tower-core retrieval** | The face that dispenses **tower beacons** (the "core" of a future tower) | Drive next to this face's outer hex, press pickup → points debit, a tower beacon spawns floating above the vehicle (per the beacon-ferry rule).  Carry to a chosen build site to deposit. |
+| **NPC ordering** | The face that accepts **helper orders** | Drive next to this face's outer hex, press pickup → points debit immediately; an NPC helper lander touches down on the lift-off face shortly after; the new helper joins the roster (no carry needed — helpers self-deploy). |
+| Plain face × 3 | (no function) | None.  These are part of the structure and read as "normal tower wall." |
+
+**Visual indicators.**
+
+Each functional face carries a **distinct icon** (placeholder —
+final art replaces with real signage / glow):
+
+| Face role | Icon placeholder |
+|---|---|
+| Lift-off | **flame / chevron pointing up**, painted on the face in red `#d04848` |
+| Tower-core retrieval | **small red disc** centred on the face (echoing the tower top + carried beacon) |
+| NPC ordering | **small silver-grey rectangle** centred on the face (echoing the helper body colour) |
+| Plain face | nothing — uniform black |
+
+The three functional faces give the player a stable mental map
+of the core ("the flame side is where things come out; the disc
+side is where I get towers; the helper-grey side is where I get
+helpers").  Walking the perimeter of the core teaches the
+layout in ~5 seconds.
+
+**Top colour signal — NPC order status.**
+
+The core's flat top face is a **diegetic status display** for
+the player's NPC order queue.  Visible from any distance / any
+camera angle (the player almost always sees the top from the
+3rd-person camera) → no separate HUD needed.
+
+| Top colour | Meaning |
+|---|---|
+| **Black** (`#1a1a1a`, body uniform) | No NPC order is pending.  The roster is either at the cap (6) or no order has been placed since the last delivery. |
+| **Red** (`#d04848`) | An NPC has been ordered but their lander is *far from arrival* — the long-wait band of the timer. |
+| **Amber / yellow** (`#ffd000`) | The lander is *en route*; arrival is mid-way through its timer. |
+| **Green** (`#4caf50`) | Arrival is *imminent* — the next few seconds. |
+| **White flash** (~`#ffffff` for ~0.3 s) | The lander has just touched down at the lift-off face; the new helper emerges; immediately after, the top returns to black (or to the next-in-queue colour if more orders are pending). |
+
+The colour **interpolates smoothly** between red → amber →
+green as the order's timer ticks down, so the player can read
+progress at any glance, not just at threshold crossings.
+
+If multiple orders are queued, the top reflects the **next**
+order's status; later orders queue up invisibly until they
+become "next."  (Open Q: should there be a queue indicator
+showing how many are waiting?  Lean **no** for validation —
+keeps the visual simple; the player can just look at the helper
+roster vs. the cap.)
+
+**Open question — face orientation on landing.**
+
+When the core lands at a random hex (DESIGN.md § Updates on
+area-pick + random-within), does its **rotation** also
+randomise (each face points at a random hex direction), or is
+the rotation deterministic (e.g. lift-off face always points
+"north" / away from the largest spawn-marker cluster)?  Lean
+**deterministic, lift-off-faces-away-from-nearest-spawn** so
+the player can't be unlucky and have the wrong face pointing
+into a hostile sector; settle in plan 04 alongside the landing
+algorithm.
 
 **Lifetime.**  Retire when actual core building art lands (which
 needs to include the rocket-launch animation — the core IS the

@@ -157,6 +157,38 @@ verbatim below** with three adjustments:
   helpers they want to order before wave 1.  Future expansion:
   more separate landers can deliver supplies / helpers /
   additional towers, mirroring the planet-scale supply theme.
+- **2026-05-26 — Core has six sides: three functional, three
+  plain.**  The core building is rendered as a hexagonal prism
+  (matching its 7-hex footprint) with 6 distinct flat faces.
+  **Three** of those carry a function and have a visible icon
+  on the placeholder geometry:
+
+  - **Output / lift-off face** — rocket lifts off here at
+    scramble; landers (helpers, supply drops) emerge here.
+    Icon: red flame / chevron.
+  - **Tower-core retrieval face** — dispenses tower beacons.
+    Icon: small red disc.
+  - **NPC ordering face** — accepts helper orders (points
+    debited; an NPC lander arrives at the lift-off face).
+    Icon: small silver-grey rectangle.
+
+  The other **three faces are visually plain** (no markings, no
+  interaction).  The player learns the core's layout in ~5 s
+  by walking the perimeter — function comes from *which side
+  you drove to*, no menu.  **Core's flat top** signals NPC
+  order status by colour (black = no order; red → amber →
+  green interpolates as arrival approaches; white flash on
+  landing).  No HUD; the visualisation is diegetic.
+
+  Both tower-core and NPC-order pickups use the **single
+  pickup/drop key**.  Tower-core pickups produce a carried
+  beacon (deposit it elsewhere to call a tower lander);
+  NPC-order pickups debit points immediately, no carry — the
+  helper self-deploys at the lift-off face when the lander
+  arrives.
+
+  Helper-roster cap of 6 remains in force; NPC orders that
+  would exceed the cap fail at the press.
 - **2026-05-26 — Helper roster: 2 starting, 6 max.**  When the
   core lands, **2 NPC helpers** are inside the rocket and
   emerge to start work.  The player can later add more (via
