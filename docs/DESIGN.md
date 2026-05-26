@@ -288,11 +288,35 @@ verbatim below** with three adjustments:
   direction; once close to a base they switch to flow-field
   guidance.  See plan
   [`../plans/future/03-marker-layer-and-spawns/`](../plans/future/03-marker-layer-and-spawns/README.md).
-- **2026-05-26 — Wave list = flat count list.**  Waves are a
+- **2026-05-26 — Wave list = flat count list, progressively
+  harder; final wave gates a free scramble.**  Waves are a
   simple ordered list of integers (each = enemy count for that
   wave).  Per-enemy spawn-marker selection is **random** at
   spawn time; direction comes from the picked marker.  Authored
   in [`../examples/waves.json`](../examples/waves.json).
+  Successive waves get **progressively harder** — for now by
+  count (the validation list ramps 5 → 80), later by
+  composition (bosses, mixed types).  After the **final wave**
+  is cleared with the core alive, the player enters a **free
+  scramble phase**: no more enemies are coming, so they can
+  ferry tower-tops at leisure, top up the wallet via remaining
+  loot, and launch the rocket with full carry.  **Most plays
+  will not reach the final wave** — the curve is designed so
+  the scramble decision usually has to be made mid-list, not
+  after.  Reaching the final wave is the "perfect run" outcome.
+- **2026-05-26 — Wave spawn-visible interval before enemies
+  walk.**  When a wave begins, enemies **appear at their picked
+  spawn markers and stand visible for a few seconds** before
+  starting to walk toward the base.  The interval is the
+  player's **scramble decision window**: see what's coming
+  (how many, from which directions, what kinds — eventually
+  boss vs. regular), assess the defence, and decide to stand
+  or scramble before any enemy has moved.  During the interval
+  the active spawn markers pulse / glow so the player can
+  spot them from any zoom.  Once the interval expires, enemies
+  start their approach-mode path along the marker direction.
+  Interval length TBD (likely a handful of seconds — long
+  enough to read the threat, short enough not to drag pacing).
 - **2026-05-26 — Tower-top salvage = the scramble mechanic,
   played tactically.**  A tower's red top is a detachable carry
   object.  Player-initiated pickup: drive to a healthy tower,
@@ -325,6 +349,44 @@ verbatim below** with three adjustments:
   between walls are a second-phase feature** (the `cy`-layer
   deck mechanic in @PLAN46 § Systems #3 + #4); same free-but-
   timed economics when they ship.
+- **2026-05-26 — Core is invulnerable; nibbling drains POINTS,
+  not core HP.**  The central tower **cannot be destroyed**.
+  Enemies that reach the core (or nibble it during the launch
+  countdown) **do not damage the core's structure** — instead
+  each nibble tick **drains the player's point wallet**.  This
+  overturns the earlier @PLAN46 framing of "core destroyed =
+  run ends."  New loss model: the player is never forced out
+  by structural collapse; they choose when to scramble.  The
+  *cost* of staying too long is bleeding points to nibbles
+  (eroding the wallet that funds towers, helpers, and the
+  next base's starting budget).  An emergent "run end"
+  condition (e.g. wallet hits zero or some negative threshold,
+  or the player vehicle is destroyed in the blocker-damage
+  edge case) is **TBD** — captured here as a deliberate open
+  decision.
+- **2026-05-26 — Force-launch is a hold sequence with visible
+  pulse.**  Launch is triggered by **driving INTO the core
+  through its opening** — the doorway on the lift-off face
+  (one of the three functional faces; the other two are
+  external dispensers).  The player can't enter the core
+  through any other side.  The moment the vehicle crosses the
+  opening into the core's interior, the core's **bottom
+  begins to pulsate** (placeholder: a bright orange / red ring
+  at the base of the cylinder brightens and beats faster as
+  the countdown progresses).
+  After a fixed number of seconds (TBD), **liftoff fires**
+  with whatever is currently onboard (carried items, deposited
+  scramble inventory, wallet, helpers who've made it back).
+  **Exiting the footprint at any time before liftoff CANCELS**
+  the sequence — the pulse fades, the countdown resets, and
+  the player can return to the base.  This countdown is also
+  a **hazard window** during a wave: enemies that reach the
+  core continue nibbling (draining points) while the player
+  sits inside; the longer the launch takes, the more points
+  the player loses to nibbles.  Net: the launch decision
+  costs *time* (helpers reaching the rocket, last carry runs)
+  + *points* (whatever nibble drain occurs during the
+  countdown).
 - **2026-05-26 — Rocket launch trigger: enter the core.**
   Launching the rocket is a **player position trigger**: drive
   the vehicle into the core building (its 7-hex footprint) and

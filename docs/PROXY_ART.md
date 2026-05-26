@@ -703,7 +703,7 @@ its visible icon, never from a menu.
 
 | Face role | What the face does | Player interaction |
 |---|---|---|
-| **Output / lift-off** | The opening from which the rocket lifts off at scramble; new NPCs emerge here when delivered by a lander; landed loot / supplies arrive here | Force-launch trigger: drive *into* the core's footprint (any hex) — the launch animation plays from this face.  No pickup interaction at this face. |
+| **Output / lift-off (the opening)** | The *opening* in the core's body — visibly cut into the cylinder face as a doorway / hangar opening, wide enough for the vehicle to drive through.  The rocket lifts off through here at scramble; new NPCs emerge here when delivered by a lander; landed loot / supplies arrive here. | **Force-launch trigger: drive THROUGH this opening INTO the core**.  The vehicle physically crosses into the interior; the launch countdown begins (bottom pulse activates).  The player can only enter the core via this opening; the other 5 faces are solid (the plain ones) or are dispensers operated from the outside (tower-core / NPC-order faces). Exit back through the opening cancels the countdown. |
 | **Tower-core retrieval** | The face that dispenses **tower beacons** (the "core" of a future tower) | Drive next to this face's outer hex, press pickup → points debit, a tower beacon spawns floating above the vehicle (per the beacon-ferry rule).  Carry to a chosen build site to deposit. |
 | **NPC ordering** | The face that accepts **helper orders** | Drive next to this face's outer hex, press pickup → points debit immediately; an NPC helper lander touches down on the lift-off face shortly after; the new helper joins the roster (no carry needed — helpers self-deploy). |
 | Plain face × 3 | (no function) | None.  These are part of the structure and read as "normal tower wall." |
@@ -725,6 +725,28 @@ of the core ("the flame side is where things come out; the disc
 side is where I get towers; the helper-grey side is where I get
 helpers").  Walking the perimeter of the core teaches the
 layout in ~5 seconds.
+
+**Bottom pulse — launch countdown.**
+
+When the player vehicle enters any hex of the core's 7-hex
+footprint, the core's **bottom ~0.5 m** lights up and begins a
+**pulsing ring** signalling that the launch countdown has
+started.  Visible from any angle / zoom.
+
+| Property | Value |
+|---|---|
+| Visual element | a horizontal ring around the bottom of the cylinder, ~0.5 m tall |
+| Idle (no vehicle inside footprint) | dark `#1a1a1a`, uniform with body |
+| Countdown active | ring fills with `#ff6020` (orange-red ignition colour) and **pulses** — brightness oscillates with a beat |
+| Countdown progress | the **pulse rate accelerates** as liftoff approaches (slow beat at the start, rapid flutter just before fire) |
+| Launch fires | ring goes bright white briefly, then the whole core ascends as the rocket |
+| Cancellation (vehicle exits footprint before liftoff) | the ring fades back to dark `#1a1a1a` over ~0.3 s; the countdown resets to zero on next entry |
+
+This makes the launch state diegetically readable: a player far
+across the base sees the orange pulse, knows their vehicle is
+sitting inside the core, and remembers to do whatever else
+they wanted to do before liftoff (or cancel by driving out).
+A pulse with very fast flicker = launch is *imminent*.
 
 **Top colour signal — NPC order status.**
 
