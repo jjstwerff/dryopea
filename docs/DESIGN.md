@@ -677,6 +677,37 @@ verbatim below** with three adjustments:
   direction; once close to a base they switch to flow-field
   guidance.  See plan
   [`../plans/future/03-marker-layer-and-spawns/`](../plans/future/03-marker-layer-and-spawns/README.md).
+- **2026-05-26 — No wave indication; player learns by moving;
+  future replaces the timer with the robot economy.**
+
+  - **Validation tier:** there is **no on-screen wave
+    indicator at all**.  No wave-number display, no
+    inter-wave countdown, no "next wave in N seconds"
+    banner.  The player discovers wave shape and timing
+    by **moving around** (scouting the active spawn
+    markers, watching which pulse) and by **internally
+    learning the rhythm across plays** (the inter-wave delay
+    + the wave list become habit knowledge).  This is the
+    diegetic principle applied uncompromisingly to waves:
+    the in-world signals (active spawn marker pulse,
+    pre-walk visibility interval) are the entire wave UI.
+  - **Future tier:** the timer-based wave list is the
+    **placeholder for the economy-driven model**.  Waves
+    stop being a fixed authored sequence and start being
+    **output of the robot economy state** — supply lines
+    deliver fuel, mines extract material, factories
+    fabricate units; the rate of arrivals is the *result*
+    of these production chains running.  Players will be
+    able to **alter the robot economy** by attacking its
+    supply lines, mines, and fabrications — fewer enemies
+    per wave, weaker units, longer gaps as a *consequence*
+    of disruption rather than a fixed-content concession.
+    This is the same shape as DESIGN.md § Future expansion
+    (planet-scale supply disruption) but elevated to be the
+    *central* wave-source mechanic, not just the
+    planet-scale meta.  The waves.json placeholder retires
+    when economy state becomes the input.
+
 - **2026-05-26 — Wave list = flat count list, progressively
   harder; final wave gates a free scramble.**  Waves are a
   simple ordered list of integers (each = enemy count for that

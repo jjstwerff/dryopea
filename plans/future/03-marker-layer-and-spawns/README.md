@@ -145,6 +145,16 @@ Why a flat count list (not a richer schema):
   breaking the integer-only short form (treat a bare integer as
   `{ count: N }`).
 
+**The flat list is also a placeholder for the future
+economy-driven wave source.**  DESIGN.md § Updates 2026-05-26
+calls out the long-term plan: waves stop being a fixed
+authored sequence and become the *output of the robot economy
+state* (factories produce → supply lines deliver → mines fuel
+the cycle), with the player able to **alter that economy** by
+disrupting any link in the chain.  The wave list retires when
+economy state becomes the input.  Plan 03 ships the placeholder;
+the economy-driven replacement is a separate later plan.
+
 What this is NOT (yet):
 - No enemy type variety — every enemy in every wave uses the
   same proxy.  Multi-type waves slot in later by tagging waves
