@@ -75,10 +75,16 @@ src/                           — game source (empty until D0 / plan 01 ships)
 | File | Topic |
 |---|---|
 | [README.md](README.md) | Public-facing project intro — what dryopea is, status, repo layout |
-| [docs/DESIGN.md](docs/DESIGN.md) | Master design — the scramble phase, bounded sessions, editor/game split, systems 0-7, phases D0-D5, dependencies, planet-scale future expansion |
+| [docs/DESIGN.md](docs/DESIGN.md) | Master design — scramble phase, bounded sessions, editor/game split, the validation-tier mechanics, dependencies, planet-scale future expansion; long Updates 2026-05-26 list records every refinement decision |
+| [docs/SETTING.md](docs/SETTING.md) | Setting / lore — haywire colonization robots, military cordon, permit-bound sorties; insects + sap economy; how the fiction frames every mechanic |
+| [docs/GROUND_TYPES.md](docs/GROUND_TYPES.md) | 11-type ground palette (water + land + structure) — colours, slope / drop / height-override, wall topology + entrance rule |
+| [docs/PROXY_ART.md](docs/PROXY_ART.md) | Placeholder geometry for testing gameplay before final art lands — enemy, boss (phase 3), player vehicle, NPC helper (with retrieval + skills), loot, tower beacon, tower (state machine + salvage), core building (6 sides + top status + bottom pulse), wall outline, construction state |
 | [docs/DESIGN_HISTORY.md](docs/DESIGN_HISTORY.md) | Design seeds salvaged from the 2023 prototype — original README paragraphs, hex/terrain notes, game-data schema, with mapping into the current design |
 | [plans/README.md](plans/README.md) | Plan tracker index + workflow |
-| [plans/future/01-ground-editor/README.md](plans/future/01-ground-editor/README.md) | First plan — in-game ground-type editor (sea-default infinite world, sparse storage) |
+| [plans/future/01-ground-editor/README.md](plans/future/01-ground-editor/README.md) | Plan 01 — in-game ground-type editor (sea-default infinite world, sparse storage) |
+| [plans/future/02-solver-validation-viewer/README.md](plans/future/02-solver-validation-viewer/README.md) | Plan 02 — dual-layer 3D viewer for height-solver validation |
+| [plans/future/03-marker-layer-and-spawns/README.md](plans/future/03-marker-layer-and-spawns/README.md) | Plan 03 — marker layer + multi-direction spawn points |
+| [plans/future/04-map-library/README.md](plans/future/04-map-library/README.md) | Plan 04 — hand-authored map library + per-map objectives + event variance |
 | [archive/README.md](archive/README.md) | What's preserved from the 2023 repo and what was deliberately dropped |
 | [QUESTIONS_FOR_LOFT.md](QUESTIONS_FOR_LOFT.md) | Outbound queue to loft |
 

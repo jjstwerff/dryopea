@@ -172,6 +172,28 @@ that blocks them at a cliff.  The top of the wall is walkable
 (the vehicle drives along it; ground troops walk it if they can
 reach it).
 
+### Wall height matters: insects climb normal walls
+
+The two wall heights are not just visual variety — they
+differ in what they actually stop:
+
+| Wall type | Stops regular robots | Stops boss robots | Stops insects (tier 2) |
+|---|---|---|---|
+| `wall` (3 m) | Yes (sheer face) | No (2×2 footprint forces gaps or break-through) | **No — insects climb it with ease** |
+| `wall_high` (5 m) | Yes | No (still 2×2; can break) | **Yes — height is the anti-insect barrier** |
+
+This makes `wall_high` **vital** once tier-2 insects are part
+of the threat — a base built only of `wall` is defensible
+against the robot tier but completely permeable to insects.
+A perimeter that's expected to face insects has to use
+`wall_high` on the insect-facing sides (or everywhere).  A
+perimeter against robots only stays cheaper with `wall`.
+
+Implication for first-time players in the early maps
+(plan 04): the guided road probably faces only robots; the
+hidden challenges that introduce insects also introduce the
+*reason* to invest in `wall_high`.
+
 ### Wall ends are drivable slopes
 
 The signature wall mechanic.  A wall hex with **exactly one wall

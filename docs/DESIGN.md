@@ -210,6 +210,35 @@ verbatim below** with three adjustments:
 
   Helper-roster cap of 6 remains in force; NPC orders that
   would exceed the cap fail at the press.
+- **2026-05-26 — Two enemy tiers, two ecologies, two reaction
+  rules.**  Tier-1 robots (haywire, territorial — react to
+  encroachment on their infrastructure).  Tier-2 **insects**
+  (biological, sap-protective — react only to sap *carriers*,
+  by smell, not to mere presence).  Insects climb normal
+  walls with ease, so `wall_high` becomes the anti-insect
+  barrier (see GROUND_TYPES.md § Wall height matters).
+  Towers will eventually have **different effects on
+  different enemy types** (current laser model is the placeholder
+  catch-all; tower variants are future).  Players gather
+  **sap** from huge trees as a valuable resource (energy +
+  life-prolonging medicine — the reason the permits exist);
+  carrying sap activates the insect chase.  Full lore in
+  [`SETTING.md`](SETTING.md) § The other enemy.
+- **2026-05-26 — Setting: haywire colonization robots, military
+  cordon, permit-bound sorties.**  The fiction the design sits
+  on: civilian colonization robots were sent to terraform /
+  build the planet; their AI went haywire; the military
+  blocked the planet (entry and *mostly* exit) because the
+  government fears the broken AI will spread to government
+  robots in orbit.  Players are inside on **official permits
+  for limited-time sorties** — short, contracted missions,
+  not stealth runs.  This sets the run-length contract
+  (bounded sessions are the permit duration), the meaning of
+  scramble (only confirmed exit through a narrow cordon), and
+  the moral framing of robots (broken infrastructure, not
+  malicious actors).  Full lore in
+  [`SETTING.md`](SETTING.md); cross-references mechanic-by-
+  mechanic to DESIGN.md and § Future expansion.
 - **2026-05-26 — Helper skill set (future): building, mining,
   scouting, hacking, engineering, crafting.**  Eventually each
   helper carries per-character skills:
