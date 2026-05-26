@@ -192,29 +192,42 @@ flow in from multiple sides.
 **Data**
 
 ```loft
+// Marker variants — polymorphic enum (loft supports per-variant
+// named fields).  Only one variant for validation; the layer is
+// built to host more later.
 enum Marker {
-    Spawn { direction: u8 },   // 0..5 cardinal hex direction
+    Spawn { direction: u8 }    // 0..5 cardinal hex direction
 }
 
-let markers: hash<Marker[integer]> = hash<Marker[integer]>::new()
+// Sparse marker layer keyed by (q, r) — two-key hash, mirroring
+// the painted layer in plan 01.
+pub struct MarkerEntry {
+    q: integer not null,
+    r: integer not null,
+    marker: Marker
+}
+
+let markers: hash<MarkerEntry[q, r]> = []
 ```
 
 **Test — `tests/scripts/03_m1_layer.loft`**
 
 ```loft
-let m = hash<Marker[integer]>::new()
-m.insert(pack(3, 0), Marker::Spawn { direction: 2 })
+let m: hash<MarkerEntry[q, r]> = []
+place_marker(&mut m, 3, 0, 2)            // direction 2
 assert m.len() == 1
-match m.lookup(pack(3, 0)) {
-    Some(Marker::Spawn { direction }) => assert direction == 2,
+let entry = lookup_marker(&m, 3, 0)
+match entry {
+    Some(MarkerEntry { marker: Marker::Spawn { direction }, .. }) =>
+        assert direction == 2,
     None => panic("expected spawn marker"),
 }
 // Sparse: an unmarked hex returns None
-assert m.lookup(pack(0, 0)) == None
+assert lookup_marker(&m, 0, 0) == None
 
 // Save / load roundtrip with the painted layer (plan 01 E4)
 let palette = load_palette("examples/palette.json")
-let painted = hash<u8[integer]>::new()
+let painted: hash<PaintedHex[q, r]> = []
 save_map_with_markers(&painted, &m, &Camera{...}, "/tmp/dryo.json")
 let (_, m2, _) = load_map_with_markers("/tmp/dryo.json", &palette)
 assert m2.len() == 1
@@ -263,39 +276,42 @@ assert mode == EditorMode::Ground
 
 **Key functions**
 
-- `fn place_marker(m: &mut hash<Marker[integer]>, q: integer, r: integer, dir: u8)`
-- `fn rotate_marker(m: &mut hash<Marker[integer]>, q: integer, r: integer, delta: integer)`
+- `fn place_marker(m: &mut hash<MarkerEntry[q, r]>, q: integer, r: integer, dir: u8)`
+- `fn rotate_marker(m: &mut hash<MarkerEntry[q, r]>, q: integer, r: integer, delta: integer)`
   — `delta = +1` clockwise, `-1` counter-clockwise; wraps mod 6.
-- `fn render_marker(c: &Camera, hex: Hex, marker: Marker)` —
-  draws the hot-pink triangle (`#ff3060`) at hex centre,
-  oriented per `direction`.
+- `fn render_marker(c: &Camera, entry: &MarkerEntry)` —
+  draws the hot-pink triangle (`#ff3060`) at the entry's hex
+  centre, oriented per its `direction`.
 
 **Test — `tests/scripts/03_m3_placement.loft`**
 
 ```loft
-let m = hash<Marker[integer]>::new()
+let m: hash<MarkerEntry[q, r]> = []
 place_marker(&mut m, 5, 5, 0)
-match m.lookup(pack(5, 5)) {
-    Some(Marker::Spawn { direction }) => assert direction == 0,
+match lookup_marker(&m, 5, 5) {
+    Some(MarkerEntry { marker: Marker::Spawn { direction }, .. }) =>
+        assert direction == 0,
     _ => panic("expected"),
 }
 
 rotate_marker(&mut m, 5, 5, 1)
-match m.lookup(pack(5, 5)) {
-    Some(Marker::Spawn { direction }) => assert direction == 1,
+match lookup_marker(&m, 5, 5) {
+    Some(MarkerEntry { marker: Marker::Spawn { direction }, .. }) =>
+        assert direction == 1,
     _ => panic("expected"),
 }
 
 // Wrap-around
 for _ in 0..6 { rotate_marker(&mut m, 5, 5, 1) }
-match m.lookup(pack(5, 5)) {
-    Some(Marker::Spawn { direction }) => assert direction == 1,
+match lookup_marker(&m, 5, 5) {
+    Some(MarkerEntry { marker: Marker::Spawn { direction }, .. }) =>
+        assert direction == 1,
     _ => panic("wraparound failed"),
 }
 
 // Re-click removes
 place_marker(&mut m, 5, 5, 0)
-assert m.lookup(pack(5, 5)) == None
+assert lookup_marker(&m, 5, 5) == None
 ```
 
 **Pass criteria.** In marker mode, clicks place / remove

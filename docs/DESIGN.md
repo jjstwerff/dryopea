@@ -998,6 +998,31 @@ A player can author a new starter map in the in-game editor
 and share the resulting JSON.  Both are first-day-of-shipping
 behaviours, not aspirational features.
 
+## 17b. Loft idiom alignment
+
+Two loft language features the design relies on were verified
+in the loft project on 2026-05-27 (read-only check;
+[`LOFT.md`](https://github.com/jjstwerff/loft/blob/main/doc/claude/LOFT.md) + `lib/gridmesh/src/gridmesh.loft`):
+
+- **Multi-field hash keys are first-class.**
+  `hash<T[field1, field2]>` is a loft language feature, not a
+  workaround.  The dryopea data layers use it directly:
+  - Painted ground: `pub struct PaintedHex { q, r, type }`
+    + `hash<PaintedHex[q, r]>`.
+  - Spawn markers: `pub struct MarkerEntry { q, r, marker }`
+    + `hash<MarkerEntry[q, r]>`.
+  The packed-key idiom in `lib/gridmesh` (`enc_coord` →
+  `hash<CellRef[ck]>`) is one library's *choice*; not required
+  by the language.
+- **Polymorphic enums with named-field per-variant payloads
+  are supported.**
+  `enum Marker { Spawn { direction: u8 } }` follows the
+  documented pattern (LOFT.md § Enum types) — same shape as
+  loft stdlib's `enum Shape { Circle { radius: float }, Rectangle { width, height } }`.
+
+Plans 01 + 03 use these forms in their Implementation +
+testing sections.
+
 ## 18. Numbers
 
 A coherent first-pass set covering every parameter is in

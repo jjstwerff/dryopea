@@ -256,32 +256,35 @@ assert active2 == 4            // "5" -> index 4 = sand
 **Data**
 
 ```loft
-// The world: sparse painted-hex map.  Key = (q, r) packed
-// into a single integer; value = u8 index into PALETTE.
-// Default (miss) = 0 = sea, never explicitly stored.
-let painted: hash<u8[integer]> = hash<u8[integer]>::new()
+// The world: sparse painted-hex map.  loft hashes can carry
+// multiple key fields directly — DESIGN.md's hash<GroundType[q,r]>
+// intent maps to the form below.  Default (miss) = sea, never
+// explicitly stored — sparse storage.
+pub struct PaintedHex {
+    q: integer not null,
+    r: integer not null,
+    type: u8 not null         // index into PALETTE; 0 = sea
+}
 
-// Coord packing — fits two i32 into one i64.
-fn pack(q: integer, r: integer) -> integer { (q << 32) | (r & 0xFFFFFFFF) }
-fn unpack(k: integer) -> (integer, integer) { (k >> 32, k & 0xFFFFFFFF) }
+let painted: hash<PaintedHex[q, r]> = []
 ```
 
 **Key functions**
 
-- `fn paint(world: &mut hash<u8[integer]>, q: integer, r: integer, idx: u8)`
-  — write `(q,r) → idx`.  If `idx == 0` (sea), **remove** the
-  entry (sparse storage; sea is implicit).
-- `fn lookup(world: &hash<u8[integer]>, q: integer, r: integer) -> u8`
-  — return entry or 0 (sea) on miss.
+- `fn paint(world: &mut hash<PaintedHex[q, r]>, q: integer, r: integer, idx: u8)`
+  — write a `PaintedHex{q, r, type: idx}` record.  If `idx == 0`
+  (sea), **remove** the entry (sparse storage; sea is implicit).
+- `fn lookup(world: &hash<PaintedHex[q, r]>, q: integer, r: integer) -> u8`
+  — return the matching record's `type` or 0 (sea) on miss.
 - `fn screen_to_hex(c: &Camera, sx: integer, sy: integer) -> Hex`
   — inverse of `hex_to_world`, used for mouse picking.
-- `fn paint_line(world: &mut hash<u8[integer]>, a: Hex, b: Hex, idx: u8)`
-  — Bresenham-equivalent hex line for drag-paint.
+- `fn paint_line(world: &mut hash<PaintedHex[q, r]>, a: Hex, b: Hex, idx: u8)`
+  — hex-grid line for drag-paint.
 
 **Test — `tests/scripts/01_e3_paint.loft`**
 
 ```loft
-let world = hash<u8[integer]>::new()
+let world: hash<PaintedHex[q, r]> = []
 
 // Paint a hex
 paint(&mut world, 0, 0, 5)     // grass at origin
