@@ -506,6 +506,72 @@ types**, producing visibly different swarm compositions across
 faction territories.  Authoring a map can hint at "this is
 faction X's region" through which robot types appear.
 
+## The player — small mining co-op, field-head, hired to investigate
+
+Most of the lore above is **backdrop** — the world the player
+operates within.  The player's own identity is closer-in and
+smaller-scale:
+
+- The player is the **field-head of a small mining
+  cooperative.**  Not a marine, not a government agent, not a
+  freelance mercenary — a working team-leader of a small,
+  private mining business.  The team are the NPC helpers (see
+  PROXY_ART.md § NPC helper); the cooperative is the
+  organisation back home that holds the permit and bankrolls
+  the sortie.
+- **They are hired to investigate the planet.**  The contract
+  is *investigation* — gather information, assess what's
+  there, file reports, possibly bring back samples — not
+  invasion, not conquest, not extraction at industrial scale.
+  Mining-co-op skill set means they have the right tools for
+  the job (drilling, hauling, building, basic combat support
+  through their towers and helpers).  Whoever hired them
+  (a separate party with their own agenda — government?
+  scientific consortium? wealthy contractor with a sap claim?)
+  may not be acting purely in good faith.  The player's coop
+  is taking the work because the pay is real.
+- This framing explains a lot in one line:
+  - Why the player has **helpers and not soldiers** — they're
+    the mining co-op's regular crew.
+  - Why the player builds rather than destroys — the co-op's
+    bread and butter is *construction*, not warfare.
+  - Why the player **can be hired** at all — they're a private
+    contractor, not state employees.
+  - Why the **permit** exists — issued by the cordon to the
+    co-op as an employer; the field-head carries it on the
+    sortie.
+  - Why "investigate" makes the SCRAMBLE mechanic natural —
+    you carry out what you found, you don't stay to colonise.
+
+## The atmosphere is thick — limited sight lines
+
+The planet's atmosphere is **dense / hazy**.  Concretely for
+gameplay:
+
+- **Long visual sight lines are physically blocked** — beyond
+  a certain distance everything fades into atmospheric haze.
+  This is the in-fiction reason the camera has a bounded
+  view distance (TBD; in the order of "tens of hexes").
+- Players must **scout** to learn what is out there.  Spawn
+  markers, sap trees, stone fixtures, abandoned bases,
+  stranded helpers — none of these can be seen by simply
+  standing on the core hex and looking around.  Movement and
+  visiting are the only ways to read the map.
+- The thick air **explains the original human survivors'
+  retreat to high mountain caves** (see § History): the
+  higher altitude was the only place their lungs cooperated.
+  Once they perfected air-control they moved deeper, where
+  enclosed environments could compensate fully.
+- Tower-laser visuals + waterfall foam + the bubble's pulse
+  all read clearly *against* a hazy backdrop — the placeholder
+  art reads against the planet's mood without needing
+  expensive shading.
+
+The thick atmosphere is also a **rendering convenience** —
+the engine doesn't need to draw the whole map, just the haze
+radius around the player.  Distant detail is *not* needed
+because it would be unrealistic to see anyway.
+
 ## How the setting shapes the mechanics
 
 | Mechanic | Why it fits the setting |

@@ -157,6 +157,31 @@ verbatim below** with three adjustments:
   helpers they want to order before wave 1.  Future expansion:
   more separate landers can deliver supplies / helpers /
   additional towers, mirroring the planet-scale supply theme.
+- **2026-05-26 — Player is the field-head of a small mining
+  cooperative, hired to investigate.**  Identity-layer of the
+  lore: not a marine, not a government agent, not a
+  mercenary — a working team-leader of a small private
+  mining business.  Helpers are the regular crew.  Hired by
+  someone (open) on a contract whose nominal goal is
+  *investigation* — gather info, sample, report.  Explains
+  the construction-and-defence-but-no-direct-combat shape of
+  the player's tools, the existence of helpers, the permit
+  flow (the co-op holds it), and the scramble idiom (you
+  carry out what you found, you don't stay).  Full framing
+  in [`SETTING.md`](SETTING.md) § The player.
+- **2026-05-26 — Thick atmosphere; bounded view distance.**
+  The planet's air is dense / hazy; long visual sight lines
+  are physically blocked beyond a certain distance.  The
+  in-fiction reason the camera has a **bounded view
+  distance** (TBD; on the order of tens of hexes).  Players
+  must *scout* to learn what's beyond the haze — spawn
+  markers, sap trees, stones, abandoned bases all hidden at
+  range.  Also explains the prior humans' retreat to high
+  mountain caves for breathing (§ History) and the early move
+  underground once air-control was solved.  Rendering bonus:
+  the engine never needs to draw the whole map, just the
+  haze radius around the player.  Full note in
+  [`SETTING.md`](SETTING.md) § The atmosphere is thick.
 - **2026-05-26 — Boss = mobile REPAIR PLATFORM (the
   engineering role in robot society).**  The boss class is in
   the fiction the **repair / engineering robot** — heavy
