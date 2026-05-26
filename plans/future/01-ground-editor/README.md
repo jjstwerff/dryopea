@@ -99,6 +99,322 @@ Out of scope (later plans):
 E1 is the foundation everything else stacks on; E2-E4 each add
 one capability on top.
 
+## Implementation + testing
+
+Each phase produces a **standalone runnable** that exercises
+exactly its added capability.  Earlier-phase tests must keep
+passing when later phases land — no regressions allowed.
+
+### Phase E1 — Infinite sea + camera
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/world.loft` | World-coordinate primitives.  `Hex { q: i32, r: i32 }`, conversions to/from screen / world space. |
+| `src/camera.loft` | `Camera { pos: Hex, zoom: i32 }` + update functions. |
+| `src/render.loft` | Visible-hex enumeration + draw of flat sea hexes. |
+| `src/main.loft` | Entry point — open GL window, init camera, frame loop. |
+| `loft.toml` | Adds `graphics = "..."` (loft GL bindings; path-dep to loft monorepo until loft-libs-graphics ships). |
+
+**Data**
+
+```loft
+struct Hex { q: integer, r: integer }
+struct Camera { pos: Hex, zoom: integer }
+
+const SEA_COLOR: integer = 0x0a2c5e   // from palette.json
+const HAZE_RADIUS_HEXES: integer = 40 // numbers.json
+```
+
+**Key functions**
+
+- `fn hex_to_world(h: Hex) -> (single, single)` — axial flat-top
+  conversion.  `x = hex_diameter * 1.5 * q`,
+  `y = hex_diameter * sqrt(3) * (r + q/2)` (loft `single` =
+  f32).
+- `fn visible_hexes(c: &Camera, haze: integer) -> vector<Hex>`
+  — returns the set of hex coordinates within `haze` of the
+  camera centre.  Used as the draw list.
+- `fn camera_update(c: &mut Camera, keys: vector<text>)` —
+  apply WASD pan; clamp zoom.
+- `fn render_frame(c: &Camera)` — clear screen, emit each
+  visible hex as a flat coloured quad at SEA_COLOR.
+
+**Test — `tests/scripts/01_e1_camera.loft`**
+
+```loft
+// Camera pan
+let c = Camera { pos: Hex { q: 0, r: 0 }, zoom: 1 }
+camera_update(&mut c, ["W"])
+assert c.pos.r == -1   // W moves "north" in axial flat-top
+
+camera_update(&mut c, ["S", "S"])
+assert c.pos.r == 1
+
+// Visible-hex enumeration: a haze=2 disc around origin
+let v = visible_hexes(&c, 2)
+// Hex disc radius 2 = 1 + 6 + 12 = 19 hexes (centre + 1-ring + 2-ring)
+assert v.len() == 19
+
+// hex_to_world sanity
+let (x, y) = hex_to_world(Hex { q: 1, r: 0 })
+assert (x - 1.5 * 1.5).abs() < 0.001  // q=1 shifts world.x by 1.5 * hex_diameter
+```
+
+**Pass criteria**
+
+- Running `loft run src/main.loft` opens a window showing
+  a uniform dark-blue sea filling the viewport.
+- WASD pans the camera smoothly; scroll zooms.
+- No allocation grows over time (the world is sparse +
+  unpainted; the only allocation is the visible-hex list
+  re-emitted per frame).
+- The test script passes under `loft test`.
+
+### Phase E2 — Palette load + named picker
+
+**Files added/modified**
+
+| File | Purpose |
+|---|---|
+| `src/palette.loft` | `GroundType` struct + JSON loader. |
+| `src/ui.loft` | 2D HUD primitives: text + filled rect + hover detection. |
+| `src/picker.loft` | Picker widget: ordered list of swatches + names + hotkey hints. |
+| `src/main.loft` | Init: load palette from `examples/palette.json`; pass to picker. |
+
+**Data**
+
+```loft
+struct GroundType {
+    name: text,
+    color: integer,
+    sub_palette: text,
+    slope: integer,           // null mapped to -1 (water + structure)
+    drop: integer,            // null mapped to -1 (land + structure)
+    drainage: boolean,
+    walk_ground: boolean,
+    walk_vehicle: boolean,
+    buildable: boolean
+}
+
+let PALETTE: vector<GroundType> = load_palette("examples/palette.json")
+let active_index: integer = 0   // index into PALETTE; 0 = sea
+```
+
+**Key functions**
+
+- `fn load_palette(path: text) -> vector<GroundType>` —
+  parse JSON; assert exactly 11 entries; assert all names
+  unique.
+- `fn picker_render(p: &vector<GroundType>, active: integer)`
+  — draws the vertical list of swatch + name + hotkey, with
+  the active row highlighted.
+- `fn picker_handle_input(p: &vector<GroundType>, keys: vector<text>) -> integer`
+  — `1` through `0` then `-` select entry `1..=11`; click on
+  a row selects.  Returns the new active index (or current
+  if no change).
+
+**Test — `tests/scripts/01_e2_palette.loft`**
+
+```loft
+let p = load_palette("examples/palette.json")
+assert p.len() == 11
+assert p[0].name == "sea"
+assert p[0].color == 0x0a2c5e
+assert p[4].name == "sand"
+assert p[4].buildable
+assert !p[0].walk_ground       // sea is not walkable by ground units
+assert p[9].name == "wall"
+assert p[10].name == "wall_high"
+
+// Hotkey -> index
+let active = 0
+let active2 = picker_handle_input(&p, ["5"])
+assert active2 == 4            // "5" -> index 4 = sand
+```
+
+**Pass criteria**
+
+- The picker is drawn over the sea floor; 11 rows are
+  visible; the active row is highlighted.
+- Hotkeys `1`-`0`, `-` switch the active row.
+- The test script passes.
+- E1 still passes (the camera works underneath the HUD).
+
+### Phase E3 — Paint sparse
+
+**Files added/modified**
+
+| File | Purpose |
+|---|---|
+| `src/painted.loft` | `painted: hash<u8[q,r]>` + paint/lookup. |
+| `src/picking.loft` | screen→hex conversion (mouse cursor + click). |
+| `src/render.loft` | Modify: per-visible-hex, look up `painted`; miss = sea colour, hit = `PALETTE[idx].color`. |
+| `src/main.loft` | Wire mouse click to paint; mouse drag to paint-along-line. |
+
+**Data**
+
+```loft
+// The world: sparse painted-hex map.  Key = (q, r) packed
+// into a single integer; value = u8 index into PALETTE.
+// Default (miss) = 0 = sea, never explicitly stored.
+let painted: hash<u8[integer]> = hash<u8[integer]>::new()
+
+// Coord packing — fits two i32 into one i64.
+fn pack(q: integer, r: integer) -> integer { (q << 32) | (r & 0xFFFFFFFF) }
+fn unpack(k: integer) -> (integer, integer) { (k >> 32, k & 0xFFFFFFFF) }
+```
+
+**Key functions**
+
+- `fn paint(world: &mut hash<u8[integer]>, q: integer, r: integer, idx: u8)`
+  — write `(q,r) → idx`.  If `idx == 0` (sea), **remove** the
+  entry (sparse storage; sea is implicit).
+- `fn lookup(world: &hash<u8[integer]>, q: integer, r: integer) -> u8`
+  — return entry or 0 (sea) on miss.
+- `fn screen_to_hex(c: &Camera, sx: integer, sy: integer) -> Hex`
+  — inverse of `hex_to_world`, used for mouse picking.
+- `fn paint_line(world: &mut hash<u8[integer]>, a: Hex, b: Hex, idx: u8)`
+  — Bresenham-equivalent hex line for drag-paint.
+
+**Test — `tests/scripts/01_e3_paint.loft`**
+
+```loft
+let world = hash<u8[integer]>::new()
+
+// Paint a hex
+paint(&mut world, 0, 0, 5)     // grass at origin
+assert lookup(&world, 0, 0) == 5
+assert lookup(&world, 1, 0) == 0   // adjacent is still sea
+assert world.len() == 1
+
+// Re-paint = overwrite
+paint(&mut world, 0, 0, 7)
+assert lookup(&world, 0, 0) == 7
+assert world.len() == 1            // size unchanged
+
+// Erase by painting sea
+paint(&mut world, 0, 0, 0)
+assert lookup(&world, 0, 0) == 0
+assert world.len() == 0            // entry removed; sparse
+
+// Paint a line
+paint_line(&mut world, Hex { q: 0, r: 0 }, Hex { q: 4, r: 0 }, 9)  // wall
+assert world.len() == 5
+for q in 0..=4 { assert lookup(&world, q, 0) == 9 }
+```
+
+**Pass criteria**
+
+- Clicking a hex paints it with the active palette entry's
+  colour; the change is visible on the next frame.
+- Click-and-drag paints a line of hexes.
+- Painting the "sea" entry erases (visibly removes painted
+  hexes; sparse storage shrinks).
+- The test script passes.
+- E1 + E2 still pass.
+
+### Phase E4 — Save / load
+
+**Files added/modified**
+
+| File | Purpose |
+|---|---|
+| `src/save.loft` | JSON serialisation of `painted` + camera state. |
+| `src/main.loft` | Save on `Ctrl+S`; load on startup if a save exists. |
+
+**Save format** — `saves/last.json` (or a path passed on CLI):
+
+```json
+{
+  "version": 1,
+  "camera": { "q": 0, "r": 0, "zoom": 1 },
+  "painted": [
+    { "q": 0, "r": 0, "type": "grass" },
+    { "q": 1, "r": 0, "type": "grass" },
+    { "q": 2, "r": 0, "type": "wall" }
+  ]
+}
+```
+
+`type` is the palette entry's **name** (not index) — robust to
+palette reordering.
+
+**Key functions**
+
+- `fn save_map(world: &hash<u8[integer]>, c: &Camera, path: text)`
+  — write JSON; one entry per painted hex; entries sorted by
+  (q,r) for deterministic output.
+- `fn load_map(path: text, palette: &vector<GroundType>) -> (hash<u8[integer]>, Camera)`
+  — read JSON; map each entry's `type` name back to its
+  palette index; assert all names exist in the palette.
+
+**Test — `tests/scripts/01_e4_saveload.loft`**
+
+```loft
+let palette = load_palette("examples/palette.json")
+
+// Build a small world
+let w = hash<u8[integer]>::new()
+paint(&mut w, 0, 0, 5)   // grass
+paint(&mut w, 1, 0, 9)   // wall
+paint(&mut w, 2, 0, 9)   // wall
+
+let c = Camera { pos: Hex { q: 0, r: 0 }, zoom: 1 }
+
+save_map(&w, &c, "/tmp/dryopea_test.json")
+
+let (w2, c2) = load_map("/tmp/dryopea_test.json", &palette)
+assert w2.len() == 3
+assert lookup(&w2, 0, 0) == 5
+assert lookup(&w2, 1, 0) == 9
+assert lookup(&w2, 2, 0) == 9
+assert c2.pos.q == 0 && c2.pos.r == 0
+```
+
+**Pass criteria**
+
+- Painting + saving + restarting + loading reproduces the
+  same painted state exactly.
+- The save file is human-readable JSON; entries can be
+  edited by hand and reloaded.
+- `version` field present for future format-evolution
+  handling.
+- The test script passes.
+- E1-E3 still pass.
+
+## Integration smoke test
+
+After all four phases:
+
+`tests/scripts/01_integration.loft`:
+
+```loft
+// Cold-start cycle: load palette + last save, paint, save, exit.
+let palette = load_palette("examples/palette.json")
+let (mut world, mut cam) = load_map_or_empty("saves/last.json", &palette)
+
+paint(&mut world, 5, 5, 6)   // hill
+save_map(&world, &cam, "saves/last.json")
+
+// Re-load to confirm persistence
+let (w2, c2) = load_map("saves/last.json", &palette)
+assert lookup(&w2, 5, 5) == 6
+```
+
+A human playtest after the script passes:
+
+1. Launch the editor; see endless sea.
+2. Press 6 (grass), click a hex — it turns green.
+3. Press 9 (wall), click-and-drag a line — red outlines
+   appear (E3 doesn't have construction-state visuals; outlines
+   are immediate solid fills in editor mode).
+4. Ctrl-S, close, re-launch — same view restored.
+
+If all of that works, plan 01 is **done** for the editor's
+contribution to plan 05's validation scenario.
+
 ### E2 — named picker UI sketch
 
 The palette UI is a **vertical list of named swatches**, one
