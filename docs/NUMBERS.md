@@ -3,12 +3,23 @@ Copyright (c) 2026 Jurjen Stellingwerff
 SPDX-License-Identifier: LGPL-3.0-or-later
 -->
 
-# Numbers — first-pass values
+# Numbers — first-pass tunable values
 
 A coherent placeholder set for every numerical parameter
 referenced in the design.  **Verify and refine through actual
 gameplay** — these values are meant to *exist together
-sensibly*, not to be balanced.  Adjust freely.
+sensibly*, not to be balanced.
+
+> **All values in this file are TUNABLE PARAMETERS.**
+> Treat every number, radius, count, duration, multiplier
+> below as a knob that can be adjusted in playtest without
+> changing the design.  The design depends on the *shape*
+> of each rule, not on the *value*.  When the engine is
+> live, the entire numerical set should live in a runtime
+> config (`examples/numbers.json` or similar) so play
+> sessions can tune without rebuilds.  This document is
+> the rationale layer; the loadable config is the
+> runtime knob.
 
 The set targets a single-base session of **~15-25 minutes**:
 ~45 s pre-wave commitment → 7 waves (15 s inter-wave) → ~5-6 min
@@ -124,8 +135,11 @@ wave phase → free scramble or earlier exit.
 | Scrambler bubble radius | **25 hexes** (~33 m) | Approach→engage handoff = this boundary |
 | Launch countdown duration | **6 s** | Player must stay inside to launch; exit cancels |
 | Launch-cancel fade | **0.3 s** | Pulse fades to dark on opening exit |
-| Core-landing area radius | **3 hexes** around player's pick | Random within; land hexes only |
-| Starter-tower landing radius | **5-10 hexes** from core | Random within; visible from core |
+| `core_landing_area_radius` | **3 hexes** around player's pick | The random-within zone the rocket actually touches down inside.  Tunable.  Larger = more variance from the pick; smaller = pick is closer to literal. |
+| `landing_pick_edge_buffer` | **5 hexes** from playable-area boundary | Closest the player's pick can be to the map edge.  Tunable. |
+| `obstruction_clearance_buffer` | **2 hexes** ring around the 7-hex footprint | Must be obstruction-free.  Tunable. |
+| `close_spawn_disable_radius` | **10 hexes** from landed core | Spawn markers within this radius are silenced for the mission.  Tunable — larger = more sympathetic landings (more safe zone); smaller = even nearby markers stay active. |
+| `starter_tower_landing_radius` | **5-10 hexes** from core | Where the separate lander touches down.  Tunable. |
 | NPC-order top colour cycle | 30 % red, 40 % amber, 25 % green, 5 % white-flash | Interpolates smoothly across 20 s |
 
 ## Wave system

@@ -496,7 +496,7 @@ verbatim below** with three adjustments:
     nearest flat shoulder.  The player's pick is a *target
     region*; the rocket commits to a *valid landing within
     that region*.
-  - **Random hex within ~3-hex radius around the pick** —
+  - **Random hex within `core_landing_area_radius` (default 3 hex) around the pick** —
     same "area + random within" shape as before; the outward
     search expands further only if no valid hex exists in
     the immediate area.
