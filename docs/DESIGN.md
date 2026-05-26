@@ -74,6 +74,51 @@ verbatim below** with three adjustments:
   (via entrance / broken wall) → the nearest wall hex when no
   path through exists.  In the absence of a blocker, the
   player and NPCs are otherwise ignored.
+- **2026-05-26 — Input philosophy: movement / position triggers,
+  not key presses.**  The player should *feel* they activated
+  something through their motion, not by typing.  Most actions
+  are **bumping into things** (drive into the core =
+  force-launch; drive over loot = pick up; drive to a tower =
+  pickup / deposit / repair / boost) or **leaving trails**
+  (driving with wall-paint active marks the trail as walls for
+  helpers to construct).  Key presses are reserved for *mode
+  toggles* (paint-walls on/off, palette index) and the rare
+  intent that has no spatial form.  This holds across the whole
+  game; design new mechanics in spatial terms first, fall back
+  to keys only when no position-trigger fits.
+- **2026-05-26 — Wave-start trigger: walls-built threshold.**
+  Enemies activate (wave 1 begins) once the player has
+  **built N walls** (the exact N TBD; tuned with the rest of
+  the numbers).  The act of laying perimeter IS the commitment:
+  the player marks the ground they intend to defend, and the
+  enemies arrive in response.  No "Begin Wave" key; no fixed
+  pre-wave timer.  Pacing is set by how fast the player chooses
+  to commit — a cautious player builds slowly and the wave is
+  delayed; an aggressive player builds fast and triggers the
+  fight early.  Aligns with the movement-trigger philosophy
+  above.
+- **2026-05-26 — Numbers are TBD (intentionally).**  Every
+  numerical value mentioned in this design — tower fire rate,
+  shot budget, damage, range, HP, movement speeds, starting
+  budget, build times, the wall-count wave-start threshold N,
+  inter-wave delay seconds, scramble-inventory effect size,
+  decay rates — is a placeholder.  A coherent set of starting
+  numbers will be picked together (not per-mechanic in
+  isolation) and refined through playtest.  This Updates list
+  records *shapes*, not *values*.
+- **2026-05-26 — Free starter tower via a separate lander.**
+  Every base starts with **one free tower**, delivered by its
+  own **separate lander** (visually distinct from the core's
+  rocket, smaller) that touches down **close to the core** at a
+  position the *player does not choose* — random within a small
+  radius of the core's footprint.  Same "area + random within"
+  shape as the core's landing, applied to the starter tower's
+  drop.  Resolves the wave-1 deadlock: the player cannot fight,
+  but the starter tower is ready to fire as soon as it lands;
+  the player's starting budget funds any *additional* towers /
+  helpers they want to order before wave 1.  Future expansion:
+  more separate landers can deliver supplies / helpers /
+  additional towers, mirroring the planet-scale supply theme.
 - **2026-05-26 — Helper roster: 2 starting, 6 max.**  When the
   core lands, **2 NPC helpers** are inside the rocket and
   emerge to start work.  The player can later add more (via
