@@ -210,6 +210,26 @@ verbatim below** with three adjustments:
 
   Helper-roster cap of 6 remains in force; NPC orders that
   would exceed the cap fail at the press.
+- **2026-05-26 — Helpers are persistent characters; damage
+  needs retrieval, not auto-respawn; stranded helpers are
+  future rescue targets.**  Each helper is an **identity**
+  (eventually a name + skill profile; for validation, just an
+  opaque persistent id).  When a helper vehicle is too
+  damaged, it **wrecks** and the helper inside is *downed
+  but alive*.  The player or another helper retrieves them by
+  driving to the wreck + pickup → carry them back to the core
+  (same single-carry-slot idiom).  After recovery time at the
+  core they rejoin the roster.  **No automatic respawn** —
+  retrieval is the only way back.  Helpers not retrieved by
+  force-launch are **stranded** at their wreck hex on the
+  planet; they persist as **rescue-quest targets** for the
+  same player on a later run OR (multiplayer) for a different
+  player who lands nearby.  This integrates with the
+  abandoned-bases mechanic in § Future expansion: stranded
+  helpers are one of the things you didn't manage to bring
+  along.  For validation, stranded-state is data only; the
+  rescue-quest UI / planet integration is future.  Replaces
+  the earlier "corpse + auto-respawn" sketch.
 - **2026-05-26 — Helper roster: 2 starting, 6 max.**  When the
   core lands, **2 NPC helpers** are inside the rocket and
   emerge to start work.  The player can later add more (via

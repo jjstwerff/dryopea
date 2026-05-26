@@ -294,43 +294,80 @@ core with a gold cube floating above it is visibly carrying
 loot home; one en route to a build site with nothing above is
 visibly going to work.
 
-**Damage → corpse-as-loot → automatic respawn.**
+**Helpers are identities — damaged vehicles need retrieval, not
+disposal.**
 
-Helpers do take damage in the same edge cases as the player
-vehicle (blocking an enemy's path to the core; phase-3 boss
-retaliation when a tower they were repairing is being attacked,
-etc.).  When a helper is *too damaged*:
+Each helper has a **persistent identity** (eventually a name +
+a small skill profile; for validation, just an opaque id).
+The model below replaces any earlier "corpse + auto-respawn"
+sketch: helpers are *characters*, not interchangeable units.
 
-- The helper **drops as a corpse** at their hex.  The corpse
-  is **treated as a loot drop** — other idle helpers can pick
-  it up and carry it back to the core for salvage points,
-  exactly the same flow as enemy-loot pickup.
-- The dead helper is **temporarily removed from the active
-  roster**; they enter a **recovery state** offscreen.
-- After a recovery timer (TBD), they **automatically respawn**
-  — a fresh helper lander touches down at the core's lift-off
-  face, and the roster ticks back up.  No player action
-  required; the cap of 6 keeps the roster maintained.
+Damage flow:
 
-**Mid-task state when a helper dies.**
+- Helpers take damage in the same edge cases as the player
+  vehicle (blocking an enemy's path to the core; phase-3
+  consequences).  Each hit chips at the helper *vehicle's* HP,
+  not at the helper inside.
+- When a helper vehicle is **too damaged** to operate, the
+  vehicle **wrecks at its hex**.  The helper inside is
+  **downed but alive** — a *character* still tied to that hex,
+  waiting to be retrieved.
+- The wrecked vehicle is visible as a distinct **damaged
+  silver-grey cuboid** at the hex — recognisably a former
+  helper, not a fresh corpse.  Mid-task work pauses (any
+  partial wall / tower stays at its current rising height;
+  any carried loot drops separately at the same hex).
 
-- **Carrying loot** — the carried loot drops *alongside* the
-  helper-corpse at the same hex (two distinct loot items;
-  another helper can take either).
-- **Mid-construction** — the partial wall/tower stays at its
-  current height (the rising-from-ground state freezes).
-  Another idle helper will pick up the order and resume; the
-  structure continues rising from where it stopped.
-- **Carrying a tower-top or beacon** — (not standard helper
-  behaviour today, but if it ever becomes one) the carried
-  object falls to the helper's hex, retains its identity, and
-  is picked up by the player or another helper from there.
+**Retrieval.**
 
-Net: helper death is **costly but never permanent**.  The
-player loses work time (recovery delay + lost mid-task
-progress + any loot the corpse couldn't deliver) but the
-roster always recovers to the cap on its own.  Fits the
-no-run-loss philosophy applied to subordinates.
+The player or another helper can rescue the downed helper:
+
+- Drive to the wreck hex, press the pickup key → the downed
+  helper becomes a **carried object** (silver-grey cuboid,
+  smaller scale, floating above the carrier — same idiom as
+  any other carry).
+- Deliver to the core (drive to it).  The helper goes into a
+  **recovery state** for some time; after recovery they
+  **rejoin the active roster** at the core's lift-off face.
+- If the player launches before retrieving, the downed
+  helper is **stranded** (see below).
+
+**Stranding — future rescue quests.**
+
+A downed helper not retrieved by force-launch **stays on the
+planet** at their wreck hex.  They are *not* lost permanently;
+they become a **rescue-quest target** on future missions —
+the same player can drive to that base on a later run to
+retrieve them, OR (in multiplayer) another player who lands
+near that base can rescue them.  Same shape as the
+"persistent abandoned bases" mechanic in DESIGN.md
+§ Future expansion; the stranded helper is one of the
+things you didn't manage to bring along.
+
+For validation: stranded helpers are a *data* state — the
+rescue-quest UI / planet-map integration is deferred, but the
+identity must persist across launches so the future rescue
+mechanic has something to point at.
+
+**Mid-task state when a helper goes down.**
+
+- **Carrying loot** — the carried loot drops *next to* the
+  wreck at the same hex (separate items; another helper can
+  take the loot independently of retrieving the wrecked
+  helper).
+- **Mid-construction** — the partial structure freezes at its
+  current rising-from-ground height; another idle helper
+  picks up the order and resumes.
+- **Carrying a tower-top or beacon** — the object falls to
+  the helper's hex with its identity intact, pickupable by
+  the player or another helper.
+
+Net: helper "death" is **costly but never permanent**.  The
+roster may shrink mid-run (no auto-respawn — retrieval is the
+mechanism), and bad runs leave stranded characters on the
+planet to rescue later, but no helper is ever truly lost.
+Fits the no-run-loss philosophy applied to subordinates while
+giving helpers real identity weight.
 
 ### Tower beacon — carry object for placing new towers
 
