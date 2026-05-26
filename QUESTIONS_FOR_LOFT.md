@@ -149,6 +149,48 @@ fix / feature, move it to **Resolved**.
 
 *(none yet)*
 
+## Investigated — no bug
+
+### Vector-in-struct pass-by-value (false alarm)
+
+Observed during E2 picker work: passing a `Picker { palette,
+active }` by value to `render_picker(p: Picker, ...)` produced
+`len(p.palette) == 0` inside the callee, even though the
+caller's `len(picker.palette) == 11`.
+
+Filed as a suspected fourth bug; reproducer was constructed
+and **the bug did not reproduce**.  Plain `vector<integer>`,
+`vector<Struct>`, and "inline call inside struct ctor"
+patterns all behave correctly: caller and callee see the same
+elements.
+
+```loft
+struct Item { name: text, n: integer }
+struct Wrap { items: vector<Item> }
+
+fn make_wrap() -> Wrap {
+    Wrap { items: [Item { name: "a", n: 1 }, Item { name: "b", n: 2 }] }
+}
+fn consume(w: Wrap) {
+    println("consume: items.len = {len(w.items)}");  // → 2 (correct)
+}
+```
+
+**Root cause:** the apparent "empty vector inside the struct"
+was the **JSON-cast-with-extras bug** (filed above) hiding a
+load that was actually returning zero entries from the start.
+Once GroundType declared all four extra optional fields the
+JSON has (`variant`, `color_status`, `height_override`,
+`end_drivable`), the cast started returning 11 entries, the
+struct correctly carried them across the value-pass, and the
+picker rendered.
+
+Notable: bugs (1) and (2) (silent JSON-cast empty + test runner
+not failing on assert) were **compound** — they masked each
+other for ~half an hour of debugging, producing a green test
+suite while every assertion was running against a 0-length
+palette.
+
 ## Resolved
 
 *(none yet)*

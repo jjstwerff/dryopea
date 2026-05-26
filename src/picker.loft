@@ -42,29 +42,16 @@ pub const PICKER_HL_COLOR:  integer = 0xffffff;   // white highlight
 
 // Draw the picker into the canvas at (x0, y0).
 //
-// Takes the palette + active index DIRECTLY (not a Picker
-// struct).  Workaround: passing a struct that contains a vector
-// by value into a function appears to lose the vector contents
-// in loft (the receiver sees len = 0); passing the vector itself
-// works fine.  Callers can call `render_picker(cv, p.palette,
-// p.active, x, y)`.
-//
 // Layout: vertical column of swatches starting at (x0, y0).  Each
 // row is PICKER_SWATCH_PX tall + PICKER_GAP_PX gap.  The active
 // row carries a white border to identify it at a glance.
-pub fn render_picker(
-    cv:      Canvas,
-    palette: vector<GroundType>,
-    active:  integer,
-    x0:      integer,
-    y0:      integer,
-) {
-    for rp_i in 0..len(palette) {
-        rp_entry = palette[rp_i];
+pub fn render_picker(cv: Canvas, p: Picker, x0: integer, y0: integer) {
+    for rp_i in 0..len(p.palette) {
+        rp_entry = p.palette[rp_i];
         rp_y = y0 + rp_i * (PICKER_SWATCH_PX + PICKER_GAP_PX);
         rp_col = parse_hex_color(rp_entry.color);
         cv.fill_rect(x0, rp_y, PICKER_SWATCH_PX, PICKER_SWATCH_PX, rp_col);
-        if rp_i == active {
+        if rp_i == p.active {
             cv.draw_rect(x0 - 1, rp_y - 1,
                          PICKER_SWATCH_PX + 2, PICKER_SWATCH_PX + 2,
                          PICKER_HL_COLOR);

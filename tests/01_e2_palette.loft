@@ -161,7 +161,7 @@ fn test_render_picker_active_sea() {
     tp1_cam = camera_default();
     tp1_w = painted_empty();
     tp1_cv = render_to_canvas(tp1_cam, tp1_w, E2_W, E2_H, E2_PPM);
-    render_picker(tp1_cv, tp1_p.palette, tp1_p.active, 4, 4);
+    render_picker(tp1_cv, tp1_p, 4, 4);
     assert_golden(tp1_cv, "01_e2_picker_active_sea");
 }
 
@@ -171,7 +171,7 @@ fn test_render_picker_active_grass() {
     tp2_cam = camera_default();
     tp2_w = painted_empty();
     tp2_cv = render_to_canvas(tp2_cam, tp2_w, E2_W, E2_H, E2_PPM);
-    render_picker(tp2_cv, tp2_p.palette, tp2_p.active, 4, 4);
+    render_picker(tp2_cv, tp2_p, 4, 4);
     assert_golden(tp2_cv, "01_e2_picker_active_grass");
 }
 
@@ -181,7 +181,7 @@ fn test_render_picker_active_wall_high() {
     tp3_cam = camera_default();
     tp3_w = painted_empty();
     tp3_cv = render_to_canvas(tp3_cam, tp3_w, E2_W, E2_H, E2_PPM);
-    render_picker(tp3_cv, tp3_p.palette, tp3_p.active, 4, 4);
+    render_picker(tp3_cv, tp3_p, 4, 4);
     assert_golden(tp3_cv, "01_e2_picker_active_wall_high");
 }
 
@@ -198,6 +198,6 @@ fn test_render_picker_over_painted_world() {
     paint(tp4_w, 2, 1, 9 as u8);     // wall lower-right
 
     tp4_cv = render_to_canvas(tp4_cam, tp4_w, E2_W, E2_H, E2_PPM);
-    render_picker(tp4_cv, tp4_p.palette, tp4_p.active, 4, 4);
+    render_picker(tp4_cv, tp4_p, 4, 4);
     assert_golden(tp4_cv, "01_e2_picker_over_painted");
 }
