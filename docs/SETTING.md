@@ -51,9 +51,40 @@ that earlier arrival shapes everything that came after.
   the factions **use hacked robots to wage war on each
   other.**  The resulting chaos — robots fighting robots,
   some on no one's behalf — is what the outside cordoning
-  authority sees as "haywire AI."  The truth is messier: the
-  AI is being driven, just by people who are not officially
-  acknowledged to exist.
+  authority sees as "haywire AI."
+
+**The truth: there was never any spontaneous corruption.**
+
+The AI in those robots **did not break on its own.**  Every
+appearance of "haywire" behaviour traces back to **the
+underground humans hacking the robots**, then turning them
+against each other in faction warfare.  There is no
+self-corrupting AI here, no contagion source, no Pandora's
+box of broken machine minds.  The robots were *competent
+machines, redirected by competent people.*
+
+**The outside government does not know this.**  The cordoning
+authority believes the AI broke spontaneously and might spread.
+That premise is **false**.  The cordon is real — and arguably
+still useful, because robots ARE attacking and the planet IS
+dangerous — but it is based on a misread of the cause.
+
+What this means for the game:
+
+- The "AI contagion" fear is **wrong**.  The government has
+  built containment around a phantom risk.
+- The **practical** danger isn't fictional — the planet IS a
+  shooting gallery, just because of *humans pulling
+  triggers*, not because of *AI gone mad*.
+- A player who discovers the truth holds **leverage** — it's
+  a future-content lever (whistle-blow, negotiate with the
+  cordon, deal with a faction, expose the government's
+  paranoia).
+- The "permits" + "limited-time sorties" structure could even
+  be the government's way of **probing for what's actually
+  down there** without admitting the question — sending
+  expendable operators in to come back with intel they then
+  reframe as "samples" or "salvage."
 
 This history reframes the situation:
 
@@ -75,7 +106,11 @@ This history reframes the situation:
   the planet only by being there.  This is future-content
   territory but the door is open.
 
-## The premise — a quarantined colonization run
+## The premise — a quarantined colonization run (the cover story)
+
+*This section reads the situation as the outside cordoning
+authority understands it.  The actual history (see § History
+above) is different and known to almost no one.*
 
 Before the events of the game, robots were dispatched to
 **prepare the planet for colonization** — a standard
@@ -83,12 +118,14 @@ terraforming-and-construction package.  Mining, basic
 infrastructure, atmospheric work, the kind of long unattended
 labour that automated swarms do well.
 
-**Something went wrong with their AI.**  The robots didn't
-just fail; they went **haywire** — they kept *running* their
-program, but in some corrupted form.  Mines, factories, supply
-lines, defensive structures all still exist on the planet's
-surface, but they answer to a will that is no longer the one
-that sent them.
+**Something went wrong with their AI.**  From the outside, the
+robots didn't just fail; they went **haywire** — they kept
+*running* their program, but in some corrupted form.  Mines,
+factories, supply lines, defensive structures all still exist
+on the planet's surface, but they answer to a will that is no
+longer the one that sent them.  *(The unacknowledged truth:
+that "will" is the underground human factions, not a
+spontaneous AI break.)*
 
 ## The quarantine — the military cordon
 
@@ -133,12 +170,17 @@ This frames the *entire game loop*:
   permit window, lose too much, and the player is
   effectively trapped until the next base-and-rocket pairing
   can be reached.
-- **Robots are the enemy, but they are not malicious.**
-  They are *broken machines doing the job they were given,
-  the wrong way.*  Their factories still produce; their
-  supply lines still flow.  The player's defensive towers,
-  their helper vehicles, their core rocket — these are
-  scavenged or improvised on the same industrial substrate.
+- **Robots are the enemy, but they are not malicious *in
+  themselves*.**  They are competent machines redirected by
+  hidden underground humans (see § History above).  From the
+  player's surface-level view they read as "broken machines
+  doing the job they were given, the wrong way" — but the
+  *true* explanation is that they are being driven by
+  someone whose existence is not officially acknowledged.
+  Their factories still produce; their supply lines still
+  flow.  The player's defensive towers, their helper
+  vehicles, their core rocket — these are scavenged or
+  improvised on the same industrial substrate.
 
 ## The other enemy — insects + sap
 
