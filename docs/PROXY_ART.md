@@ -89,6 +89,95 @@ sits in the game's render path; final art replaces it 1:1 (same
 hex footprint, same pivot, same facing convention).  No
 gameplay-side changes when art arrives.
 
+### Boss enemy — 2×2 footprint (phase 3, deferred)
+
+A larger enemy class that forces structural play because of its
+**size**, not its damage.  Out of scope for the validation tier;
+captured here so the data model + entrance topology leave room.
+
+| Property | Value |
+|---|---|
+| Shape | Cuboid (same primitive as the regular enemy proxy) |
+| Length (along facing axis) | **~2.7 m** — same length as a regular enemy |
+| Width (across facing axis) | **~2.7 m** — **DOUBLE the regular's ~1.3 m**, occupying 2 hexes wide instead of <1 |
+| Footprint | **2 × 2 hexes** (vs the regular's <2×1) |
+| Height | ~1.5 m (slightly taller than regular's 1.0 m, reinforces the "bigger threat" silhouette) |
+| Body colour | placeholder magenta-purple `#a040c0` — same as regular enemies for now; final art differentiates |
+| Front face colour | `#000000` black (same facing convention) |
+| HP | meaningfully higher than a regular enemy (TBD; numbers tier) |
+
+**Why 2×2 forces structural play.**
+
+- **A 2×2 footprint cannot fit through a 1-hex gap.**  The
+  entrance topology in GROUND_TYPES.md § Entrances designs
+  three gap widths (1-hex, 2-hex, 3-hex+).  Regular enemies
+  squeeze through 1-hex gaps comfortably; bosses **physically
+  cannot** — they have to either break the wall or use a
+  2-hex-wide opening (the "main gate" entrance).
+- **Forces destructive behaviour.**  A boss that can't path
+  through any gap (only 1-hex entrances exist, or the player
+  closed everything) falls back to **breaking walls** — the
+  same nibble-fallback regular enemies use when no path exists,
+  but bosses are vastly more effective at it (higher HP +
+  damage).  Building a wall that stops infantry but not the
+  boss is a recognisable tactical hole.
+- **Validates the entrance design.**  If 1-hex gaps don't
+  exist (or 2-hex gaps are heavily defended), the boss becomes
+  the wave's structural breaker.  This is exactly what DESIGN.md
+  § Systems #5 describes ("a boss that breaks walls → dirty
+  re-mesh + path re-route").
+
+**Phase 3 — leader commands.**
+
+A boss has a per-boss order to **guard it** that it can issue
+to nearby regular enemies — they cluster near the boss instead
+of pathing solo to the core.  Regular enemies don't normally
+guard anyone; the command is a boss-only behaviour.  This adds
+formation play around bosses and is **deferred to phase 3**
+(after the validation + first-pass content are proven).
+
+**Boss retaliation — localised, specific, command-driven.**
+
+The boss itself **never attacks towers** — it stays focused on
+the core.  But when a tower fires on the boss, the boss
+**communicates the threat to regular enemies in its immediate
+vicinity** (direct communication, short range — the boss has
+to be effectively next to those regulars).  Only those
+directly-nearby regulars switch to attacking the offending
+tower; everyone else carries on with default behaviour
+(core / walls when blocked / blockers).
+
+Combined rule:
+
+- Regular enemies *normally* ignore towers entirely.
+- A tower hitting a boss **marks** the tower as a target.
+- The boss's directly-nearby regulars (within a short
+  communication radius of the boss) start pathing toward
+  marked towers as a higher-priority target than the core.
+- Regulars *outside* that radius — even other escorts of the
+  same boss — don't get the order and stay on the default
+  path.
+
+Two tactical consequences for the player:
+
+- **Killing the boss's nearby escorts cuts the chain.**  A
+  boss with no regulars next to it can't deliver the "attack
+  that tower" order; isolating the boss is itself a tower-
+  defence move.
+- **Choose which towers fire on the boss.**  Towers that don't
+  shoot the boss stay unmarked — so the player can salvage
+  the tops of certain towers (silencing them) before the boss
+  enters range to preserve them, and let the boss soak fire
+  only from the towers they're willing to lose.
+
+Phase 3 (ships with the boss enemy).  Until then, towers
+cannot be damaged by enemies at all.
+
+**Lifetime.**  Retire when real boss art lands.  The 2×2
+footprint + the wall-breaking fallback + the "leader command"
+phase-3 behaviour are gameplay invariants; final art preserves
+them.
+
 ### NPC helper — grey version of the player
 
 The autonomous construction + salvage unit (DESIGN.md § Systems

@@ -157,6 +157,27 @@ verbatim below** with three adjustments:
   helpers they want to order before wave 1.  Future expansion:
   more separate landers can deliver supplies / helpers /
   additional towers, mirroring the planet-scale supply theme.
+- **2026-05-26 — Boss enemies: 2×2 footprint forces structural
+  play; phase-3 leader commands; tower-attack retaliation.**
+  Boss-class enemies occupy a **2×2-hex footprint** (twice the
+  width of a regular enemy) and therefore **cannot path
+  through 1-hex entrance gaps** — they fit only through 2-hex+
+  openings or by **breaking walls** to make their own.  Wall
+  topology becomes a *tactical* lever against bosses: a
+  perimeter that funnels regulars through 1-hex gaps still
+  leaks bosses through whatever is breakable or 2-wide.
+  Bosses have higher HP, and (phase 3) two unique behaviours:
+  ordering nearby regular enemies to **guard** them (formation
+  play); **localised tower-attack retaliation** — a tower that
+  fires on the boss is *marked*, and regular enemies in the
+  boss's immediate vicinity (short communication radius)
+  re-target the marked tower.  The boss itself never attacks
+  towers; it stays focused on the core.  Player options:
+  isolate the boss from its escorts to cut the order chain;
+  salvage tower tops to silence specific towers and keep them
+  unmarked.  All of this is **deferred to phase 3** — captured
+  now so entrance authoring + the marker / enemy / tower data
+  models leave room.
 - **2026-05-26 — Core has six sides: three functional, three
   plain.**  The core building is rendered as a hexagonal prism
   (matching its 7-hex footprint) with 6 distinct flat faces.
