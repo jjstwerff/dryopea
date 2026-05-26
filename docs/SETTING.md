@@ -571,6 +571,47 @@ Tone notes:
   orbital — patched plating, scuffed floors, no fanfare.  The
   cooperative pays rent; they don't own the place.
 
+### Future UX — the planet rotating below
+
+The long-term replacement for the abstract map-selection menu
+is a **diegetic view of the planet itself**, seen from the
+station's observation deck:
+
+- **The planet rotates below**, slowly and visibly, as the
+  station orbits.  Day / night terminator moves across the
+  surface.
+- **Information is projected onto the planet's surface** —
+  overlay markers / outlines / shading for: previous landing
+  sites, abandoned bases (the rotating planet shows them
+  fading from green-active to red-encroached over time),
+  permitted contract regions, intel hotspots from briefings,
+  faction-territory hints if discovered through scouting,
+  potentially weather / atmospheric storms.
+- **Players click directly on the rotating planet** to pick a
+  sortie destination.  The selected hex becomes the landing
+  target; the rocket departs from the station's dock and
+  descends to that exact spot (per the area-pick + random-
+  within landing rule).
+- No abstract menu — the *planet itself* is the selection UI.
+  Diegetic principle applied to between-mission flow.
+
+This is **future content** — not for the validation tier
+(which uses plan 04's simple list-based map selection).  It
+ships when:
+
+- Multi-mission run state is in (so there's persistent surface
+  state to *show* on the planet — abandoned bases, stranded
+  helpers, scouted-but-not-collected gems / sap trees, etc.).
+- The planet-scale meta from § Future expansion is being
+  implemented.
+- The hub UI has had at least one iteration.
+
+The visual + the click-target-as-landing-spot are a natural
+fit for loft's `lib/graphics` and the existing 3rd-person
+camera tooling (the @PLAN36 audience-demo projector is a
+reference point for spherical rotating geometry under a
+camera).
+
 ## The player — small mining co-op, field-head, hired to investigate
 
 Most of the lore above is **backdrop** — the world the player
