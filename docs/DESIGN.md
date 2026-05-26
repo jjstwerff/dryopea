@@ -237,6 +237,24 @@ verbatim below** with three adjustments:
   life-prolonging medicine — the reason the permits exist);
   carrying sap activates the insect chase.  Full lore in
   [`SETTING.md`](SETTING.md) § The other enemy.
+- **2026-05-26 — The cordon is a naval blockade: two
+  battleships; the real concern is robot-built escape
+  rockets.**  The military maintains **two large battleships
+  in orbit** around the planet — visible silhouettes from the
+  ground, atmospheric backdrop, no day-to-day surface
+  intervention.  They will **shoot anything attempting orbital
+  exit without their permit**, no warning.  The *cover story*
+  for the cordon is AI contagion fear; the *real operational
+  reason* is that **the underground-faction-controlled robots
+  have been ordered to build escape rockets** — the military's
+  job is to prevent those rockets from leaving with what they
+  carry (hacked robots, humans, stolen tech).  Permits exist
+  because the military needs a controlled flow of operators
+  (intel, salvage, contracted work) and player sorties fit
+  that flow.  Three concentric truths: public AI-contagion
+  story, military naval-blockade reality, hidden-faction
+  escape-rocket fact (almost no one knows the third).  Full
+  expansion in [`SETTING.md`](SETTING.md) § The quarantine.
 - **2026-05-26 — Planet history: prior humans, mountain caves,
   underground civilization, faction wars.**  Long before the
   colonization robots, an **ancient landing ship** put survivors

@@ -127,26 +127,63 @@ longer the one that sent them.  *(The unacknowledged truth:
 that "will" is the underground human factions, not a
 spontaneous AI break.)*
 
-## The quarantine — the military cordon
+## The quarantine — the military cordon (two battleships)
 
-The government's response is *containment*:
+The government's response is *containment* — and the
+practical enforcement is **two large military battleships
+stationed in orbit around the planet**.
 
-- The **military has blocked the planet** for ordinary entry.
-  Approaches are turned away; orbital insertions without
-  clearance are intercepted.
-- Exit is *mostly* blocked too.  A ship that makes it back to
-  orbit faces intense scrutiny.  Some craft slip out — the
-  small, hardened, single-mission rockets the player rides
-  are part of that exception — but the cordon is real and the
-  margin is narrow.
-- **The reason for the cordon is AI contagion, not the planet
-  itself.**  The government is frightened that the haywire
-  robots' AI will **spread to their own robots in orbit** —
-  the construction drones servicing satellites, the logistics
-  bots in stations, the maintenance swarms throughout the
-  near-system.  A single carrier vessel returning with a
-  compromised system could seed years of clean-up.  Better
-  to seal the source.
+- **Two battleships, permanent presence.**  Both warships
+  ring the planet.  Their visible silhouettes from the
+  surface are environmental atmosphere (no cutscenes — the
+  sky just *has* them, slowly traversing the upper view).
+- **Day-to-day, the military barely intervenes on the
+  surface.**  They are not patrolling, not raiding bases, not
+  hunting factions.  They simply *watch*.  Surface activity
+  unfolds without their participation; the planet feels
+  abandoned at ground level even though it isn't.
+- **They WILL shoot anything that leaves the planet without
+  their knowledge or permit.**  This is the cordon's actual
+  teeth: orbital exit is the chokepoint.  Take off without
+  authorisation, and a battleship's weapons fire.  No
+  warning, no negotiation — the military's rule is binary:
+  permit on file = pass; permit missing = destroyed.
+- **The PRIMARY reason for that strict orbital posture: the
+  robots have been ordered to build their own rockets.**
+  Under their new underground-faction masters (see § History
+  above), the hacked robots have repurposed colonization
+  fabrication infrastructure to build **escape vehicles**.
+  The military's concern is not abstract "spread of AI" — it
+  is concrete: hijacked rockets attempting unauthorized
+  ascent with hacked robots and/or underground humans
+  aboard, carrying whatever they can take with them.
+- **Entry is also blocked**, but it is the EXIT control that
+  matters most.  Approaches without clearance are turned
+  away; the rare permits issued allow controlled landings.
+- **The official "AI contagion" framing remains the public
+  cover story.**  The military's true operational focus —
+  no rocket leaves without permission — is closer to a *naval
+  blockade* than a *biological quarantine*, but the
+  contagion-narrative is what the rest of the government and
+  public outside the planet believe.
+
+So the cordon is **three concentric truths**:
+
+1. **Outside public:** "There's a haywire-AI problem; we have
+   quarantined the planet."  Plausible, accepted, simple.
+2. **Military operational reality:** "Two battleships keep
+   the orbital boundary closed.  Nothing leaves without our
+   permit.  Whatever the planet is doing on the surface is
+   theirs to do."
+3. **Hidden truth (almost no one knows):** "Underground
+   humans run hacked robots and are building escape rockets.
+   The cordon exists to keep them from leaving with what
+   they have."
+
+Permits exist *because* the military needs operators going
+in and out — for intel, salvage, contracted work, the
+visible economy of "a quarantined planet."  Player operators
+are part of that controlled flow.
 
 This frames the *entire game loop*:
 
