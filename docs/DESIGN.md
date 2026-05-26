@@ -236,6 +236,33 @@ verbatim below** with three adjustments:
   terrain).  Editor (plan 01) therefore does NOT paint a core
   marker — the core's location is a runtime decision, not
   authored content.
+- **2026-05-26 — Carry-over scope: points only for now; richer
+  later.**  The validation-tier scramble carry-over is the
+  player's **unspent points** (added to the next base's
+  starting budget per the budget rule above).  Tower-tops
+  deposited in the core travel along the *mechanic* (they are
+  collected, parked at the core, survive force-launch) but
+  their **effect on the next base is deliberately left open**
+  for now — the validation scenario doesn't depend on it.
+  When the carry-over economy expands, it will gain:
+
+  - **Multiple material / point types** — the game's economy
+    diversifies beyond a single point pool; different
+    materials represent different resources (TBD; no taxonomy
+    yet).
+  - **Orbital launch banking — a *secondary* launch outside
+    the scramble phase.**  The player will be able to send
+    cargo pods (materials / points) to orbit *during play*,
+    instantly converting them into safely-banked resources.
+    Banked materials persist and are usable later (next base,
+    or the planet-scale meta).  Distinct from the rocket-and-
+    everything scramble: the scramble takes the *player +
+    whatever's onboard*; the cargo pod takes *just resources*,
+    no exit.  This lets the player bank gains mid-base without
+    leaving — a counter to "stay too long and lose what you
+    gathered."
+
+  All deferred — captured here so the data model leaves room.
 - **2026-05-26 — Starting points budget per base; scales with
   previous base's haul.**  Every base begins with a points
   budget the player can spend before / during the first wave —
