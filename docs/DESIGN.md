@@ -85,6 +85,52 @@ verbatim below** with three adjustments:
   core, which converts it into the upgrade resource pool.  NPC
   helpers also execute build orders for both walls and towers
   (DESIGN.md § Systems #2 generalised).
+- **2026-05-26 — Multi-direction spawns + marker layer.**  A
+  second sparse data layer holds **markers** parallel to the
+  painted palette.  First variant: **spawn point** = hex + one
+  of 6 hex directions.  A base typically has multiple spawn
+  markers; enemies appear at each, heading along the marker's
+  direction; once close to a base they switch to flow-field
+  guidance.  See plan
+  [`../plans/future/03-marker-layer-and-spawns/`](../plans/future/03-marker-layer-and-spawns/README.md).
+- **2026-05-26 — Wave list = flat count list.**  Waves are a
+  simple ordered list of integers (each = enemy count for that
+  wave).  Per-enemy spawn-marker selection is **random** at
+  spawn time; direction comes from the picked marker.  Authored
+  in [`../examples/waves.json`](../examples/waves.json).
+- **2026-05-26 — Tower-top salvage = the scramble mechanic,
+  played tactically.**  A tower's red top is a detachable carry
+  object.  Player-initiated pickup: drive to a healthy tower,
+  pickup → the tower goes black (stops firing); the top floats
+  above the player.  Deposit at **another black tower** = fast
+  repair (instantly restores it).  Deposit at the **core** =
+  add to scramble inventory for the next base.  The same
+  carried disc, two destinations, mutually exclusive use — the
+  scramble decision lived inside every combat sortie.
+- **2026-05-26 — Points fund towers AND helpers.**  Salvaged
+  loot from killed enemies (delivered to the core) becomes the
+  player's **point pool**.  Points spend on **two things**:
+  (a) ordering new towers, (b) ordering new NPC helpers.
+  Both are queued as build orders; existing NPC helpers
+  construct towers, and the core spawns new helpers when their
+  order completes.  Same currency, two destinations — analogous
+  to the carried-top "fast repair vs scramble inventory"
+  tradeoff but at the base-economy scale.  Total score visible
+  to the player is the running point total.
+- **2026-05-26 — Rocket launch trigger: enter the core.**
+  Launching the rocket is a **player position trigger**: drive
+  the vehicle into the core building (its 7-hex footprint) and
+  the launch sequence starts immediately.  NPC helpers
+  *normally* board the rocket on their own when their work
+  list is empty (no salvage to fetch, no builds queued, no
+  outstanding orders).  Entering the core as the player
+  **forces** the launch right then — any NPC helpers not yet
+  onboard, and any loot / scramble inventory not yet
+  delivered, are **left behind**.  The launch decision is
+  therefore another scramble tradeoff: wait for the helpers
+  to finish their loops (more carried over, but the base
+  weakens during the wait) or force-launch (immediate exit,
+  lose what didn't make it).
 
 ## World scale
 

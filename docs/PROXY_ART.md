@@ -272,6 +272,73 @@ of towers behind a closed wall (no shots fired) needs no attention.
 The player's repair priorities **emerge from the geography of the
 fighting**, not a uniform timer.
 
+**Tower-top salvage — the scramble mechanic, made tactical.**
+
+A tower top is a **detachable object** the player (or an NPC
+helper) can pick up and carry.  This is the concrete form of the
+scramble-and-salvage thesis (DESIGN.md § Scramble): the "key
+component" you evacuate from a base IS the tower top, and
+removing it from a tower disables that tower — exactly the
+"weakening your remaining defence" tradeoff the design calls for.
+
+Flow (player-initiated):
+
+1. Player drives to a healthy tower, presses **pickup**.  The
+   tower's red top detaches; that tower is now "topless" — its
+   visual goes to the same dark / black state as a decayed
+   tower (uniform `#1a1a1a`); it stops firing.
+2. The detached top becomes a **carried object** floating just
+   above the player vehicle (a flat red disc, ~1.5 m diameter —
+   visibly the same disc that *was* the tower's top).
+3. The player drives to a destination and presses **deposit**.
+   Two valid destinations:
+
+   - **Another black tower (decayed *or* topless).**  The
+     carried top installs onto it → that tower goes red /
+     healthy / firing again, **instantly** — much faster than
+     the helper-rebuild repair path.  This is a **fast repair**
+     using salvaged stock: swap a top from a quiet tower at the
+     back to a hot tower at the front.
+   - **The core building.**  The top goes into the core's
+     **scramble inventory** — the cargo manifest for the next
+     base (DESIGN.md § Scramble: "Evacuated components give an
+     advantage at the next base").  This is the long-term play
+     at the cost of permanently losing the tower it came from
+     for the current base.
+
+4. NPC helpers can perform the same flow autonomously when
+   directed (auto-salvage tag on the source tower; helper picks
+   up and delivers).  For validation, the player-initiated
+   path is the priority.
+
+**The tactical tension.**
+
+The same carried disc has two completely different uses.  At any
+moment, the player holding a top is choosing between:
+
+- *Fast repair* (deposit at another tower) — *immediate*
+  battlefield help.  The carried top is consumed; nothing
+  carries into the scramble.
+- *Stockpile* (deposit at the core) — *future* help.  The
+  current base's defence is permanently weaker, but the next
+  base starts ahead.
+
+That choice is the scramble decision, lived **inside every
+combat sortie**.  The player doesn't have to wait for the launch
+moment to start trading current strength for future strength —
+they're doing it constantly, hex by hex.
+
+**Visual — carried top.**
+
+| Property | Value |
+|---|---|
+| Shape | Flat disc (the same truncation-top disc that was on the tower) |
+| Diameter | ~1.7 m (matching the tower top) |
+| Thickness | ~0.2 m (a thin disc, not a sphere) |
+| Colour | **`#d04848`** (red, identical to the source tower top) — so the same "red equals firepower" semantic survives intact |
+| Position | floats ~1.5 m above the carrier vehicle's centre, slightly forward so you can read the carry pose at a glance |
+| Animation | gentle bob (~10 cm amplitude) so it reads as carried, not painted-on |
+
 **Why these dimensions.**
 
 - **7-hex footprint** is large enough to be a serious commitment

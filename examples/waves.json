@@ -1,0 +1,13 @@
+{
+  "_comment": "Validation-tier wave list. A wave is just an enemy count; spawn marker selection per enemy is random across the markers placed on the map (their direction governs the enemy's approach heading). See plans/future/03-marker-layer-and-spawns/README.md § Waves.",
+  "inter_wave_delay_seconds": 15,
+  "waves": [
+    5,
+    8,
+    12,
+    20,
+    30,
+    50,
+    80
+  ]
+}
