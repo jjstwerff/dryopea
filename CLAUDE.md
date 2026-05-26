@@ -130,17 +130,34 @@ in DESIGN.md derives from archive material, link to it from
 [`docs/DESIGN_HISTORY.md`](docs/DESIGN_HISTORY.md) — that
 document is the bridge between past and present.
 
-## Branch policy — MANDATORY
+## Branch policy
 
-**Direct commits to `main` are not allowed.**
+### Current phase — pre-game-shippable: commit + push directly to `main`
 
-All changes — features, design updates, plan edits — must land on
-a feature branch and reach `main` only through a pull request.
-The dryopea repo follows the same discipline as loft: `main` is
-the release branch, every commit on it is expected to be
-shippable, and PRs are the review gate.
+**Until a runnable game build exists, direct commits to `main`
+are the normal flow.**  The repo is small, single-author, and
+the cost of branching ceremony outweighs its benefit while the
+foundation is being laid.  Commit locally, push when the user
+asks (`feedback_one_branch_per_cycle` still applies — no
+automatic pushes).
 
-### Rules
+**Trigger for switching to the formal flow below:** the moment
+there's a runnable game — even a minimum-playable validation —
+this section is retired and the **MANDATORY** rules below
+become the policy.  Until then, the design corpus + plan
+implementation work commits straight to main.
+
+### Future phase — once a runnable game exists — MANDATORY
+
+**Direct commits to `main` will not be allowed.**
+
+All changes — features, design updates, plan edits — must land
+on a feature branch and reach `main` only through a pull
+request.  CI gates each PR.  `main` becomes the release branch,
+every commit on it expected to be shippable, PRs the review
+gate.
+
+#### Rules (active once the policy switches)
 
 1. **Never `git commit` directly on `main`.**  If you accidentally
    land on `main`, move the change to a feature branch before
