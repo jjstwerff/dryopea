@@ -210,6 +210,19 @@ verbatim below** with three adjustments:
 
   Helper-roster cap of 6 remains in force; NPC orders that
   would exceed the cap fail at the press.
+- **2026-05-26 — Three enemy tiers stack rather than replace.**
+  Tier 1 robots are everywhere by default (territorial).
+  Tier 2 insects appear where trees do and are passive until
+  the player gathers sap.  **Tier 3 elementals** come in four
+  kinds — water, fire, wind, earth — and their attack
+  patterns are keyed to **special stones of their element**
+  placed on the map (no auto-gen).  Elementals sense their
+  matching stones at distance; an elemental's behaviour
+  depends on stone proximity.  The same elemental on two
+  maps behaves differently depending on where the stones are
+  placed.  Map authors compose encounters by choosing which
+  trees, which stones, and where.  Full lore in
+  [`SETTING.md`](SETTING.md) § The third enemy.
 - **2026-05-26 — Two enemy tiers, two ecologies, two reaction
   rules.**  Tier-1 robots (haywire, territorial — react to
   encroachment on their infrastructure).  Tier-2 **insects**

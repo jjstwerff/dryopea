@@ -141,6 +141,50 @@ mechanical and biological — that share the same terrain but
 have different rules of engagement.  The player chooses how
 to interact with each.
 
+## The third enemy — elementals + stones
+
+Beyond robots (tier 1) and insects (tier 2), the planet hosts
+**elementals** (tier 3) — four elemental kinds:
+
+- **Water**
+- **Fire**
+- **Wind**
+- **Earth**
+
+Each elemental is a creature whose **attack patterns are
+keyed to special stones of its element**.  The stones exist
+on the planet as **rare environmental fixtures** — placed by
+the map author (no auto-gen, per plan 04).  Each elemental
+**senses stones of its own element at a distance** — they
+*feel* them, in the user's words.
+
+What this implies (with intentional design room left):
+
+- An elemental's *behaviour* changes with proximity to a
+  stone of its element.  A fire elemental near a fire stone
+  is in its full attack pattern; far from any fire stone, it
+  is muted or dormant.  Authoring a hot encounter is in part
+  authoring the stone placements.
+- The four elementals do **not** all wake together.  A map
+  with only a water stone activates water elementals only;
+  earth, fire, wind stay quiet without their stones.  Mixed-
+  stone maps are tougher and *layered*.
+- Elementals are a *spatially keyed* threat: where the
+  stones are matters as much as which elementals are present.
+  The same elemental on two different maps behaves
+  differently depending on what's been placed.
+- The stones are presumably **player-affectable** — destroyed,
+  moved, harvested, used — but **how** the player interacts
+  with them is open design space (a stone-disabling action
+  could be a powerful weapon against a specific elemental
+  type; harvested stones could be a player resource for
+  upgrades; both are possible).
+
+This makes the tier-3 layer the **mapped-encounter** tier:
+robots are everywhere by default, insects appear where
+trees do, elementals appear where their stones are.  The
+three tiers stack rather than replace.
+
 ## How the setting shapes the mechanics
 
 | Mechanic | Why it fits the setting |
