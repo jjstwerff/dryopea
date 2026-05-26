@@ -131,6 +131,42 @@ exercise it).**
   resisting.  The player decides whether to defend worker paths
   or let them run risk.
 
+### Tower beacon — carry object for placing new towers
+
+The carried order ticket the player ferries from the core to a
+chosen build site (DESIGN.md § Updates 2026-05-26 on beacon
+ferry).  Purpose: **make tower placement physical** — the
+player drives the order to its destination, rather than
+"clicking a hex from a menu."
+
+| Property | Value |
+|---|---|
+| Shape | Short vertical cylinder ("pylon" / "tent peg") |
+| Diameter | ~0.5 m |
+| Height | ~0.8 m |
+| Body colour | `#d04848` (same placeholder red as the tower top — the carry signals "this becomes a tower") |
+| Position when carried | floats above the vehicle, same slot as a carried tower-top (gentle bob); only one carry-slot — the player can't carry a beacon AND a tower-top simultaneously |
+| When placed | the beacon stays at the deposited hex visually for the moment between drop and lander arrival; then the lander touches down on it and the beacon is consumed |
+
+**Pickup at the core:** drive adjacent to the core, press the
+single pickup/drop key.  Costs points (debited from the
+wallet immediately at pickup).  If the wallet is short, pickup
+fails (no beacon spawns; the press is a no-op).
+
+**Deposit at the build site:** drive to the chosen 7-hex
+centre, press the same key.  A tower lander is summoned to that
+hex; the beacon is consumed.  If the chosen spot is not
+buildable (water, steep_rock, occupied), deposit fails — the
+beacon stays carried, no points are returned.
+
+**Always visible on screen.**  The carried beacon (and any
+other carry object — tower-top, future beacons of other kinds)
+is **rendered as part of the vehicle** in the 3rd-person view,
+so the player can never lose track of what they're holding.
+There is no separate "carried inventory icon" HUD — the carry
+is part of the world geometry and stays in frame because the
+camera follows the vehicle.
+
 ### Loot drop — proxy collectible
 
 When an enemy dies it leaves a **loot marker** on its death hex.

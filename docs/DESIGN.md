@@ -86,17 +86,32 @@ verbatim below** with three adjustments:
   intent that has no spatial form.  This holds across the whole
   game; design new mechanics in spatial terms first, fall back
   to keys only when no position-trigger fits.
-- **2026-05-26 — Wave-start trigger: walls-built threshold.**
-  Enemies activate (wave 1 begins) once the player has
-  **built N walls** (the exact N TBD; tuned with the rest of
-  the numbers).  The act of laying perimeter IS the commitment:
-  the player marks the ground they intend to defend, and the
-  enemies arrive in response.  No "Begin Wave" key; no fixed
-  pre-wave timer.  Pacing is set by how fast the player chooses
-  to commit — a cautious player builds slowly and the wave is
-  delayed; an aggressive player builds fast and triggers the
-  fight early.  Aligns with the movement-trigger philosophy
-  above.
+- **2026-05-26 — Wave-start triggers: walls or provocation
+  (whichever fires first).**  Enemies activate (wave 1 begins)
+  by EITHER of two spatial conditions:
+
+  (a) **Walls-built threshold.**  The player has built **N
+  walls** (exact N TBD).  The act of laying perimeter IS the
+  commitment — the player marks the ground they intend to
+  defend, and the enemies arrive in response.
+
+  (b) **Player provokes by visiting a distant spawn marker.**
+  The player drives their vehicle ONTO a spawn marker hex that
+  sits a *fair distance* from the starter tower / core
+  (distance TBD).  Touching the marker = poking the enemy.
+  Wave 1 fires.  **Spawn markers very close to the core
+  never trigger** activation — those are safe to explore /
+  inspect without commitment.
+
+  Either trigger fires wave 1; once activated, the wave list
+  proceeds via its scheduler (inter-wave delay etc.).  No
+  "Begin Wave" key; no fixed pre-wave timer.  Pacing is set
+  by how fast the player chooses to commit OR to provoke — a
+  cautious settler builds slowly; a brave scout reaches out and
+  touches a far spawn marker; either gesture brings the fight.
+  Aligns with the movement-trigger philosophy above; the map
+  author shapes the pacing by placing close (safe) vs. far
+  (provocation) spawn markers.
 - **2026-05-26 — Numbers are TBD (intentionally).**  Every
   numerical value mentioned in this design — tower fire rate,
   shot budget, damage, range, HP, movement speeds, starting
@@ -106,6 +121,29 @@ verbatim below** with three adjustments:
   numbers will be picked together (not per-mechanic in
   isolation) and refined through playtest.  This Updates list
   records *shapes*, not *values*.
+- **2026-05-26 — New towers placed via beacon ferry; single
+  pickup/drop key.**  The player orders a new tower by carrying
+  a **tower beacon** from the core to the chosen build site:
+
+  (1) Drive next to the core, press the **single pickup/drop
+  key** → a beacon is removed from the core's stock (cost is
+  points, taken from the wallet at pickup time) and floats
+  above the vehicle as a carried object.
+
+  (2) Drive to the chosen 7-hex centre, press the same key →
+  the beacon is placed; a tower lander touches down on it (same
+  separate-lander idiom as the starter); helpers handle any
+  remaining construction time on the deployed tower.
+
+  The key is the **only non-movement/non-camera key** the game
+  uses for *interactions*: it picks up whatever the vehicle is
+  next to (beacon at core, tower-top at a healthy tower, etc.)
+  and deposits whatever is currently carried (beacon onto a
+  build spot, tower-top onto another black tower or into the
+  core for scramble inventory).  Empty-handed = pickup;
+  carrying = deposit.  Loot drops (gold cubes) remain
+  auto-pickup on drive-over — too cheap a decision to need an
+  explicit press.
 - **2026-05-26 — Free starter tower via a separate lander.**
   Every base starts with **one free tower**, delivered by its
   own **separate lander** (visually distinct from the core's
