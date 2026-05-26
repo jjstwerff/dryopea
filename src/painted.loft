@@ -65,3 +65,30 @@ pub fn lookup_painted(w: const PaintedWorld, q: integer, r: integer) -> u8 {
 pub fn painted_count(w: const PaintedWorld) -> integer {
     len(w.painted)
 }
+
+// Paint every hex on the line from `a` to `b` (inclusive) with
+// `kind`.  Hex line via fractional axial lerp + cube round —
+// Red Blob Games' standard algorithm.
+//
+// Used by drag-paint: the mouse moves from screen pixel A to
+// pixel B; convert each endpoint to a Hex, then paint_line
+// fills the gap with no missed hexes (cube round handles the
+// edge cases).
+pub fn paint_line(w: &PaintedWorld, a: Hex, b: Hex, kind: u8) {
+    pl_n = hex_distance(a, b);
+    if pl_n == 0 {
+        paint(w, a.q, a.r, kind);
+        return;
+    }
+    pl_aq = a.q as float;
+    pl_ar = a.r as float;
+    pl_bq = b.q as float;
+    pl_br = b.r as float;
+    for pl_i in 0..=pl_n {
+        pl_t = (pl_i as float) * (1.0 / (pl_n as float));
+        pl_qf = pl_aq + (pl_bq - pl_aq) * pl_t;
+        pl_rf = pl_ar + (pl_br - pl_ar) * pl_t;
+        pl_h = cube_round_axial(pl_qf, pl_rf);
+        paint(w, pl_h.q, pl_h.r, kind);
+    }
+}

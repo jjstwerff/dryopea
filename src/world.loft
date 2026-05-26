@@ -45,6 +45,39 @@ pub fn hex_distance(a: Hex, b: Hex) -> integer {
 // point (x, y)?  Axial flat-top inverse + cube_round (Red Blob
 // Games' standard hex-grid algorithm).
 //
+// Round a fractional axial (q, r) to the nearest integer Hex
+// using cube round: convert to fractional cube coords, round
+// each axis, then fix the axis with the largest delta so
+// x + y + z = 0 still holds.  Standard Red Blob Games hex-grid
+// algorithm.
+//
+// Used by both world_to_hex (pixel-to-hex picking) and
+// hex_line / paint_line (fractional lerp + snap to nearest
+// integer hex).
+pub fn cube_round_axial(qf: float, rf: float) -> Hex {
+    cra_xf = qf;
+    cra_zf = rf;
+    cra_yf = -cra_xf - cra_zf;
+
+    cra_rx = round(cra_xf);
+    cra_ry = round(cra_yf);
+    cra_rz = round(cra_zf);
+
+    cra_dx = abs(cra_rx - cra_xf);
+    cra_dy = abs(cra_ry - cra_yf);
+    cra_dz = abs(cra_rz - cra_zf);
+
+    if cra_dx > cra_dy && cra_dx > cra_dz {
+        cra_rx = -cra_ry - cra_rz;
+    } else if cra_dy > cra_dz {
+        cra_ry = -cra_rx - cra_rz;
+    } else {
+        cra_rz = -cra_rx - cra_ry;
+    }
+
+    Hex { q: cra_rx as integer, r: cra_rz as integer }
+}
+
 // Used by the renderer to map a pixel back to a hex.
 //
 // Inverse-hex factors precomputed to avoid float divisions
@@ -58,29 +91,7 @@ pub fn world_to_hex(world_x: float, world_y: float) -> Hex {
     wth_qf = world_x * 0.8888888888888889;                              // (2/3)/0.75
     wth_rf = world_x * (-0.4444444444444444)                            // (-1/3)/0.75
            + world_y *   0.7698003589195008;                            // (sqrt(3)/3)/0.75
-    // Convert axial fractional to cube fractional, round each axis,
-    // fix the one with the largest delta to keep x + y + z = 0.
-    wth_xf = wth_qf;
-    wth_zf = wth_rf;
-    wth_yf = -wth_xf - wth_zf;
-
-    wth_rx = round(wth_xf);
-    wth_ry = round(wth_yf);
-    wth_rz = round(wth_zf);
-
-    wth_dx = abs(wth_rx - wth_xf);
-    wth_dy = abs(wth_ry - wth_yf);
-    wth_dz = abs(wth_rz - wth_zf);
-
-    if wth_dx > wth_dy && wth_dx > wth_dz {
-        wth_rx = -wth_ry - wth_rz;
-    } else if wth_dy > wth_dz {
-        wth_ry = -wth_rx - wth_rz;
-    } else {
-        wth_rz = -wth_rx - wth_ry;
-    }
-
-    Hex { q: wth_rx as integer, r: wth_rz as integer }
+    cube_round_axial(wth_qf, wth_rf)
 }
 
 // Enumerate every hex within `haze` of the centre — the "disc"

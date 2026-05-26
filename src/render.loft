@@ -44,6 +44,39 @@ pub fn sea_color() -> integer { palette_color(0 as u8) }
 
 // ── Canvas / world projection ────────────────────────────────────
 
+// Inverse of world_to_canvas: pixel (sx, sy) on a canvas
+// of size (cw, ch) at scale `ppm`, centred on the camera's
+// hex, maps back to a world-space (x, y).  Combined with
+// world_to_hex this is the screen→hex mouse-pick path.
+pub fn screen_to_world(
+    cam: EditorCamera,
+    sx:  integer,
+    sy:  integer,
+    cw:  integer,
+    ch:  integer,
+    ppm: float,
+) -> (float, float) {
+    stw_camw = hex_to_world(cam.pos);
+    stw_inv = 1.0 / ppm;
+    stw_dx = ((sx - cw / 2) as float) * stw_inv;
+    stw_dy = ((sy - ch / 2) as float) * stw_inv;
+    (stw_camw.0 + stw_dx, stw_camw.1 + stw_dy)
+}
+
+// Convenience: screen pixel → Hex containing that pixel.  Used
+// by mouse-click painting (the editor's primary picking path).
+pub fn screen_to_hex(
+    cam: EditorCamera,
+    sx:  integer,
+    sy:  integer,
+    cw:  integer,
+    ch:  integer,
+    ppm: float,
+) -> Hex {
+    sth_w = screen_to_world(cam, sx, sy, cw, ch, ppm);
+    world_to_hex(sth_w.0, sth_w.1)
+}
+
 // Translate a world-space (x, y) to canvas pixel coordinates given a
 // camera (positioned at a hex) and a pixels-per-metre scale.
 //
@@ -160,4 +193,58 @@ pub fn render_to_canvas(
     }
 
     cv
+}
+
+// Draw a 1-px white outline along the perimeter of a hex —
+// used to indicate the hovered hex during painting.  Vertex
+// layout matches draw_hex (flat-top, clockwise from east).
+pub fn draw_hex_outline(
+    cv:    Canvas,
+    cam:   EditorCamera,
+    h:     Hex,
+    color: integer,
+    cw:    integer,
+    ch:    integer,
+    ppm:   float,
+) {
+    dho_world = hex_to_world(h);
+    dho_centre = world_to_canvas(cam, dho_world.0, dho_world.1, cw, ch, ppm);
+    dho_cx = dho_centre.0;
+    dho_cy = dho_centre.1;
+
+    dho_rx_m = HEX_DIAMETER * 0.5;
+    dho_ry_m = HEX_FLAT_TO_FLAT * 0.5;
+    dho_rx_px = (dho_rx_m * ppm + 0.5) as integer;
+    dho_hx_px = (dho_rx_m * 0.5 * ppm + 0.5) as integer;
+    dho_ry_px = (dho_ry_m * ppm + 0.5) as integer;
+
+    dho_v0x = dho_cx + dho_rx_px; dho_v0y = dho_cy;
+    dho_v1x = dho_cx + dho_hx_px; dho_v1y = dho_cy + dho_ry_px;
+    dho_v2x = dho_cx - dho_hx_px; dho_v2y = dho_cy + dho_ry_px;
+    dho_v3x = dho_cx - dho_rx_px; dho_v3y = dho_cy;
+    dho_v4x = dho_cx - dho_hx_px; dho_v4y = dho_cy - dho_ry_px;
+    dho_v5x = dho_cx + dho_hx_px; dho_v5y = dho_cy - dho_ry_px;
+
+    cv.draw_line(dho_v0x, dho_v0y, dho_v1x, dho_v1y, color);
+    cv.draw_line(dho_v1x, dho_v1y, dho_v2x, dho_v2y, color);
+    cv.draw_line(dho_v2x, dho_v2y, dho_v3x, dho_v3y, color);
+    cv.draw_line(dho_v3x, dho_v3y, dho_v4x, dho_v4y, color);
+    cv.draw_line(dho_v4x, dho_v4y, dho_v5x, dho_v5y, color);
+    cv.draw_line(dho_v5x, dho_v5y, dho_v0x, dho_v0y, color);
+}
+
+// Render the world + a hover-highlight outline on the supplied
+// hex.  Convenience helper for tests / live edit modes that
+// want to show the player which hex the cursor is on.
+pub fn render_with_hover(
+    cam:     EditorCamera,
+    pw:      PaintedWorld,
+    hovered: Hex,
+    w:       integer,
+    h:       integer,
+    ppm:     float,
+) -> Canvas {
+    rwh_cv = render_to_canvas(cam, pw, w, h, ppm);
+    draw_hex_outline(rwh_cv, cam, hovered, 0xffffff, w, h, ppm);
+    rwh_cv
 }

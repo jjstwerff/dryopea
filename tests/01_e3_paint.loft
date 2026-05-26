@@ -1,0 +1,204 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 01 phase E3 — paint sparse + click/drag mouse picking.
+//
+// Headless tests: paint_line (hex line walk + paint), screen_to_hex
+// (pixel→hex picking inverse), hover-outline render, and golden
+// images for click + drag patterns.
+
+use dryopea;
+
+const E3_W: integer = 96;
+const E3_H: integer = 96;
+const E3_PPM: float = 16.0;
+
+// ─────────────────────────────────────────────────────────────────
+// cube_round_axial — the rounding primitive paint_line + world_to_hex
+// share.  Verify it picks the nearest hex even on awkward fractions.
+// ─────────────────────────────────────────────────────────────────
+
+fn test_cube_round_axial_origin() {
+    tcr_h = cube_round_axial(0.0, 0.0);
+    assert(tcr_h.q == 0, "(0.0, 0.0) → (0,0).q");
+    assert(tcr_h.r == 0, "(0.0, 0.0) → (0,0).r");
+}
+
+fn test_cube_round_axial_integer_input() {
+    // Already-integer inputs land exactly on themselves.
+    tcr_e = cube_round_axial(3.0, -1.0);
+    assert(tcr_e.q ==  3, "(3.0, -1.0) → q=3");
+    assert(tcr_e.r == -1, "(3.0, -1.0) → r=-1");
+}
+
+fn test_cube_round_axial_near_centre() {
+    // Slightly off-centre rounds to (0, 0).
+    tcr_a = cube_round_axial(0.1, -0.1);
+    assert(tcr_a.q == 0, "(0.1,-0.1) → q=0");
+    assert(tcr_a.r == 0, "(0.1,-0.1) → r=0");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// paint_line — hex line walk
+// ─────────────────────────────────────────────────────────────────
+
+fn test_paint_line_single_hex() {
+    // a == b → just paint a.
+    tpl_w = painted_empty();
+    paint_line(tpl_w, Hex { q: 2, r: 3 }, Hex { q: 2, r: 3 }, 5 as u8);
+    assert(painted_count(tpl_w) == 1, "single-hex line paints 1");
+    assert(lookup_painted(tpl_w, 2, 3) == 5 as u8, "(2,3) painted grass");
+}
+
+fn test_paint_line_horizontal() {
+    // (0, 0) → (4, 0) is 4 hexes east; line covers all 5 inclusive.
+    tpl_h = painted_empty();
+    paint_line(tpl_h, Hex { q: 0, r: 0 }, Hex { q: 4, r: 0 }, 9 as u8);
+    assert(painted_count(tpl_h) == 5, "5 hexes painted");
+    for tplh_q in 0..=4 {
+        assert(lookup_painted(tpl_h, tplh_q, 0) == 9 as u8,
+               "({tplh_q},0) wall");
+    }
+}
+
+fn test_paint_line_diagonal() {
+    // (0, 0) → (3, -3) is 3 hexes NE-ish in axial flat-top.
+    // hex_distance = 3, so line covers 4 hexes (inclusive).
+    tpl_d = painted_empty();
+    paint_line(tpl_d, Hex { q: 0, r: 0 }, Hex { q: 3, r: -3 }, 7 as u8);
+    assert(painted_count(tpl_d) == 4, "diagonal line: 4 hexes");
+    assert(lookup_painted(tpl_d, 0, 0)  == 7 as u8, "start painted");
+    assert(lookup_painted(tpl_d, 3, -3) == 7 as u8, "end painted");
+}
+
+fn test_paint_line_overwrites() {
+    // Painting twice through the same hex with different kinds
+    // overwrites — the second call wins.
+    tpl_o = painted_empty();
+    paint_line(tpl_o, Hex { q: 0, r: 0 }, Hex { q: 3, r: 0 }, 5 as u8);  // grass
+    paint_line(tpl_o, Hex { q: 1, r: 0 }, Hex { q: 2, r: 0 }, 9 as u8);  // wall
+    assert(lookup_painted(tpl_o, 0, 0) == 5 as u8, "(0,0) still grass");
+    assert(lookup_painted(tpl_o, 1, 0) == 9 as u8, "(1,0) overwritten wall");
+    assert(lookup_painted(tpl_o, 2, 0) == 9 as u8, "(2,0) overwritten wall");
+    assert(lookup_painted(tpl_o, 3, 0) == 5 as u8, "(3,0) still grass");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// screen_to_hex — the mouse-click picking inverse
+// ─────────────────────────────────────────────────────────────────
+
+fn test_screen_to_hex_centre_pixel() {
+    // Camera at origin; canvas centre pixel maps to (0, 0).
+    tsh_cam = camera_default();
+    tsh_h = screen_to_hex(tsh_cam, E3_W / 2, E3_H / 2, E3_W, E3_H, E3_PPM);
+    assert(tsh_h.q == 0, "centre pixel → q=0");
+    assert(tsh_h.r == 0, "centre pixel → r=0");
+}
+
+fn test_screen_to_hex_round_trip() {
+    // For each hex h: world_to_canvas → screen_to_hex should
+    // recover h (within rounding tolerance — picking the hex
+    // CENTRE always lands on its own hex).
+    tsh_cam = camera_default();
+    for tshrt_q in -1..=1 {
+        for tshrt_r in -1..=1 {
+            tshrt_h = Hex { q: tshrt_q, r: tshrt_r };
+            tshrt_world = hex_to_world(tshrt_h);
+            tshrt_screen = world_to_canvas(tsh_cam, tshrt_world.0, tshrt_world.1, E3_W, E3_H, E3_PPM);
+            tshrt_back = screen_to_hex(tsh_cam, tshrt_screen.0, tshrt_screen.1, E3_W, E3_H, E3_PPM);
+            assert(tshrt_back.q == tshrt_q, "rt q for ({tshrt_q},{tshrt_r})");
+            assert(tshrt_back.r == tshrt_r, "rt r for ({tshrt_q},{tshrt_r})");
+        }
+    }
+}
+
+fn test_screen_to_hex_with_camera_offset() {
+    // Camera moved east by (5, 0).  Centre pixel now maps to (5, 0).
+    tsh_off = camera_at(5, 0, 1);
+    tsh_h = screen_to_hex(tsh_off, E3_W / 2, E3_H / 2, E3_W, E3_H, E3_PPM);
+    assert(tsh_h.q == 5, "with cam at (5,0), centre pixel → q=5");
+    assert(tsh_h.r == 0, "                            → r=0");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Golden images — simulated click + drag + hover
+// ─────────────────────────────────────────────────────────────────
+
+fn test_render_click_paints_hex() {
+    // Simulate a single click at the canvas centre on an empty
+    // world: pick hex → paint → render.  Expected: green hex
+    // at canvas centre (just like grass_at_origin in E1).
+    trcp_w = painted_empty();
+    trcp_cam = camera_default();
+    trcp_h = screen_to_hex(trcp_cam, E3_W / 2, E3_H / 2, E3_W, E3_H, E3_PPM);
+    paint(trcp_w, trcp_h.q, trcp_h.r, 5 as u8);   // grass
+    trcp_cv = render_to_canvas(trcp_cam, trcp_w, E3_W, E3_H, E3_PPM);
+    assert_golden(trcp_cv, "01_e3_click_paint_centre");
+}
+
+fn test_render_drag_paints_line() {
+    // Simulate a drag from (48-24, 48) to (48+24, 48) on a 96x96
+    // canvas — a horizontal line crossing the centre.  Pick each
+    // endpoint, paint_line between them.
+    trd_w = painted_empty();
+    trd_cam = camera_default();
+    trd_a = screen_to_hex(trd_cam, E3_W / 2 - 24, E3_H / 2, E3_W, E3_H, E3_PPM);
+    trd_b = screen_to_hex(trd_cam, E3_W / 2 + 24, E3_H / 2, E3_W, E3_H, E3_PPM);
+    paint_line(trd_w, trd_a, trd_b, 9 as u8);   // wall
+    trd_cv = render_to_canvas(trd_cam, trd_w, E3_W, E3_H, E3_PPM);
+    assert_golden(trd_cv, "01_e3_drag_horizontal_wall");
+}
+
+fn test_render_drag_paints_diagonal() {
+    // Drag from upper-left to lower-right — diagonal hex line.
+    trdd_w = painted_empty();
+    trdd_cam = camera_default();
+    trdd_a = screen_to_hex(trdd_cam, 20, 20, E3_W, E3_H, E3_PPM);
+    trdd_b = screen_to_hex(trdd_cam, 76, 76, E3_W, E3_H, E3_PPM);
+    paint_line(trdd_w, trdd_a, trdd_b, 6 as u8);   // hill
+    trdd_cv = render_to_canvas(trdd_cam, trdd_w, E3_W, E3_H, E3_PPM);
+    assert_golden(trdd_cv, "01_e3_drag_diagonal_hill");
+}
+
+fn test_render_hover_outline_centre() {
+    // Hover on the centre hex (no painted hexes underneath).
+    // Expected: sea everywhere + a white hexagonal outline at
+    // canvas centre.
+    trho_w = painted_empty();
+    trho_cam = camera_default();
+    trho_cv = render_with_hover(trho_cam, trho_w, Hex { q: 0, r: 0 }, E3_W, E3_H, E3_PPM);
+    assert_golden(trho_cv, "01_e3_hover_centre_empty");
+}
+
+fn test_render_hover_outline_over_painted() {
+    // Hover over a painted grass hex.  The outline draws on top
+    // of the green fill, showing both the painted colour and the
+    // hover indicator.
+    trhp_w = painted_empty();
+    paint(trhp_w, 1, 0, 5 as u8);   // grass east of centre
+    trhp_cam = camera_default();
+    trhp_cv = render_with_hover(trhp_cam, trhp_w, Hex { q: 1, r: 0 }, E3_W, E3_H, E3_PPM);
+    assert_golden(trhp_cv, "01_e3_hover_over_grass");
+}
+
+fn test_render_full_workflow() {
+    // Combine paint + drag + hover in one frame: a closed wall
+    // ring formed by four short paint_line calls, with the
+    // cursor hovering on an interior hex.
+    //
+    //          (0,-1) sand
+    //  (-1, 0)        ( 0, 0) grass (hovered)        (1, -1)
+    //          ( 0, 1) hill
+    //  rim: walls drawn as four line segments connecting the
+    //  four cardinal-ish points around the centre.
+    trf_w = painted_empty();
+    paint_line(trf_w, Hex { q:  0, r: -1 }, Hex { q:  1, r: -1 }, 9 as u8);
+    paint_line(trf_w, Hex { q:  1, r: -1 }, Hex { q:  1, r:  1 }, 9 as u8);
+    paint_line(trf_w, Hex { q:  1, r:  1 }, Hex { q: -1, r:  1 }, 9 as u8);
+    paint_line(trf_w, Hex { q: -1, r:  1 }, Hex { q: -1, r:  0 }, 9 as u8);  // leaves a gap
+    paint(trf_w, 0, 0, 5 as u8);   // grass in the middle
+
+    trf_cam = camera_default();
+    trf_cv = render_with_hover(trf_cam, trf_w, Hex { q: 0, r: 0 }, E3_W, E3_H, E3_PPM);
+    assert_golden(trf_cv, "01_e3_wall_ring_with_grass_centre_hovered");
+}
