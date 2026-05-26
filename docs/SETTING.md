@@ -595,16 +595,36 @@ station's observation deck:
 - No abstract menu — the *planet itself* is the selection UI.
   Diegetic principle applied to between-mission flow.
 
-This is **future content** — not for the validation tier
-(which uses plan 04's simple list-based map selection).  It
-ships when:
+**Validation already ships a teaser version of this UI.**
+Even before the rotation + projected-state layers are
+implemented, the map-selection screen (plan 04 L3) becomes a
+**static planet view with possible-location markers**:
 
-- Multi-mission run state is in (so there's persistent surface
+- A still planet (placeholder sphere / low-poly globe).
+- The maps available in `maps/index.json` show as **clickable
+  markers** on the planet's surface, one per map.
+- Clicking a marker is equivalent to "selecting that map from
+  the list" — the rest of the flow (landing-spot pick, rocket
+  descent) proceeds unchanged.
+- For validation: probably one map = one marker.  Hand-place
+  the marker at a recognisable spot on the placeholder
+  planet.
+
+The teaser does not need rotation, day/night, or projected
+data — just the planet + the markers + the click.  It sets
+the **visual tone** of the eventual diegetic hub before any
+of the meta-game state is implemented.
+
+**Fully animated / projected version** (later) adds, in
+sequence:
+
+- Multi-mission run state (so there's persistent surface
   state to *show* on the planet — abandoned bases, stranded
   helpers, scouted-but-not-collected gems / sap trees, etc.).
-- The planet-scale meta from § Future expansion is being
-  implemented.
-- The hub UI has had at least one iteration.
+- Rotation + day/night terminator.
+- Projected information layers (faction territory, intel
+  hotspots, etc.).
+- The planet-scale meta from § Future expansion fully wired.
 
 The visual + the click-target-as-landing-spot are a natural
 fit for loft's `lib/graphics` and the existing 3rd-person

@@ -58,9 +58,12 @@ When the rocket finishes landing on the chosen map:
 ```
 [ Launch the game ]
      ↓
-[ Map selection UI ]        plan 04 § L3
+[ Static planet view ]      plan 04 § L3 — teaser of the future
+                            rotating-planet hub.  Placeholder
+                            sphere with one clickable marker
+                            per available map.
      ↓
-  player clicks a map
+  player clicks a map-marker
      ↓
 [ Landing-spot pick UI ]    DESIGN.md § Updates: free-pick landing
      ↓
