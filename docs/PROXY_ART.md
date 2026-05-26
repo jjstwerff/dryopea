@@ -182,6 +182,53 @@ final vehicle art is years out.
   noticeably above the terrain even on flat ground, so you can
   see it isn't a ground unit).
 
+**Combat role — none.**  The player vehicle **cannot harm
+enemies** and is **not hunted by them** in general either.  No
+weapon, no ramming damage, no melee.  In normal play enemies
+ignore the vehicle in targeting (the player is invisible to
+their AI); the vehicle can drive *past* enemy formations
+without taking or dealing damage.
+
+This makes the player a **noncombatant base manager**:
+positioning, timing of repairs / boosts, where to place
+towers and helpers, when to salvage tops, when to force-launch.
+Combat itself is entirely between **towers and enemies**; the
+player choreographs but does not fight.
+
+**Conditional damage — blocking access to the core.**
+
+The "enemies ignore the player" rule has one exception.  If the
+player vehicle (or an NPC helper) is **physically blocking an
+enemy's path to the core building**, the enemy attacks the
+blocker instead of the wall / core it can't reach.  The blocker
+takes nibble damage until it moves out of the way (or is
+destroyed).
+
+Implications:
+
+- The player **cannot use the vehicle as a tank** to soak hits
+  for the core — parking in front of the core does NOT pull
+  enemies off it; it just makes the enemies attack the player
+  *en route* to reaching the core (the enemy nibbles through
+  the blocker).  Same for helpers.
+- Genuine accidental obstruction (a helper standing in a narrow
+  entrance corridor, an idle player parked across a kill funnel)
+  becomes a *liability*, not a defence.  Player movement
+  discipline matters even though the player is otherwise
+  invulnerable.
+- The vehicle therefore *does* need a minimal damage model —
+  but it's **inactive in the common case** and **activated only
+  by player positioning choices**.  Settle the exact HP /
+  destruction-on-zero behaviour in plan 04 alongside the
+  starter-loadout decision.
+
+**The base must START armed.**  With the player unable to fight
+in the general case, a validation scenario that begins with zero
+towers and zero points DEADLOCKS on wave 1 — enemies walk to the
+core uncontested.  The validation scenario therefore needs a
+**starter loadout** (likely one free pre-placed tower + 1-2
+helpers + zero points; settle in plan 04).
+
 **Movement mechanics** (gameplay, not just art — captured here
 because the proxy must visibly demonstrate them):
 
@@ -240,7 +287,7 @@ A tower's top reads its lifecycle state at any zoom:
 |---|---|---|
 | **Healthy** (just built or just repaired) | **`#d04848`** (red, matching wall placeholder) | Tower operates at standard fire rate; the default state. |
 | **Degraded** (needs repair) | **`#1a1a1a`** (totally black — top *and* body now identical) | Tower has fired its **per-charge shot budget** and **stops firing**.  Decay is NOT time-based — an idle tower never degrades; only attacking does.  Player must visit and repair, then the top reverts to red and the shot budget resets.  Visually the whole tower goes uniformly dark, so a black-topped tower is instantly readable from across the base as "spent — needs restocking". |
-| **Boosted** (player-buffed) | **`#ff80c0`** (pink) | Player has actively buffed this tower (resource cost, time-limited).  Higher fire rate / damage / range while pink (exact tunings TBD).  Reverts to red (healthy) when the boost duration expires. |
+| **Boosted** (player-buffed) | **`#ff80c0`** (pink) | Player has actively buffed this tower.  **Cost is player time only** for now — drive to the tower, hold a boost key for a short duration; no points spent, no carried-top consumed.  Higher fire rate / damage / range while pink (exact tunings TBD).  Reverts to red (healthy) when the boost duration expires.  The cost model is intentionally placeholder; later balance work may introduce a points or inventory cost. |
 
 The **care loop** this enables:
 

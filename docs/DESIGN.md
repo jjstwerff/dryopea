@@ -68,9 +68,22 @@ verbatim below** with three adjustments:
   enemies.**  All towers fire the same primitive weapon: a
   pulsed laser beam with a recharge pause between shots.
   Enemies have **nibble** (damage-per-second melee) when they
-  reach the core or are blocked at a wall.  Default enemy
-  target: the core (via entrance / broken wall); fallback:
-  the nearest wall hex when no path through exists.
+  reach the core or are blocked at a wall.  Enemy target
+  priority (highest first): **a player or NPC physically
+  blocking the enemy's path to the core** → the core itself
+  (via entrance / broken wall) → the nearest wall hex when no
+  path through exists.  In the absence of a blocker, the
+  player and NPCs are otherwise ignored.
+- **2026-05-26 — Player is a noncombatant manager.**  The
+  player vehicle cannot harm enemies (no weapon) and is not
+  hunted by them in the general case.  Combat is entirely
+  between **towers and enemies**; the player choreographs.
+  Exception: the **conditional damage rule** above — being in
+  the path between an enemy and the core makes the vehicle (or
+  an NPC helper) a target until they move.  Consequence: a
+  validation scenario must start with at least one free
+  pre-placed tower (else wave 1 deadlocks); the vehicle has a
+  minimal damage model that activates only in the blocker case.
 - **2026-05-26 — Tower lifecycle: shot-budget decay + repair +
   boost.**  Towers degrade per **attack count**, not per time:
   each laser shot consumes one unit of a per-charge shot
@@ -117,6 +130,19 @@ verbatim below** with three adjustments:
   to the carried-top "fast repair vs scramble inventory"
   tradeoff but at the base-economy scale.  Total score visible
   to the player is the running point total.
+- **2026-05-26 — Walls cost time, not points.**  Walls (both
+  `wall` and `wall_high`) and **bridges between walls** are
+  **free** in the point economy — no cost from the player's
+  point pool — but they are **not instant**: an NPC helper must
+  spend construction time at the build site before the wall hex
+  actually appears.  This makes walls a *labour* resource
+  (helper-seconds) rather than a *currency* resource (points),
+  and the bottleneck on perimeter expansion is the helper
+  roster, not the score.  Pre-painted walls in the editor
+  (plan 01) are instant — runtime orders are not.  **Bridges
+  between walls are a second-phase feature** (the `cy`-layer
+  deck mechanic in @PLAN46 § Systems #3 + #4); same free-but-
+  timed economics when they ship.
 - **2026-05-26 — Rocket launch trigger: enter the core.**
   Launching the rocket is a **player position trigger**: drive
   the vehicle into the core building (its 7-hex footprint) and
