@@ -294,6 +294,44 @@ core with a gold cube floating above it is visibly carrying
 loot home; one en route to a build site with nothing above is
 visibly going to work.
 
+**Damage → corpse-as-loot → automatic respawn.**
+
+Helpers do take damage in the same edge cases as the player
+vehicle (blocking an enemy's path to the core; phase-3 boss
+retaliation when a tower they were repairing is being attacked,
+etc.).  When a helper is *too damaged*:
+
+- The helper **drops as a corpse** at their hex.  The corpse
+  is **treated as a loot drop** — other idle helpers can pick
+  it up and carry it back to the core for salvage points,
+  exactly the same flow as enemy-loot pickup.
+- The dead helper is **temporarily removed from the active
+  roster**; they enter a **recovery state** offscreen.
+- After a recovery timer (TBD), they **automatically respawn**
+  — a fresh helper lander touches down at the core's lift-off
+  face, and the roster ticks back up.  No player action
+  required; the cap of 6 keeps the roster maintained.
+
+**Mid-task state when a helper dies.**
+
+- **Carrying loot** — the carried loot drops *alongside* the
+  helper-corpse at the same hex (two distinct loot items;
+  another helper can take either).
+- **Mid-construction** — the partial wall/tower stays at its
+  current height (the rising-from-ground state freezes).
+  Another idle helper will pick up the order and resume; the
+  structure continues rising from where it stopped.
+- **Carrying a tower-top or beacon** — (not standard helper
+  behaviour today, but if it ever becomes one) the carried
+  object falls to the helper's hex, retains its identity, and
+  is picked up by the player or another helper from there.
+
+Net: helper death is **costly but never permanent**.  The
+player loses work time (recovery delay + lost mid-task
+progress + any loot the corpse couldn't deliver) but the
+roster always recovers to the cap on its own.  Fits the
+no-run-loss philosophy applied to subordinates.
+
 ### Tower beacon — carry object for placing new towers
 
 The carried order ticket the player ferries from the core to a
