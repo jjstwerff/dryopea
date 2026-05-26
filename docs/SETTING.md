@@ -310,6 +310,16 @@ What this implies (with intentional design room left):
   is in its full attack pattern; far from any fire stone, it
   is muted or dormant.  Authoring a hot encounter is in part
   authoring the stone placements.
+- **Gems** (a special variety of stone) are the player's
+  reward / trigger pairing for elementals.  A gem of an
+  element is high-value loot (material, upgrade input,
+  possibly the unlock for that element's specialist tower)
+  but **disturbing it awakens the matching elemental** —
+  parallels the sap / insect rule.  Picking up a fire gem
+  invites fire elemental aggression; an earth gem wakes
+  earth elementals; etc.  Both reward and consequence land
+  in the same act, just like the sap-smell mechanic for
+  insects.
 - The four elementals do **not** all wake together.  A map
   with only a water stone activates water elementals only;
   earth, fire, wind stay quiet without their stones.  Mixed-

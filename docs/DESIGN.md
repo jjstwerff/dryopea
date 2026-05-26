@@ -112,15 +112,63 @@ verbatim below** with three adjustments:
   Aligns with the movement-trigger philosophy above; the map
   author shapes the pacing by placing close (safe) vs. far
   (provocation) spawn markers.
-- **2026-05-26 — Numbers are TBD (intentionally).**  Every
-  numerical value mentioned in this design — tower fire rate,
-  shot budget, damage, range, HP, movement speeds, starting
-  budget, build times, the wall-count wave-start threshold N,
-  inter-wave delay seconds, scramble-inventory effect size,
-  decay rates — is a placeholder.  A coherent set of starting
-  numbers will be picked together (not per-mechanic in
-  isolation) and refined through playtest.  This Updates list
-  records *shapes*, not *values*.
+- **2026-05-26 — Scouting is the primary discovery loop;
+  every reward has a cost.**  The player's main path to
+  special **materials**, **upgrades**, and **NEW TOWER
+  TYPES** is **scouting** — driving out beyond the haze
+  radius into the unknown to find them on the map.  This
+  makes scouting *the* progression activity (not building,
+  not combat) and motivates the scout skill (one of the six
+  helper skills) being more than a flavour buff.
+
+  **Every reward has its own pressure.**  No discovery is
+  pure upside; engaging with each kind of reward triggers a
+  corresponding cost:
+
+  - **Sap** (from huge trees) → **invites insect chase by
+    smell** (already in design).
+  - **Special gems** (associated with elementals) →
+    **awakens elementals** of the matching type.  Picking up
+    or disturbing a gem triggers the corresponding elemental
+    encounter near it.
+  - **Future kinds** of discoveries may carry their own
+    triggers (each authored per map).
+
+  This makes scouting a **bet**: every find is high-value
+  AND opens a fight.  Stay near the core (no gains, low
+  risk) vs. push outward (real rewards, real consequences).
+  Combined with the bounded haze radius, every venture is a
+  small commitment with a known shape: drive out, find
+  something, deal with what you woke up, decide whether to
+  carry it back.
+
+  **New tower types via scouting.**  The validation tier
+  ships only the placeholder laser tower.  Future tower
+  variants are *unlocked content* — found on the map,
+  brought back to the core, and become orderable from then
+  on.  Different tower types specialise (anti-insect,
+  anti-elemental, anti-coordinated-robot, area-effect,
+  etc.; exact catalogue TBD).  This is also why scouting
+  matters even in maps the player has played before — the
+  map's authored finds are persistent, but unlocking the
+  tower types is the run's progression.
+
+  A coherent placeholder set for every numerical
+  parameter has been compiled in [`NUMBERS.md`](NUMBERS.md).
+  Values target a ~15-25 minute base session: ~45 s pre-wave
+  commitment, 7 waves with 15 s gaps, ~5-6 min of wave phase,
+  then free scramble or earlier exit.  Highlights: hexes 1.5 m
+  flat-to-flat; player 3 hex/s normal, 6 hex/s boost; enemies
+  1.5 hex/s, 30 HP, 10 pts loot; tower range 15 hex, 1 shot/s,
+  10 dmg, 30-shot budget, 100 pts to order; walls free + 10 s
+  build (3 m) / 20 s build (5 m), 100 / 200 HP; helpers 2
+  start + 6 cap, 50 HP, 100 pts to order, 20 s lander; core
+  invulnerable, 25-hex scrambler bubble, 6 s launch hold;
+  starting budget 200 pts, 1:1 carryover.  Wave-1 trigger:
+  8 walls built OR distant-spawn touch (≥ 12 hex from core).
+  Input scheme catalogue + camera defaults also in
+  NUMBERS.md.  Values are explicitly placeholder — verify
+  through actual play.
 - **2026-05-26 — New towers placed via beacon ferry; single
   pickup/drop key.**  The player orders a new tower by carrying
   a **tower beacon** from the core to the chosen build site:
