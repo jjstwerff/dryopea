@@ -31,6 +31,16 @@ fix / feature, move it to **Resolved**.
 
 ## Open
 
+*(none yet — the three filed entries are picked up by the loft
+agents; see § Submitted below.)*
+
+## Submitted
+
+> Picked up by the loft project agents (2026-05-27).  Listed
+> here for traceability; will move to § Resolved as each is
+> confirmed fixed (binary rebuilt + dryopea's reproducer
+> behaves as expected).
+
 ### Don't warn on division by a literal constant
 
 - **Found while:** Plan 01 E1 — implementing `world_to_hex`
@@ -144,10 +154,6 @@ fix / feature, move it to **Resolved**.
 - **Loft pointer:** test_runner.rs:1033 (catch_unwind site);
   native.rs:480 (n_assert sets runtime_error);
   state/mod.rs:1966 (dispatch-loop short-circuit).
-
-## Submitted
-
-*(none yet)*
 
 ## Investigated — no bug
 
