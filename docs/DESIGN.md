@@ -153,6 +153,42 @@ verbatim below** with three adjustments:
   map's authored finds are persistent, but unlocking the
   tower types is the run's progression.
 
+- **2026-05-26 — Moddability is a first-class principle.**
+  dryopea is open source (LGPL-3.0-or-later) and aims to let
+  other developers and players **mod the game immediately**,
+  without rebuilds.  This shapes design and data choices:
+
+  - **All numerical values live in runtime config files.**
+    [`NUMBERS.md`](NUMBERS.md) is the rationale layer; the
+    runtime sees a loadable JSON config.  Tuning damage,
+    range, fire rate, budget, build time, scrambler radius,
+    landing parameters etc. is a *config edit*, never a code
+    change.
+  - **All content lives in editable data files** —
+    [`../examples/palette.json`](../examples/palette.json)
+    (ground types), [`../examples/waves.json`](../examples/waves.json)
+    (wave schedules), maps as JSON under `maps/` (plan 04),
+    the tower-type catalogue once it exists, etc.  Adding a
+    ground type, a weapon variant, an enemy stat block, or
+    a starter map is a data edit.
+  - **The in-game editor (plan 01) IS the modding tool.**
+    Players who want to create new maps do so in the same
+    binary they play in.  Authoring is end-user; no separate
+    developer toolchain.
+  - **Anti-mod choices are out of bounds** — no obfuscation,
+    no signed-only content, no first-party content gates.
+    Save formats are stable and documented; data formats are
+    text-first (JSON / loft literals) over binary blobs.
+
+  Net: a developer downloading the repo can change "tower
+  fire rate" by editing one line in `numbers.json` and
+  re-launching.  A player can author a new starter map in
+  the in-game editor and share the resulting JSON.  Both are
+  first-day-of-shipping behaviours, not aspirational
+  late-game features.
+
+- **2026-05-26 — Numbers: first-pass tunable set picked,
+  will refine through play.**
   A coherent placeholder set for every numerical
   parameter has been compiled in [`NUMBERS.md`](NUMBERS.md).
   Values target a ~15-25 minute base session: ~45 s pre-wave

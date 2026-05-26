@@ -76,6 +76,18 @@ src/                  — game source (empty until D0 starts)
 loft.toml             — package manifest
 ```
 
+## Moddability
+
+dryopea is built for **immediate modding** — open source,
+text-format data files, and a runtime config that holds every
+tunable.  A developer can change tower fire rate or damage by
+editing one line in `numbers.json` and re-launching.  A player
+can author a new starter map in the **in-game editor** and
+share the resulting JSON.  Both are intended first-day
+behaviours, not aspirational late-game features.  See
+[`docs/DESIGN.md`](docs/DESIGN.md) § "Moddability is a
+first-class principle" for the full design stance.
+
 ## License
 
 LGPL-3.0-or-later — see [LICENSE](LICENSE).
