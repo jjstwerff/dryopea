@@ -349,6 +349,55 @@ verbatim below** with three adjustments:
   between walls are a second-phase feature** (the `cy`-layer
   deck mechanic in @PLAN46 § Systems #3 + #4); same free-but-
   timed economics when they ship.
+- **2026-05-26 — Vehicle destroyed = respawn inside the core,
+  which doubles as a launch prompt.**  When the player vehicle
+  is destroyed (blocker-damage edge case is currently the only
+  damage path), the player **respawns inside the core**.
+  Because they're now inside the lift-off footprint, the
+  **launch countdown starts immediately** (same pulse, same
+  hold sequence as a normal entry).  The player has two
+  options:
+
+  - **Drive out through the opening** → cancels the launch,
+    returns to the base, vehicle restored.  No further
+    consequence beyond having been knocked back to the core.
+  - **Stay inside** → liftoff fires with whatever is currently
+    onboard.  The scramble decision was made for them by the
+    destruction event, but they get to ratify (stay) or veto
+    (leave) it.
+
+  Net: vehicle "death" is never a game-loss; it's a forced
+  return-to-base + a free "are you ready to leave?" prompt.
+  Fits the no-run-loss design and keeps the scramble decision
+  in the player's hands even at the moment of greatest stress.
+- **2026-05-26 — No hard run-loss condition.  A "lost run" is
+  the player's own judgment, not a game state.**  dryopea does
+  not have a fail screen.  Every base ends with the player
+  launching the rocket — sometimes with a full carry, sometimes
+  with almost nothing.  The next base always starts.  A run
+  the player feels was *bad* is simply a run that produced
+  meagre carryover; a *good* run produced a lot.  The
+  difference is felt across the sequence, not announced by the
+  game.
+
+  Mechanical consequences:
+
+  - No "Game Over" screen, no forced exit from a run.
+  - The run is the **continuous sequence of bases the player
+    chooses to play**; it ends only when the player stops
+    playing.
+  - Bad performance still produces *some* carryover (an empty
+    wallet, no tower-tops; the next base falls back to the
+    fixed baseline starter loadout — starter tower + 2
+    helpers + baseline budget).
+  - Removes any need for a points-zero or vehicle-destroyed
+    "lose" trigger — those become *bad outcomes*, not run-
+    ending events.
+
+  The closed-by-decision register for the game-loss question:
+  the player's expectations are the only meter.  The earlier
+  "core destroyed = run ends" framing in @PLAN46 is fully
+  retired by this rule.
 - **2026-05-26 — Core is invulnerable; nibbling drains POINTS,
   not core HP.**  The central tower **cannot be destroyed**.
   Enemies that reach the core (or nibble it during the launch
