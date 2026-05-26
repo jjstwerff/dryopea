@@ -74,6 +74,52 @@ verbatim below** with three adjustments:
   (via entrance / broken wall) → the nearest wall hex when no
   path through exists.  In the absence of a blocker, the
   player and NPCs are otherwise ignored.
+- **2026-05-26 — Helper roster: 2 starting, 6 max.**  When the
+  core lands, **2 NPC helpers** are inside the rocket and
+  emerge to start work.  The player can later add more (via
+  point-funded build orders / drops; carryover from a previous
+  base is possible too), but the roster is **hard-capped at 6
+  helpers**.  This keeps labour scarce — a closed perimeter
+  takes meaningful time even at max roster, and the player
+  must triage which orders (walls, towers, salvage runs)
+  matter most.  Helpers in excess of 6 can't be ordered; the
+  cap is a design pressure, not a soft target.
+- **2026-05-26 — Core landing is "area + random within."**  The
+  core building is always present in every base — it isn't
+  authored in the editor; it's placed at base start by the
+  game itself.  The player chooses a **starting LOCATION** (a
+  general area on the map / planet), and the game **lands the
+  rocket at a random hex within a small area** around that
+  chosen point.  Same shape as DESIGN.md § Future expansion's
+  "Players pick start spots" — agency on the *region*, variance
+  on the *exact tile* — but applied to every base, not just
+  planet-scale picks.  Consequence: the player must adapt the
+  defence plan to wherever the core actually lands.  Validation
+  rule of thumb: ~3-hex radius around the chosen centre, land
+  hexes only (re-roll if random pick is water / impassable
+  terrain).  Editor (plan 01) therefore does NOT paint a core
+  marker — the core's location is a runtime decision, not
+  authored content.
+- **2026-05-26 — Starting points budget per base; scales with
+  previous base's haul.**  Every base begins with a points
+  budget the player can spend before / during the first wave —
+  the budget is the first move in the build economy, not a
+  zero-start dig-out.  On subsequent bases (after a successful
+  scramble), the starting budget is **higher**, scaling with
+  points the player carried out of the previous base.
+  Concrete rule (validation tier): the budget = a fixed base
+  amount + the player's unspent points at the moment they
+  entered the rocket.  Unspent points NOT carried (because the
+  player force-launched and left some helper-held loot behind)
+  are forfeit, same as un-evacuated tower tops.  Net effect:
+  scramble inventory now has TWO carrying lanes — tower tops
+  (parked in the core) and the player's wallet (carried with
+  them) — both grow the next base's strength, both subject to
+  the "what made it onboard" gate.  This also resolves the
+  validation deadlock: the player can spend the starting budget
+  to order their first tower(s) and helper(s) before wave 1
+  arrives; a free pre-placed starter tower is still likely
+  needed because helpers take time to build the ordered one.
 - **2026-05-26 — Player is a noncombatant manager.**  The
   player vehicle cannot harm enemies (no weapon) and is not
   hunted by them in the general case.  Combat is entirely
