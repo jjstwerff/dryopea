@@ -3,223 +3,121 @@ Copyright (c) 2026 Jurjen Stellingwerff
 SPDX-License-Identifier: LGPL-3.0-or-later
 -->
 
-# Numbers — first-pass tunable values
+# Numbers — runtime parameters
 
-A coherent placeholder set for every numerical parameter
-referenced in the design.  **Verify and refine through actual
-gameplay** — these values are meant to *exist together
-sensibly*, not to be balanced.
+**Source of truth:**
+[`../examples/numbers.json`](../examples/numbers.json) is the
+runtime config the game loads at startup.  **Every parameter
+has its value, units, and documentation inline in the JSON.**
+Modders edit values there and re-launch — no rebuild required
+(DESIGN.md § Moddability).
 
-> **All values in this file are TUNABLE PARAMETERS.**
-> Treat every number, radius, count, duration, multiplier
-> below as a knob that can be adjusted in playtest without
-> changing the design.  The design depends on the *shape*
-> of each rule, not on the *value*.  When the engine is
-> live, the entire numerical set should live in a runtime
-> config (`examples/numbers.json` or similar) so play
-> sessions can tune without rebuilds.  This document is
-> the rationale layer; the loadable config is the
-> runtime knob.
+This document is the *high-level overview*: what's in the file,
+why it's organised the way it is, and what the design targets
+are.  For an individual parameter's meaning + tradeoffs, read
+the JSON.
 
-The set targets a single-base session of **~15-25 minutes**:
-~45 s pre-wave commitment → 7 waves (15 s inter-wave) → ~5-6 min
-wave phase → free scramble or earlier exit.
+## What's in numbers.json
 
-## World
+The file is a single JSON object with one section per system,
+each section's leaves carrying `value` + `units` + `doc`:
 
-| Parameter | Value | Notes |
+| Section | Holds |
+|---|---|
+| `world` | hex grid scale, layout convention, map extents, atmospheric haze radius |
+| `player_vehicle` | dimensions, hover heights, speeds, boost timings, blocker-damage model |
+| `enemy_regular` | dimensions, speeds, HP, damage rates (core / wall / blocker), loot value, pre-walk standstill |
+| `enemy_boss_phase3` | 2×2 footprint, speed, HP, wall-break + repair-on-regulars rates, loot value |
+| `tower` | range, fire interval, damage, shot budget, costs + build/repair/boost timings + boost multipliers |
+| `wall` | wall + wall_high heights, HPs, build times, the end-ramp slope, entrance gap window |
+| `helper` | starting + cap roster, speed, HP, order cost, lander delivery + recovery times, construction tick |
+| `core` | footprint + dims, invulnerability flag, scrambler bubble radius, launch countdown, all 5 landing geometry params |
+| `wave_system` | wave list, inter-wave delay, pre-walk visibility, both wave-1 triggers (wall-count + provocation distance) |
+| `economy` | starting budget, carryover ratio, all order / loot values, tower-top carryover effect (validation placeholder) |
+| `camera` | over-the-shoulder pose, swing easing, FOV, haze visibility |
+| `input` | key + controller binding map; mouse/right-stick reserved for UI clicks (camera is locked) |
+
+## Design targets the parameters anchor
+
+The defaults are picked to produce these *shapes* (verify in
+play; tune freely):
+
+- **Single base session ≈ 15-25 minutes.**  ~45 s pre-wave
+  commitment → 7 waves with 15 s gaps → ~5-6 min wave phase
+  → free scramble or earlier exit.
+- **Tower DPS ≈ 10/s.**  Regular at 30 HP = 3-shot kill;
+  cluster of 3 enemies dies in ~10 s under one tower.
+- **Wall break-through ≈ rare.**  A lone enemy needs 100 s
+  to break a wall; bosses 5× faster.  Wall-nibbling is the
+  fallback when perimeter is fully closed; player intent is
+  to leave deliberate entrances.
+- **Economy ramps via loot.**  Wave 1 (5 enemies × 10 pts =
+  50 pts) + 200 starting = 250 pts → 1 tower + 1 helper.
+  Wave 2 (8 × 10 = 80 pts) plus carryover funds further
+  expansion.  By mid-game the player should be running ~3-4
+  towers + 4-6 helpers.
+- **Movement scale.**  Player at 3 hex/s normal = ~4 m/s; an
+  enemy at 1.5 hex/s gives time to react.  Boost (6 hex/s)
+  is for crossing the base, not winning fights.
+- **Combat economy ≈ 1 wave / 30 s of full-tower fire.**
+  Tower shot budget 30 = the player needs to pace towers
+  across the wave, salvage or repair between bursts.
+- **Damage to wallet ≈ slow drain.**  At 1 pt/s per nibbling
+  enemy, 5 enemies on the core = 5 pt/s; 200 pts buys 40 s
+  before zero.  Encourages keeping enemies AWAY, not just
+  outpacing the damage.
+
+## What gets used by what
+
+Cross-references between the parameter file and the design
+docs:
+
+| Parameter | Referenced by | Why |
 |---|---|---|
-| Hex diameter (vertex-to-vertex) | **1.5 m** | DESIGN.md § World scale |
-| Hex side | **0.75 m** | = diameter / 2 |
-| Hex flat-to-flat | **1.30 m** | = diameter × √3 / 2 |
-| Hex layout convention | **axial flat-top** | Q13 settled.  Matches loft's `lib/moros_*` hex layout (the primary precedent).  The loft `gridmesh` library exposes a `HexLayout` adapter so both layouts coexist (audience_crystal uses offset pointy-top); dryopea consumes the `gridmesh` library and picks axial flat-top to share data shapes with moros / `loft-libs-world`. |
-| Default map play-area | **~50 × 50 hexes** (~65 × 60 m) | Plan 04 open Q.  Map bounded but visible only within haze. |
-| Atmosphere haze radius | **40 hexes** (~50 m) | Bounded camera view distance; SETTING.md § The atmosphere is thick |
+| `world.hex_diameter` | every distance in the design | Canonical unit |
+| `world.atmosphere_haze_radius` | SETTING.md § The atmosphere is thick; camera | Caps render + sight |
+| `core.scrambler_bubble_radius` | SETTING.md § The core is a scrambling tower; wave engage-mode handoff | The bubble boundary IS the approach→engage trigger |
+| `core.close_spawn_disable_radius` | DESIGN.md § Updates: free-pick landing | Auto-silenced spawn markers |
+| `wave_system.wave_1_wall_trigger` + `wave_1_provocation_distance` | DESIGN.md § Updates: wave-start triggers | Either trigger fires wave 1 |
+| `wall.entrance_gap_recognition_hexes` | GROUND_TYPES.md § Entrances | Two ends form a gate when within this range |
+| `tower.shot_budget_per_charge` | PROXY_ART.md § Tower § lifecycle | Top goes black after this many shots |
+| `helper.recovery_time_after_retrieval` | PROXY_ART.md § Helper § Damage | Time before retrieved helper rejoins |
+| `economy.tower_top_carryover_effect` | DESIGN.md § Q4 | Mechanic carries, effect deferred — validation = "none" |
+| `camera.swing_easing_time` | DESIGN.md § Updates: camera locked | Auto-reframe smoothing |
 
-## Player vehicle
+## Loading + modding
 
-| Parameter | Value | Notes |
-|---|---|---|
-| Length × Width × Height | 2.4 m × 1.1 m × 0.9 m | PROXY_ART.md |
-| Hover clearance (idle) | 0.4 m | |
-| Hover clearance (boosted) | 3.0 m | Max during boost |
-| Movement speed (normal) | **3 hex/s** (~4 m/s) | Brisk drive |
-| Movement speed (boost) | **6 hex/s** (~8 m/s) | 2× normal |
-| Boost duration | **2.0 s** | Sustained, then auto-end |
-| Boost cooldown (post-end) | **5.0 s** | Time before next boost available |
-| HP (blocker-damage edge case only) | **100** | ~100 s of nibble before destruction |
-| Damage rate when blocking core path | **5 HP/s per enemy** | From PROXY_ART.md conditional damage rule |
-| Respawn after destruction | **instant** at core; launch countdown begins per usual rule |
+The intended flow:
 
-## Enemy regular
+1. Game starts → reads `examples/numbers.json` (or whatever
+   path the install ships at).
+2. Each section is bound to a strongly-typed config struct in
+   loft code.
+3. Player tweaks a value (e.g. raises `tower.range` from 15
+   to 20) and re-launches.  Effect visible immediately.
+4. Modders ship a forked numbers.json alongside a forked
+   palette.json / waves.json / maps for a custom variant.
 
-| Parameter | Value | Notes |
-|---|---|---|
-| Footprint | <2 × <1 hex | PROXY_ART.md |
-| Move speed (engage mode) | **1.5 hex/s** (~2 m/s) | Slow enough to react |
-| Move speed (approach mode) | **1.5 hex/s** | Same; only direction differs |
-| HP | **30** | = 3 tower shots |
-| Nibble damage to player wallet (at core) | **1 point / s** | Slow drain — most pressure comes from compound effects |
-| Nibble damage to walls (when blocked) | **1 HP / s** | Walls fall slowly to lone enemies; cluster pressure matters |
-| Nibble damage to blocker (player / helper) | **5 HP / s** | Conditional damage rule |
-| Loot value on death | **10 points** | Cheap individual reward; volume scales income |
-| Pre-walk standstill at spawn | **5 s** | Scramble decision window (SETTING.md) |
+No code changes needed for any of this; the build is the
+*engine*, not the *content*.  See DESIGN.md § Moddability.
 
-## Enemy boss (phase 3 — values for planning)
+## Updating values
 
-| Parameter | Value | Notes |
-|---|---|---|
-| Footprint | 2 × 2 hex | DESIGN.md |
-| Move speed | **1.0 hex/s** (~1.3 m/s) | Heavy industrial repair platform |
-| HP | **200** | = 20 tower shots |
-| Wall-break damage | **5 HP / s** | Bosses are the wall-breakers |
-| Repair rate on nearby regulars (phase 3) | **+5 HP / s** | Range 3 hexes; per-repaired-unit |
-| Repair range | **3 hexes** | Tight cluster around boss |
-| Loot value on death | **50 points** | 5× a regular |
+When a value changes in `numbers.json`:
 
-## Tower
-
-| Parameter | Value | Notes |
-|---|---|---|
-| Footprint | 7 hex (centre + 6 neighbours) | PROXY_ART.md |
-| Height | 6 m | Peeks over `wall_high` 5 m |
-| Range | **15 hexes** (~20 m) | LOS blocked by `wall_high` + `steep_rock`, NOT by `wall` |
-| Fire interval | **1.0 s** | Pulsed laser; one shot per second |
-| Damage per shot | **10** | = 3 hits to kill a regular |
-| Shot budget per charge | **30** | = 30 s of continuous fire before decay |
-| Order cost (beacon) | **100 points** | Debited at pickup at the core |
-| Construction time (after beacon drop) | **30 s** | One helper |
-| Repair time (helper rebuild) | **20 s** | Helper repairs a black tower from scratch |
-| Repair time (transplant from carried top) | **instant** | Salvage-and-deposit fast repair |
-| Boost duration | **15 s** | While pink top |
-| Boost effect | **2× fire rate, 1.5× damage, +5 hex range** | Aggressive but time-limited |
-| Boost engage time (player must hold key while next to tower) | **2 s** | Player commits attention |
-
-## Wall
-
-| Parameter | Value | Notes |
-|---|---|---|
-| `wall` height | 3.0 m | |
-| `wall_high` height | 5.0 m | Anti-insect barrier |
-| `wall` HP | **100** | |
-| `wall_high` HP | **200** | |
-| Construction time (per hex) | **10 s** (wall) / **20 s** (wall_high) | One helper per hex |
-| Build cost | **free** (helper time only) | DESIGN.md |
-| End-of-line drivable ramp slope | matches `hill` slope (~12) | GROUND_TYPES.md § Wall ends |
-| Entrance gap recognition window | **1-3 hex** | GROUND_TYPES.md § Entrances |
-
-## Helper
-
-| Parameter | Value | Notes |
-|---|---|---|
-| Roster starting | 2 | Inside the core on landing |
-| Roster cap | 6 | Hard cap |
-| Move speed | **2.5 hex/s** (~3.3 m/s) | Slightly slower than player |
-| HP | **50** | Halfway between player and regular enemy |
-| Order cost | **100 points** | Same as tower order |
-| Order delivery time (lander) | **20 s** | Top-color signal interpolates over this |
-| Retrieval pickup speed | instant on adjacent | |
-| Recovery time at core (post-retrieval) | **60 s** | Then rejoins roster |
-| Construction tick (wall) | **10 HP / s** | Net = 10 s per wall (matches construction time) |
-| Construction tick (tower) | proportional | 30 s total (PROXY_ART.md) |
-| Carry capacity | 1 slot | Same as player |
-
-## Core (central tower)
-
-| Parameter | Value | Notes |
-|---|---|---|
-| Footprint | 7 hex hex-prism | PROXY_ART.md |
-| Height | 8 m | Taller than max-decay tower (6 m) |
-| Diameter (flat-to-flat) | 3.9 m | |
-| HP | **∞ (invulnerable)** | DESIGN.md |
-| Scrambler bubble radius | **25 hexes** (~33 m) | Approach→engage handoff = this boundary |
-| Launch countdown duration | **6 s** | Player must stay inside to launch; exit cancels |
-| Launch-cancel fade | **0.3 s** | Pulse fades to dark on opening exit |
-| `core_landing_area_radius` | **3 hexes** around player's pick | The random-within zone the rocket actually touches down inside.  Tunable.  Larger = more variance from the pick; smaller = pick is closer to literal. |
-| `landing_pick_edge_buffer` | **5 hexes** from playable-area boundary | Closest the player's pick can be to the map edge.  Tunable. |
-| `obstruction_clearance_buffer` | **2 hexes** ring around the 7-hex footprint | Must be obstruction-free.  Tunable. |
-| `close_spawn_disable_radius` | **10 hexes** from landed core | Spawn markers within this radius are silenced for the mission.  Tunable — larger = more sympathetic landings (more safe zone); smaller = even nearby markers stay active. |
-| `starter_tower_landing_radius` | **5-10 hexes** from core | Where the separate lander touches down.  Tunable. |
-| NPC-order top colour cycle | 30 % red, 40 % amber, 25 % green, 5 % white-flash | Interpolates smoothly across 20 s |
-
-## Wave system
-
-| Parameter | Value | Notes |
-|---|---|---|
-| Wave list | `[5, 8, 12, 20, 30, 50, 80]` | examples/waves.json |
-| Inter-wave delay | **15 s** | |
-| Pre-walk visibility interval | **5 s** | Player decision window |
-| Wave-1 wall trigger (N walls built) | **8** | Either trigger fires wave 1 |
-| Wave-1 provocation distance (hexes from core) | **≥ 12** | Markers within < 12 hexes are "safe to inspect" |
-| Final-wave-cleared free-scramble grace | **unlimited** | No more enemies; player decides launch time |
-| Active spawn marker pulse rate | 1 Hz | Subtle, gentle |
-
-## Economy
-
-| Parameter | Value | Notes |
-|---|---|---|
-| Starting points budget (first base) | **200** | Fund first tower + helper order |
-| Carryover (unspent points → next base) | **1 : 1** | All unspent points carried to next base's budget |
-| Tower order cost | 100 | (above) |
-| Helper order cost | 100 | (above) |
-| Loot value per regular enemy | 10 | (above) |
-| Loot value per boss | 50 | (above) |
-| Helper-delivered loot to core | same as direct pickup | No transit discount |
-| Tower-top carryover effect on next base | **TBD; validation = no effect** | DESIGN.md Q4 |
-| Sap value (deferred) | TBD | SETTING.md § The other enemy |
-
-## Camera (game, not viewer)
-
-**Over-the-shoulder, locked in position; auto-swings only on
-sudden vehicle movement or terrain blocking the view of the
-player.**  No mouse orbit — the camera is automatic, not
-player-driven.  Matches the @PLAN46 "over-the-shoulder 3rd-
-person camera" framing in DESIGN.md.
-
-| Parameter | Value | Notes |
-|---|---|---|
-| Default pose | **Over-the-shoulder** — slightly above and behind the vehicle | ~3 m above vehicle, ~5 m behind |
-| Camera lock | **Locked in pose** — does not orbit with mouse / right stick | Avoids cinematic burden on the player; movement triggers do the talking |
-| Auto-reframe trigger 1 | **Sudden vehicle movement** (sharp turn, boost start) | Camera swings smoothly to maintain framing |
-| Auto-reframe trigger 2 | **Terrain blocks line-of-sight to the player** (wall, `steep_rock` cliff, `wall_high`, etc.) | Camera swings to a position that *can* view the vehicle |
-| Swing easing | Smooth, ~0.5 s — visibly the camera *moves*, not snaps | Communicates "the camera adjusted because of geometry" |
-| Default look-ahead | Slight pitch forward (≈ 10°) | Player sees a bit further ahead than back |
-| Zoom range | **fixed for now** (placeholder) — single setting | Revisit if play needs variable zoom |
-| FOV | **60°** | |
-| Visible radius (effective) | ~haze radius (40 hexes) | Beyond, fade to atmospheric fog |
-
-## Input scheme
-
-| Action | Key | Controller (sketch) |
-|---|---|---|
-| Move | **W A S D** | Left stick |
-| Look / camera orbit | mouse | Right stick |
-| Pickup / drop (single key) | **E** | A / X |
-| Wall paint mode toggle | **Q** | B / circle |
-| Vehicle boost (hold) | **Shift** | RT / R2 |
-| Tower boost (hold while adjacent) | **Shift** *(same key, context resolves)* | RT (same; context) |
-| Camera zoom | scroll wheel | RB/LB |
-| Mode toggle (editor: ground ↔ marker) | **Tab** | Y / triangle |
-| Palette select (editor) | **1 2 3 4 5 6 7 8 9 0 -** | D-pad cycle |
-| Cancel / exit menu | **Esc** | Start |
-
-**Open keybinds (settle when in-engine):** quick-rebind UI, hold-vs-tap distinctions for boost, controller-glyph variants.
-
-## How to use this file
-
-- Treat values as **placeholder constants**.  Change any one
-  without ceremony — the design doesn't depend on the
-  *value*, only on the *shape*.
-- When a value changes, **note here why** in a one-line entry
-  (helps future tuning).
-- Once the engine is live, mirror these into a runtime config
-  file (`examples/numbers.json` or similar) — but this
-  document stays as the **rationale** companion.
+- Update the `doc` field if the *meaning* changed (not just
+  the value).
+- Note here in a one-line bullet if the change is
+  *structural* (e.g., adding a new section, removing a
+  parameter).
+- Defer to the JSON's own inline docs for per-parameter
+  rationale.
 
 ## See also
 
-- [`DESIGN.md`](DESIGN.md) — every mechanic these numbers attach to.
-- [`PROXY_ART.md`](PROXY_ART.md) — geometry that some numbers reference.
-- [`GROUND_TYPES.md`](GROUND_TYPES.md) — slope / drop / height-override numbers per ground type (separate from this file).
-- [`../examples/palette.json`](../examples/palette.json) — palette values in loadable form.
-- [`../examples/waves.json`](../examples/waves.json) — wave counts in loadable form.
+- [`../examples/numbers.json`](../examples/numbers.json) — the loadable config (source of truth).
+- [`../examples/palette.json`](../examples/palette.json) — companion: ground-type palette.
+- [`../examples/waves.json`](../examples/waves.json) — companion: wave count list (will fold into numbers.json eventually; kept separate for now to mirror plan 03's authoring shape).
+- [`DESIGN.md`](DESIGN.md) — every mechanic the parameters attach to.
+- [`PROXY_ART.md`](PROXY_ART.md) — geometry that some parameters reference.
+- [`GROUND_TYPES.md`](GROUND_TYPES.md) — palette-internal slope/drop/height-override values (kept separate from numbers.json — they live with the palette content rather than the engine config).

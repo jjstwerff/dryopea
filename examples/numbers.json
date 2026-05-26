@@ -1,0 +1,189 @@
+{
+  "_doc": "dryopea runtime parameters. The game loads this file at startup. Every entry is tunable: modders edit the value and re-launch, no rebuild required (DESIGN.md § Moddability). Each parameter has value + units + doc; the _doc fields on each section explain context. Values target a single base session of ~15-25 minutes; this is a coherent placeholder set, not a balanced one — verify in play.",
+
+  "world": {
+    "_doc": "Hex grid scale + atmospheric extents. All other distances reference these.",
+    "hex_diameter": {
+      "value": 1.5,
+      "units": "m",
+      "doc": "Vertex-to-vertex hex size. The canonical unit; vehicle / wall / tower / range numbers all derive from this. Smaller = finer tactical resolution + more hexes to render. Larger = chunkier feel."
+    },
+    "hex_side": {
+      "value": 0.75,
+      "units": "m",
+      "doc": "Edge length of one hex; = hex_diameter / 2. Derived; do not edit independently."
+    },
+    "hex_flat_to_flat": {
+      "value": 1.299,
+      "units": "m",
+      "doc": "Apothem × 2 ≈ hex_diameter × √3/2. The 'short' diagonal. Used when '1 hex' means a row step rather than a diagonal step."
+    },
+    "hex_layout": {
+      "value": "axial_flat_top",
+      "doc": "Hex grid convention. Matches loft's lib/moros_* tradition for forward interop with the shared world library. The gridmesh library exposes a HexLayout adapter so 'offset_pointy_top' is also valid — switching would invalidate all neighbour-direction code."
+    },
+    "map_play_area_default": {
+      "value": [50, 50],
+      "units": "hex",
+      "doc": "Default playable-area extents for an authored map (width × height). Smaller maps feel intimate; larger encourage scouting. Plan 04 maps specify their own."
+    },
+    "atmosphere_haze_radius": {
+      "value": 40,
+      "units": "hex",
+      "doc": "Visible radius around the player before atmospheric haze fades the world. Bounds the camera's effective view + cheap render distance. Larger = more visible area at the cost of draws; smaller = denser fog feel."
+    }
+  },
+
+  "player_vehicle": {
+    "_doc": "The player's hover unit. Smaller + brighter than enemies; noncombatant; conditionally damageable only when blocking core access.",
+    "length": { "value": 2.4, "units": "m", "doc": "Along the facing axis. Sized to fit comfortably in a single hex with movement headroom." },
+    "width":  { "value": 1.1, "units": "m", "doc": "Across the facing axis. Two vehicles can pass abreast in a 2-hex-wide entrance." },
+    "height": { "value": 0.9, "units": "m", "doc": "Reads as 'vehicle' silhouette; flatter than enemies." },
+    "hover_clearance_idle":  { "value": 0.4, "units": "m", "doc": "Baseline hover above local terrain. Always visibly above ground." },
+    "hover_clearance_boost": { "value": 3.0, "units": "m", "doc": "Peak during boost. High enough to clear walls + steep_rock cliffs." },
+    "speed_normal":  { "value": 3.0, "units": "hex/s", "doc": "Cruising speed. ≈ 4 m/s. Brisk drive." },
+    "speed_boost":   { "value": 6.0, "units": "hex/s", "doc": "Boosted speed. = 2× normal. ≈ 8 m/s." },
+    "boost_duration": { "value": 2.0, "units": "s", "doc": "Sustained boost time before auto-end. Long enough to clear a wall + recover." },
+    "boost_cooldown": { "value": 5.0, "units": "s", "doc": "After boost ends, time before next boost is available." },
+    "hp_blocker": { "value": 100, "units": "HP", "doc": "Vehicle HP — relevant ONLY when the vehicle is in the blocker-damage edge case (standing between an enemy and the core). Otherwise effectively invulnerable (enemies ignore the player)." },
+    "blocker_damage_rate_taken": { "value": 5, "units": "HP/s per attacker", "doc": "Damage rate while blocking. With multiple enemies stacking, the vehicle falls fast — intentional pressure on bad positioning." },
+    "respawn_location": { "value": "core_interior", "doc": "On destruction, the player respawns inside the core (which immediately starts the launch countdown — drive out the opening to cancel)." }
+  },
+
+  "enemy_regular": {
+    "_doc": "The basic robot enemy — comm-cut, drawn to the scrambler tower individually. Fits through 1-hex entrances; doesn't coordinate by default.",
+    "length": { "value": 2.7, "units": "m", "doc": "Along facing — slightly larger than the player vehicle." },
+    "width":  { "value": 1.3, "units": "m", "doc": "Across facing — fits a 1-hex entrance with margin." },
+    "height": { "value": 1.0, "units": "m", "doc": "" },
+    "speed_engage":  { "value": 1.5, "units": "hex/s", "doc": "Movement under flow-field guidance (inside scrambler bubble)." },
+    "speed_approach": { "value": 1.5, "units": "hex/s", "doc": "Movement outside the bubble, along its spawn marker's direction. Same speed as engage for now." },
+    "hp": { "value": 30, "units": "HP", "doc": "= 3 tower laser shots to kill." },
+    "damage_to_core_wallet": { "value": 1, "units": "points/s", "doc": "When nibbling the core, this rate drains the player's point wallet (core is invulnerable; points are the proxy)." },
+    "damage_to_wall": { "value": 1, "units": "HP/s", "doc": "When forced to attack a wall (closed perimeter, no path through), this rate. Slow — wall-breaking is a rare path, not the default." },
+    "damage_to_blocker": { "value": 5, "units": "HP/s", "doc": "When attacking a player/helper blocking their path to the core." },
+    "loot_value": { "value": 10, "units": "points", "doc": "Points dropped on death; gold cube on the death hex." },
+    "pre_walk_standstill": { "value": 5.0, "units": "s", "doc": "Seconds the enemy stands at its spawn marker after wave start before beginning approach. The player's scramble-decision window." }
+  },
+
+  "enemy_boss_phase3": {
+    "_doc": "Heavy repair-platform enemy (phase 3, deferred). 2×2 footprint forces structural play; heals nearby regulars; never attacks towers directly.",
+    "footprint_hexes": { "value": [2, 2], "doc": "2×2 hex bounding box. Cannot fit through 1-hex entrances; forces 2-hex gates or wall-breaking." },
+    "speed": { "value": 1.0, "units": "hex/s", "doc": "Slow — heavy industrial machinery." },
+    "hp": { "value": 200, "units": "HP", "doc": "= 20 tower laser shots." },
+    "damage_to_wall_break": { "value": 5, "units": "HP/s", "doc": "Bosses are the wall-breakers. 5× a regular's rate." },
+    "repair_rate_on_regulars": { "value": 5, "units": "HP/s per repaired unit", "doc": "Healing applied to each damaged regular in range. Killing the boss stops the heal pool." },
+    "repair_range": { "value": 3, "units": "hex", "doc": "Radius from boss within which regulars are healed." },
+    "loot_value": { "value": 50, "units": "points", "doc": "5× a regular." }
+  },
+
+  "tower": {
+    "_doc": "Pulsed-laser defensive tower. 7-hex footprint, ~6 m tall (peeks over wall_high). Decays by per-shot budget, not time.",
+    "footprint_layout": { "value": "hex_disc_radius_1", "doc": "Centre hex + 6 neighbours = 7 hexes total." },
+    "height": { "value": 6.0, "units": "m", "doc": "Body height; peeks 1 m over wall_high (5 m)." },
+    "range": { "value": 15, "units": "hex", "doc": "≈ 20 m. LOS blocked by wall_high + steep_rock; NOT by wall." },
+    "fire_interval": { "value": 1.0, "units": "s", "doc": "One laser shot per second. Pulsed; the recharge gap is visible." },
+    "damage_per_shot": { "value": 10, "units": "HP", "doc": "= 3 hits to kill a regular enemy." },
+    "shot_budget_per_charge": { "value": 30, "units": "shots", "doc": "Continuous fire before the tower goes black (decayed). At 1 shot/s = 30 s of firing." },
+    "order_cost_points": { "value": 100, "units": "points", "doc": "Debited from the wallet when the player picks up a tower beacon at the core. Failed deposit does not refund." },
+    "construction_time_helper": { "value": 30.0, "units": "s", "doc": "Time for one helper to construct a tower after the beacon is deposited." },
+    "repair_time_helper_rebuild": { "value": 20.0, "units": "s", "doc": "Time for a helper to repair a black tower from scratch." },
+    "repair_time_top_transplant": { "value": 0.0, "units": "s", "doc": "Instant — the salvage-and-deposit fast-repair path." },
+    "boost_duration": { "value": 15.0, "units": "s", "doc": "Time the top stays pink after boost; reverts to red afterwards." },
+    "boost_fire_rate_multiplier": { "value": 2.0, "units": "×", "doc": "Fire interval scales by 1/this while boosted." },
+    "boost_damage_multiplier": { "value": 1.5, "units": "×", "doc": "Per-shot damage scales by this while boosted." },
+    "boost_range_bonus": { "value": 5, "units": "hex", "doc": "Added to range while boosted." },
+    "boost_engage_time": { "value": 2.0, "units": "s", "doc": "Player must hold the boost key adjacent to the tower for this long to activate." }
+  },
+
+  "wall": {
+    "_doc": "Player-built barrier ground type. Two heights; both free in points, helper-time bottleneck.",
+    "wall_height": { "value": 3.0, "units": "m", "doc": "Standard wall extrusion. Insects climb this easily." },
+    "wall_high_height": { "value": 5.0, "units": "m", "doc": "Anti-insect barrier. Insects cannot climb." },
+    "wall_hp": { "value": 100, "units": "HP", "doc": "Time to break by one regular = 100 s. By a boss = 20 s." },
+    "wall_high_hp": { "value": 200, "units": "HP", "doc": "2× wall; takes proportionally longer to break." },
+    "build_time_wall": { "value": 10.0, "units": "s", "doc": "One helper, one wall hex." },
+    "build_time_wall_high": { "value": 20.0, "units": "s", "doc": "One helper, one wall_high hex. = 2× wall." },
+    "build_cost_points": { "value": 0, "units": "points", "doc": "Free in points. Helper-seconds is the bottleneck." },
+    "end_ramp_slope_value": { "value": 12, "doc": "Slope value applied to the open face of a wall-end hex (= hill slope). Drivable for ground units." },
+    "entrance_gap_recognition_hexes": { "value": [1, 3], "units": "hex range", "doc": "Two wall ends within 1-3 hexes (inclusive) form a recognised entrance. <1 = touching = no gap; >3 = not recognised; not the designed entrance." }
+  },
+
+  "helper": {
+    "_doc": "NPC vehicle — same chassis as the player, grey, non-combat. Identity-carrying; damage = wreck + retrieve + recover, never destroyed.",
+    "roster_start": { "value": 2, "doc": "Helpers emerging from the core on landing." },
+    "roster_cap": { "value": 6, "doc": "Maximum simultaneous helpers. Hard cap." },
+    "speed": { "value": 2.5, "units": "hex/s", "doc": "Slightly slower than the player vehicle (3 hex/s)." },
+    "hp": { "value": 50, "units": "HP", "doc": "Higher than a regular enemy (30), lower than the player (100)." },
+    "order_cost_points": { "value": 100, "units": "points", "doc": "Same as tower order cost. Debited at the NPC-order face of the core." },
+    "lander_delivery_time": { "value": 20.0, "units": "s", "doc": "Time between order placement and lander touchdown. Top-of-core colour interpolates over this." },
+    "recovery_time_after_retrieval": { "value": 60.0, "units": "s", "doc": "Time a retrieved downed helper spends in recovery at the core before rejoining the roster." },
+    "construction_tick_hp_per_second": { "value": 10, "units": "HP/s", "doc": "Build rate applied at a construction site. Net = 10 s per wall, 20 s per wall_high." },
+    "carry_slot_count": { "value": 1, "doc": "Same as player. Cannot carry beacon + loot simultaneously." }
+  },
+
+  "core": {
+    "_doc": "Central scrambling tower / escape rocket. Invulnerable; carves the comm-jam bubble that makes defence possible.",
+    "footprint_layout": { "value": "hex_disc_radius_1", "doc": "Same 7-hex footprint as a tower." },
+    "height": { "value": 8.0, "units": "m", "doc": "Taller than a max-decay tower (6 m); distinguishes core silhouette." },
+    "diameter_flat_to_flat": { "value": 3.9, "units": "m", "doc": "≈ 3 × hex_flat_to_flat. Matches the 7-hex footprint." },
+    "hp": { "value": null, "doc": "Invulnerable. Damage to the core is registered as point-wallet drain instead (see enemy_regular.damage_to_core_wallet)." },
+    "scrambler_bubble_radius": { "value": 25, "units": "hex", "doc": "Radius of the comm-jam zone around the core. Inside: robots act per the wave-system rules. Outside: robots regain coordination → more dangerous. ALSO the approach→engage handoff distance (closes Q11)." },
+    "launch_countdown_duration": { "value": 6.0, "units": "s", "doc": "Time the player must stay inside the core's interior to launch. Bottom pulse beats faster as it elapses. Exit cancels." },
+    "launch_cancel_fade_time": { "value": 0.3, "units": "s", "doc": "Time for the bottom pulse to fade after cancellation." },
+    "core_landing_area_radius": { "value": 3, "units": "hex", "doc": "Random-within zone for actual touchdown around the player's pick. Tunable: larger = more variance from pick; smaller = pick is literal." },
+    "landing_pick_edge_buffer": { "value": 5, "units": "hex", "doc": "Closest the player's pick can be to the map's playable-area boundary." },
+    "obstruction_clearance_buffer": { "value": 2, "units": "hex", "doc": "Ring around the 7-hex footprint that must be obstruction-free at landing time. The rocket auto-steers off invalid hexes searching for a valid landing." },
+    "close_spawn_disable_radius": { "value": 10, "units": "hex", "doc": "Spawn markers within this radius of the landed core are silenced for the mission. Visible to the player; just don't spawn enemies." },
+    "starter_tower_landing_offset": { "value": [5, 10], "units": "hex range", "doc": "Distance from core at which the free starter tower's lander touches down. Random within this range, random direction." }
+  },
+
+  "wave_system": {
+    "_doc": "Wave shape + activation triggers. No HUD — player learns via in-world signals + memory.",
+    "wave_list": {
+      "value": [5, 8, 12, 20, 30, 50, 80],
+      "units": "enemy count per wave",
+      "doc": "Validation list — 7 waves, progressively larger. Authored content (placeholder for the eventual economy-driven model)."
+    },
+    "inter_wave_delay": { "value": 15.0, "units": "s", "doc": "Wall-clock seconds between the last enemy dying and the next wave's spawn." },
+    "pre_walk_visibility_interval": { "value": 5.0, "units": "s", "doc": "Seconds enemies stand visible at their spawn markers before walking. Player's scramble-decision window." },
+    "wave_1_wall_trigger": { "value": 8, "units": "walls built", "doc": "One of two wave-1 triggers (whichever fires first). Number of walls the player has built. Higher = more pre-wave prep; lower = faster start." },
+    "wave_1_provocation_distance": { "value": 12, "units": "hex", "doc": "Other wave-1 trigger: a spawn marker ≥ this distance from the core, driven onto. Closer markers don't trigger; map author shapes pacing by close-vs-far placement." }
+  },
+
+  "economy": {
+    "_doc": "Point-pool funded from enemy loot. Carryover via the wallet (1:1); tower-tops have no validation-tier effect yet (Q4 future model).",
+    "starting_budget_first_base": { "value": 200, "units": "points", "doc": "Wallet at the start of a player's first mission. Lets them order 1 tower + 1 helper before earning loot." },
+    "carryover_points_ratio": { "value": 1.0, "units": "× unspent", "doc": "Fraction of the wallet at scramble that carries to the next base's starting budget. 1.0 = all unspent points carry." },
+    "tower_order_cost": { "value": 100, "units": "points", "doc": "Mirrors tower.order_cost_points." },
+    "helper_order_cost": { "value": 100, "units": "points", "doc": "Mirrors helper.order_cost_points." },
+    "loot_value_regular": { "value": 10, "units": "points", "doc": "Mirrors enemy_regular.loot_value." },
+    "loot_value_boss": { "value": 50, "units": "points", "doc": "Mirrors enemy_boss_phase3.loot_value." },
+    "tower_top_carryover_effect": {
+      "value": "none",
+      "doc": "Validation placeholder. Future: each carried specialised top is a loadout slot for the next mission's available pool. See DESIGN.md § Q4."
+    }
+  },
+
+  "camera": {
+    "_doc": "Over-the-shoulder, locked-in-pose. Auto-reframes on sudden movement or terrain blocking the vehicle.",
+    "mode": { "value": "over_the_shoulder_locked", "doc": "Fixed pose relative to vehicle; no player-driven rotation. The camera is automatic." },
+    "height_above_vehicle": { "value": 3.0, "units": "m", "doc": "Vertical offset above the vehicle's pivot." },
+    "distance_behind_vehicle": { "value": 5.0, "units": "m", "doc": "Horizontal offset behind the vehicle." },
+    "forward_pitch_degrees": { "value": 10, "units": "°", "doc": "Slight pitch — player sees more ahead than behind." },
+    "fov_degrees": { "value": 60, "units": "°", "doc": "Field of view." },
+    "swing_easing_time": { "value": 0.5, "units": "s", "doc": "Auto-reframe smoothing; reads as 'the camera adjusted' rather than 'teleported'." },
+    "visible_radius_haze": { "value": 40, "units": "hex", "doc": "Mirrors world.atmosphere_haze_radius. Beyond, fade to atmospheric fog." }
+  },
+
+  "input": {
+    "_doc": "Key bindings + controller mappings. Movement / position triggers do most of the work; only a handful of keys remain.",
+    "move":            { "key": ["W", "A", "S", "D"], "controller": "left_stick", "doc": "Vehicle movement." },
+    "pickup_drop":     { "key": "E", "controller": "A_or_X", "doc": "Single key for both pickup and deposit. Empty hands = pickup, carrying = deposit. Loot is auto-pickup on drive-over (no key)." },
+    "wall_paint_toggle": { "key": "Q", "controller": "B_or_circle", "doc": "Toggle the wall-paint mode. Vehicle body tints red when ON; appearance of outlines as you drive confirms." },
+    "boost":           { "key": "Shift", "controller": "RT_or_R2", "doc": "Hold to boost. Context-resolved: vehicle boost while moving; tower boost while adjacent to a tower." },
+    "editor_mode_toggle": { "key": "Tab", "controller": "Y_or_triangle", "doc": "Editor only: flip between ground-paint and marker-place modes." },
+    "palette_select":  { "key": ["1","2","3","4","5","6","7","8","9","0","-"], "controller": "d_pad_cycle", "doc": "Editor only: pick the active palette entry. 11 entries match the 11 ground types." },
+    "cancel_menu":     { "key": "Esc", "controller": "Start", "doc": "Cancel a UI action / open pause menu." },
+    "mouse_or_right_stick": { "value": "ui_clicks_only", "doc": "Reserved for landing-spot pick on the planet view, editor click-to-paint, map markers. NOT camera orbit (camera is locked + auto-reframed)." }
+  }
+}
