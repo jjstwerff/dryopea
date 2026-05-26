@@ -37,6 +37,83 @@ verbatim below** with three adjustments:
   an endless flat sea; only painted hexes occupy storage
   (`hash<GroundType[q,r]>`, miss = sea). Editor and game share
   this data model. See plan 01.
+- **2026-05-26 — World scale: hexes are 1.5 m diameter.** A hex
+  is ~1.5 m vertex-to-vertex (side ≈ 0.75 m, flat-to-flat ≈
+  1.3 m). Concrete implications below in § World scale.
+- **2026-05-26 — Canonical ground-type palette.** Eleven types
+  in three sub-palettes (water 4 + land 5 + structure 2 walls).
+  See [`GROUND_TYPES.md`](GROUND_TYPES.md) for the full design
+  and [`../examples/palette.json`](../examples/palette.json) for
+  the loadable form.  Wall colours (red) are explicit
+  placeholders.
+- **2026-05-26 — Walls have drivable ends + topological
+  entrances.**  A wall hex with exactly one wall neighbour
+  (an "end") renders a drivable ramp on its open face — so an
+  unfinished wall lets enemies roll up onto it.  Two wall ends
+  within 1-2 tiles of each other form a recognised
+  **entrance**, which the flow-field routes enemies through.
+  A fully closed wall has no path; enemies fall back to
+  **nibbling the nearest wall hex** until it breaks.  See
+  [`GROUND_TYPES.md` § Entrances](GROUND_TYPES.md#entrances--two-wall-ends-near-each-other).
+- **2026-05-26 — Proxy art convention.**  Placeholder geometry
+  for testing gameplay before final art lands lives in
+  [`PROXY_ART.md`](PROXY_ART.md).  Current entries: enemy
+  (magenta cuboid, black front), player vehicle (white cuboid
+  with hover + boost + auto-impact-protection), NPC helper
+  (grey version of the player — builds walls/towers and
+  salvages loot), loot drop (gold cube), tower
+  (almost-black cone, red top, peeks over `wall_high`), core
+  building (dark-blue tower variant).
+- **2026-05-26 — Combat: pulsed-laser towers, nibble-melee
+  enemies.**  All towers fire the same primitive weapon: a
+  pulsed laser beam with a recharge pause between shots.
+  Enemies have **nibble** (damage-per-second melee) when they
+  reach the core or are blocked at a wall.  Default enemy
+  target: the core (via entrance / broken wall); fallback:
+  the nearest wall hex when no path through exists.
+- **2026-05-26 — Tower lifecycle: shot-budget decay + repair +
+  boost.**  Towers degrade per **attack count**, not per time:
+  each laser shot consumes one unit of a per-charge shot
+  budget; when spent, the tower's top turns black and it stops
+  firing.  Player repairs to refill (top → red).  Player can
+  also boost a tower (top → pink) for time-limited enhanced
+  performance.  Idle towers never decay.
+- **2026-05-26 — Enemy salvage + NPC helpers.**  Killed enemies
+  drop loot (gold cubes) at their death hex.  The player picks
+  up directly by driving over; **NPC helpers** (grey versions
+  of the player vehicle) auto-path to loot and carry it to the
+  core, which converts it into the upgrade resource pool.  NPC
+  helpers also execute build orders for both walls and towers
+  (DESIGN.md § Systems #2 generalised).
+
+## World scale
+
+| Quantity | Value | Notes |
+|---|---|---|
+| **Hex diameter** (vertex-to-vertex) | **~1.5 m** | The canonical unit. |
+| Hex side length | ~0.75 m | = diameter / 2 |
+| Hex flat-to-flat | ~1.30 m | = diameter × √3 / 2 ≈ 1.299 m |
+| Hex area | ~1.46 m² | ≈ (3√3 / 2) × side² |
+| 32×32 chunk footprint | ~48 m × ~42 m | One gridmesh chunk; about a city block |
+
+**Why 1.5 m.** Small enough that the painted resolution feels
+tactical — a hex is roughly "where one person stands". A small
+vehicle covers 2-3 hexes; a tower base is 1-2; a wall is 1 hex
+wide and several long; the core building footprint is a small
+cluster. Large enough that authoring a base doesn't drown in
+hex count.
+
+**Comparisons.**
+- A person's footprint: 1 hex.
+- A medium vehicle: 2-3 hexes wide.
+- A wall section: 1 hex wide, walkable along its length.
+- An enemy mob: 1 hex.
+- Sniping distance (rough): 20-30 hexes ≈ 30-45 m.
+- Across a 32×32 chunk: ~48 m — visible at a glance from the
+  3rd-person camera.
+
+These scale assumptions feed back into camera height, vehicle
+hover clearance, weapon range, wave spawn radii, etc.
 
 ---
 

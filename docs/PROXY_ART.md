@@ -1,0 +1,404 @@
+<!--
+Copyright (c) 2026 Jurjen Stellingwerff
+SPDX-License-Identifier: LGPL-3.0-or-later
+-->
+
+# Proxy art — placeholder geometry for gameplay testing
+
+This document records the **placeholder shapes** that stand in
+for real art while dryopea's gameplay systems are being built.
+Each entry exists for one reason: **a system needs to be testable
+in-game before the art for it is ready**.
+
+When real art lands for an entry, its row is moved from
+**Active** to **Retired**, with a note pointing at where the
+final art lives.
+
+## Conventions
+
+- **Primitive geometry first.**  Cuboids and cylinders unless a
+  shape is *load-bearing for gameplay* (a wall section needs to
+  read as a wall; a hill profile doesn't need to read as
+  anything until lib-plan 19 meshes it).
+- **Honest proportions.**  Always sized to the real game scale
+  (DESIGN.md § World scale, hexes ~1.5 m).  Painting tests with
+  the right footprint catches a class of "looks fine but won't
+  actually fit through the gate" bugs.
+- **Facing signalled by colour contrast, not detail.**  A black
+  front face on an otherwise plain body is enough to read
+  direction from any zoom; no headlights / eyes / antennae
+  needed yet.
+- **Body colour distinct from the
+  [palette](GROUND_TYPES.md).**  Pick a hue that does NOT appear
+  in the 11 ground types — so a proxy enemy is unambiguous
+  against any terrain.  Magenta / purple `#a040c0` is the
+  default proxy body colour; rotate to a different
+  off-palette hue per entity class if more proxies are needed.
+
+## Active proxies
+
+### Enemy — basic ground unit (first wave class)
+
+The first enemies to be testable on a painted map.  Purpose:
+**validate movement** — flow-field guidance through wall
+entrances, slope-gated traversal, vehicle-vs-ground-mob path
+differences.
+
+| Property | Value |
+|---|---|
+| Shape | Cuboid (long box) |
+| Length (along facing axis) | **~2.7 m** — slightly under 2 hexes (`< 2 × 1.5 m`) |
+| Width (across facing axis) | **~1.3 m** — slightly under 1 hex (`< 1.5 m`) |
+| Height | **1.0 m** — short enough to fit under walls visually, tall enough to read from the 3rd-person camera |
+| Body colour | `#a040c0` (placeholder magenta-purple) |
+| **Front face colour** | **`#000000` (black)** — the only side with a different colour; reads as "this is the front" at any zoom |
+| Other 5 faces | body colour, flat shaded |
+| Origin / pivot | centre of the footprint (so rotation around the central hex axis is natural) |
+
+**Why these dimensions.**
+
+- **< 2 hexes long:** a single enemy occupies *roughly* one hex
+  but spans into an adjacent one when in motion, which exercises
+  the multi-hex collision + flow-field sampling path (an
+  enemy's "current hex" is its centre, but its body touches
+  neighbours — important for the entrance-detection mechanic in
+  [GROUND_TYPES.md § Entrances](GROUND_TYPES.md#entrances--two-wall-ends-near-each-other),
+  where a 1-hex gap is a tight squeeze and a 2-hex gap is roomy).
+- **< 1 hex wide:** lets two of them pass each other in a 2-hex
+  gap or stand abreast in a 2-hex-wide column.  Forces the
+  player's entrance design to *matter* — a 1-hex gap funnels
+  enemies single-file, a 2-hex gap lets them flood.
+- **Black front:** the moment you can see which way an enemy is
+  *pointing*, you can see whether the flow-field actually turned
+  it toward the core or sent it past — visual debugging for the
+  AI is free.
+
+**What this is NOT yet.**
+
+- No animation rig, no movement bob, no projectile, no death
+  animation.
+- No faction colour variation.
+- No size tiers (boss enemies, fast scouts, etc.) — those are
+  later proxies (with their own off-palette colours).
+- No top decoration — the user can tell it's an enemy because
+  it's the only off-palette purple thing on the map; no need
+  for a faction icon.
+
+**Lifetime.**  Retire when actual enemy art lands.  The proxy
+sits in the game's render path; final art replaces it 1:1 (same
+hex footprint, same pivot, same facing convention).  No
+gameplay-side changes when art arrives.
+
+### NPC helper — grey version of the player
+
+The autonomous construction + salvage unit (DESIGN.md § Systems
+#2 + § Updates 2026-05-26 on salvage).  Purpose: **validate the
+auto-build flow + the loot pickup path** with the cheapest
+possible visual differentiation from the player.
+
+| Property | Value |
+|---|---|
+| Shape, size, hover behaviour | **identical to the player vehicle** below (~2.4 m × 1.1 m × 0.9 m, ~0.4 m hover clearance) |
+| Body colour | **`#c0c0c0`** (silver-grey) — clearly a "grey version of the player white"; distinct from terrain greys (`rock` `#b0b0b0`, `steep_rock` `#555555`) by hue lightness and by virtue of being a moving vehicle, not a hex tile |
+| Front face colour | `#000000` (black) — same facing convention as player + enemy |
+| Boost capability | **none** (workers stay on-task; only the player boosts) |
+
+**Why a colour-swap proxy, not a different shape.**
+
+- The player and the worker share **all** the same locomotion
+  primitives — hover, path, climb-the-same-slopes, ignore-water,
+  same-vehicle-footprint-rules.  Same code path; only the
+  *driver* differs (player input vs path-following AI).
+- A separate shape would imply separate behaviour; the
+  colour-swap honestly signals "this is a player-shaped thing,
+  controlled by the game."  When workers get real art later it's
+  free to diverge; the proxy doesn't pretend otherwise.
+
+**Worker behaviour (gameplay, captured here so the proxy can
+exercise it).**
+
+- **Build orders** — when the player marks a structure
+  (wall / wall_high / tower) for construction, idle workers
+  path to the build site and apply construction ticks until
+  the structure is complete (DESIGN.md § Systems #2).
+- **Salvage path** — when an enemy dies, loot appears on its
+  death hex.  Idle workers path to the nearest loot, pick it up,
+  and carry it back to the core building.  Loot delivered to
+  the core becomes the **upgrade resource** pool (DESIGN.md
+  § Systems #6).
+- **No combat role** — workers do not fight.  They are
+  noncombatants; if enemies reach them, they die without
+  resisting.  The player decides whether to defend worker paths
+  or let them run risk.
+
+### Loot drop — proxy collectible
+
+When an enemy dies it leaves a **loot marker** on its death hex.
+Visually:
+
+| Property | Value |
+|---|---|
+| Shape | small upright cube |
+| Size | ~0.4 m on a side (clearly visible on a 1.5 m hex) |
+| Colour | **`#ffd000`** (bright gold) — off-palette, signals "pick me up" |
+| Behaviour | sits stationary at the death-hex centre; despawns when picked up |
+| Pickup rule | player drives over → instant pickup, points credited; OR worker delivers to core → points credited there |
+| Despawn | if not collected within a generous timeout (e.g. 60 s), the loot vanishes (anti-clutter; tunable) |
+
+Open question: pickup priority when player + worker race for the
+same loot.  Lean **player wins** (player presence at the hex
+trumps worker AI), with the worker reverting to "look for the
+next loot" automatically.
+
+### Player vehicle — the over-the-shoulder hover unit
+
+The thing the player rides (DESIGN.md § Systems #1).
+Purpose: **validate vehicle hover, the 3rd-person camera, the
+boost mechanic, and movement-with-impact-protection** while
+final vehicle art is years out.
+
+| Property | Value |
+|---|---|
+| Shape | Cuboid (same chassis primitive as the enemy proxy) |
+| Length | **~2.4 m** — slightly smaller than the enemy (~2.7 m) |
+| Width | **~1.1 m** — slightly smaller than the enemy (~1.3 m) |
+| Height | **~0.9 m** — flatter than the enemy (a more vehicle-like silhouette) |
+| Body colour | **`#f0f0f0`** (near-white) — the universal "this is the player" colour |
+| **Front face colour** | **`#000000`** (black) — same facing convention as the enemy proxy; black = front |
+| Hover clearance above ground | **~0.4 m** standard; up to **~3 m** while boosting |
+| Origin / pivot | centre of the footprint, at terrain height (vehicle position interpolated above) |
+
+**Why these dimensions.**
+
+- **Smaller than the enemy** in every axis — at a glance the
+  player is the *agile* one; the slight size delta is enough to
+  read.  Doesn't matter what colour the enemy is; what matters
+  is the player is consistently *smaller and brighter*.
+- **Same front-face convention** (black) means the player and
+  enemies share a single facing rule.  When testing the AI's
+  flow-field guidance, you can compare the enemy's pointing
+  direction to the player's reference at a glance.
+- **Hover clearance ~0.4 m** is the *visible* baseline (sits
+  noticeably above the terrain even on flat ground, so you can
+  see it isn't a ground unit).
+
+**Movement mechanics** (gameplay, not just art — captured here
+because the proxy must visibly demonstrate them):
+
+- **Hover** — the vehicle's bottom face sits at
+  `local_terrain_height(footprint) + clearance` where the
+  height is the **max** over the footprint's hexes.  This is
+  why it can ride over terraced cliffs without clipping
+  (DESIGN.md § Systems #1).
+- **Boost key — fly for a stretch.**  Pressing the boost key
+  lifts the vehicle to ~3 m clearance for a short window
+  (tunable — start at ~2 s sustained, with cooldown).  While
+  boosting the vehicle ignores ground-slope constraints — it can
+  cross over a `steep_rock` cliff, a wall, a closed perimeter.
+  This is the OUTBOUND scramble / scouting mobility tool, and
+  it's also how the player can recover from being trapped.
+- **Automatic impact protection on the ground.**  When boost ends
+  and the vehicle descends back through the clearance zone, the
+  landing is softened automatically — no damage from the
+  height-drop, no momentum penalty.  The player never has to
+  *manage* landing; boost is a "go up, come down" lever, not a
+  flight-sim discipline.
+
+**Why these mechanics in the proxy doc.**  The player can be
+fully tested with a white box if the BEHAVIOUR is right.  Art
+can wait; the boost / landing curves need to feel correct first,
+and that's a proxy-tunable.
+
+**Lifetime.**  Retire when actual vehicle art lands (chassis +
+wheels-or-thrusters + glowing-cockpit-equivalent + boost VFX +
+damage state).  The proxy's hover clearance + boost height + soft
+landing carry into final art unchanged.
+
+### Tower — defensive structure (placed by build orders)
+
+The defensive tower the player orders built around the core.
+Purpose: **validate placement + flow-field interaction +
+line-of-sight** before tower art lands.
+
+| Property | Value |
+|---|---|
+| Footprint | **7 hexes** — a centre hex + its 6 neighbours (axial-radius-1 hex disc) |
+| Footprint diameter | ~3.9 m flat-to-flat (3 hexes × 1.30 m per hex) |
+| Shape | **Truncated cone** (cone frustum) — wider at base, narrower at top |
+| Base diameter | ~3.9 m (matching the footprint) |
+| Top diameter | **~1.7 m** — "slightly bigger than a tile" (1 hex ≈ 1.5 m flat-to-flat); a slight overhang above the surrounding terrain |
+| Height | **~6 m** — slightly taller than the highest wall (`wall_high` = 5 m) so the tower peeks over it |
+| Body colour | **`#1a1a1a`** ("almost black") — body stays this colour across all states |
+| Top colour | **state-dependent** — see "Tower state visuals" below |
+| Origin / pivot | centre hex of the footprint at terrain height |
+
+**Tower state visuals.**
+
+A tower's top reads its lifecycle state at any zoom:
+
+| State | Top colour | Meaning |
+|---|---|---|
+| **Healthy** (just built or just repaired) | **`#d04848`** (red, matching wall placeholder) | Tower operates at standard fire rate; the default state. |
+| **Degraded** (needs repair) | **`#1a1a1a`** (totally black — top *and* body now identical) | Tower has fired its **per-charge shot budget** and **stops firing**.  Decay is NOT time-based — an idle tower never degrades; only attacking does.  Player must visit and repair, then the top reverts to red and the shot budget resets.  Visually the whole tower goes uniformly dark, so a black-topped tower is instantly readable from across the base as "spent — needs restocking". |
+| **Boosted** (player-buffed) | **`#ff80c0`** (pink) | Player has actively buffed this tower (resource cost, time-limited).  Higher fire rate / damage / range while pink (exact tunings TBD).  Reverts to red (healthy) when the boost duration expires. |
+
+The **care loop** this enables:
+
+1. NPC helpers build the tower → top starts red, tower fires
+   normally.
+2. Each shot the tower fires consumes one unit of a per-charge
+   **shot budget**.  When the budget hits zero the top turns
+   black and the tower stops firing.  An idle tower in a quiet
+   corner of the base **never degrades**; a tower covering a
+   busy entrance burns through its budget fast.
+3. Player drives to the dark tower → repairs it (key press) →
+   top reverts to red and the budget refills.
+4. In critical moments (a heavy wave hitting an entrance, or
+   defending the core during a scramble launch) the player can
+   **boost** key-positioned towers → top turns pink → temporary
+   peak performance.
+
+The player is therefore *always* doing some maintenance pass +
+strategic boost.  This is the "reactive player repair / buff of
+towers" mechanic from DESIGN.md § Systems #5, made concrete:
+**watch the tops**.
+
+**Why attack-count, not time.**  Time-based decay punishes the
+player evenly regardless of base activity — a quiet hour costs as
+much repair as a hectic one.  Attack-count decay ties the
+maintenance load directly to *where the enemy pressure is*: a
+ring of towers around a busy entrance needs repair often; a row
+of towers behind a closed wall (no shots fired) needs no attention.
+The player's repair priorities **emerge from the geography of the
+fighting**, not a uniform timer.
+
+**Why these dimensions.**
+
+- **7-hex footprint** is large enough to be a serious commitment
+  (the player can't carpet a base with towers); small enough that
+  several fit inside a closed wall perimeter on a typical-sized
+  base.
+- **Peeks over the highest wall** by ~1 m — the top has a sight
+  line over a `wall_high` rampart, which is necessary for the
+  tower to shoot at enemies on the other side.  Drop this and a
+  tower behind a tall wall becomes useless.
+- **Top slightly bigger than a tile** is the *gameplay* readable:
+  the tower's "business end" is visibly a one-hex platform, so
+  the player intuits where the weapon sits without needing a
+  separate turret model yet.
+- **Cone shape** (vs cylinder) makes the body silhouette
+  unambiguously a tower at any zoom, even with no detail.  Also
+  hides any wall-corner clipping at the base.
+
+**Data model — open question.**  Whether a tower is stored as
+**one record** keyed at its centre hex (with an implicit 7-hex
+footprint) OR as **7 painted-hex entries** under a `tower`
+sub-palette is not yet decided.  Lean **one record**: multi-hex
+structures don't fit the sparse `hash<GroundType[q,r]>` model
+(painting a single hex doesn't make a tower; the 7 must move /
+remove as a unit).  Settle this in plan 02 follow-on or in @PLAN46
+D1's structure-layer design.
+
+**Combat — placeholder laser weapon.**
+
+All towers, regardless of future variations, currently fire the
+same primitive weapon: a **pulsed laser beam** with an energy
+recharge cycle.  This is the *one* offence mechanic until the
+weapon system grows.
+
+| Property | Value |
+|---|---|
+| Beam origin | tower's red top, centre of the truncation face |
+| Beam target | a single enemy's centre point |
+| Beam visual | thin straight line from origin to target, bright red (matching the tower top's `#d04848`), ~1 frame visible per shot |
+| Range | **~15 hexes** (~20 m at 1.5 m hex diameter) — tunable |
+| Targeting | nearest enemy in range with line-of-sight; line-of-sight blocked by `wall_high` and `steep_rock`, NOT by `wall` (tower peeks over a normal wall by ~1 m) |
+| Fire cycle | **fire** (single beam, instantaneous hit, small damage tick) → **recharge pause** (~0.8 s, no beam) → repeat |
+| Damage feedback | enemy proxy flashes briefly on hit; no health-bar visualisation yet |
+
+**Why pulsed, not continuous.**
+
+- A continuous beam reads as "perpetually killing things" — hard
+  to balance, hard to see fire-rate problems.  A pulsed beam
+  with a visible recharge gap makes the firing rate *visible*:
+  the player can see "this tower is shooting too slow / too
+  fast" without a debug overlay.
+- The recharge pause is also the player's mental clock for
+  *how many enemies the tower can stop per second* — useful for
+  estimating defence strength against a wave.
+- Pulse + recharge is the simplest "weapon" loop that exercises
+  targeting, hit detection, damage, and reload — all four
+  mechanics on one primitive, no fancy ammo / projectile-flight
+  simulation needed.
+
+**What this is NOT yet.**
+
+- No tower variants (no slow-but-heavy, no fast-but-weak, no AOE,
+  no air-vs-ground split).  One weapon for now.
+- No projectile travel time — the laser hit is instantaneous.
+- No upgrade / buff state (DESIGN.md § Systems #5's "reactive
+  player repair / buff of towers" is a later mechanic).
+- No firing arc / cone limit — the tower can shoot in any of 360°
+  while LOS is clear.  Final art (a rotating turret) will impose
+  arc limits naturally; for now any-direction firing exercises
+  the targeting math at its broadest.
+
+**Lifetime.**  Retire when actual tower art (with a recognisable
+weapon mount, scaling damage state, faction trims, destruction
+animation) lands.  Final art replaces it 1:1 (same footprint,
+same height, same pivot).
+
+### Core building — the defend objective + escape rocket
+
+The base centre (DESIGN.md § Match setup, § Scramble).  Purpose:
+**make the defend goal visible from any camera distance, with no
+ambiguity about which tower is the special one.**
+
+| Property | Value |
+|---|---|
+| Footprint | **7 hexes** — same hex disc as a tower |
+| Shape | **Same truncated cone** as a tower |
+| Base / top dimensions | same as tower (3.9 m base, 1.7 m top, 6 m tall) |
+| Body colour | **`#1a3a85`** (dark blue) — the "dark blue version of a normal tower" |
+| Top colour | **`#1a3a85`** (same dark blue, uniform with body) — see open question |
+| Origin / pivot | centre hex of the footprint |
+
+**Why this differs from a tower.**
+
+- **Colour swap is the only difference** — the core is
+  *visually* a tower, painted dark blue.  At any zoom the
+  player can see: "all the almost-black ones are mine; the dark
+  blue one is *the thing*."  Single hue, single object — the
+  defend goal can't be misidentified.
+- **Same footprint** means towers and the core trade slot-for-
+  slot inside the perimeter — the player chooses where to put
+  the core (DESIGN.md § Systems #0) and the rest of the build
+  budget goes to towers around it.
+
+**Open question — uniform vs accented top.**
+
+Should the core's top stay dark blue (uniform) or carry the same
+red accent that a tower's top has?  Lean **uniform** for now (the
+user's "dark blue version of a normal tower" reads as a full
+colour-swap), but a thin red ring at the truncation (matching
+the tower top) could re-link the core silhouette visually to the
+tower family.  Pick when in-game.  Final art will resolve this
+naturally.
+
+**Lifetime.**  Retire when actual core building art lands (which
+needs to include the rocket-launch animation — the core IS the
+escape rocket, DESIGN.md § Scramble).
+
+## Retired proxies
+
+*(none yet)*
+
+## See also
+
+- [`GROUND_TYPES.md`](GROUND_TYPES.md) — the palette the proxy
+  body colour deliberately avoids.
+- [`DESIGN.md`](DESIGN.md) § World scale — the 1.5 m hex
+  diameter that anchors proxy dimensions.
+- [`../plans/future/02-solver-validation-viewer/README.md`](../plans/future/02-solver-validation-viewer/README.md)
+  — the first place proxy enemies will visibly walk around once
+  flow-field validation joins the viewer.

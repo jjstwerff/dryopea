@@ -92,12 +92,61 @@ Out of scope (later plans):
 | # | Scope | Proves |
 |---|---|---|
 | **E1** | **Infinite sea + camera.** Render an endless 2D hex grid where every visible hex is sea (dark blue). Camera pans freely (drag or WASD). NO data, NO palette UI, NO paint. Just the empty world + a moving viewport. | The frustum→visible-hexes enumeration. The "miss = sea" path. The render pipeline against `lib/graphics`. |
-| **E2** | **Palette load + UI.** Parse `examples/terrain.txt` at startup; render a swatch picker on screen (hotkey or click selects active type). Still no painting — just inspection. | Palette file format. Basic 2D UI primitives (swatch, text, hover-state). |
+| **E2** | **Palette load + named picker.** Parse [`examples/palette.json`](../../../examples/palette.json) at startup; render a **named swatch picker** on screen (each entry = colour swatch + the type's name, vertically stacked); click or hotkey selects the active type. Still no painting — just inspection.  Sketch + details below. | Palette file format. Basic 2D UI primitives (swatch, label text, hover-state). The picker is the player's primary *named* interface to the palette — colour alone is not enough. |
 | **E3** | **Paint sparse.** Click a hex → write `(q,r) → active_type` into the sparse `hash<GroundType[q,r]>`. Drag → paint a line. Hover → highlight. Render: each visible hex looks up in the sparse map; miss = sea. | Picking (screen→hex). Sparse mutation. The data model the rest of dryopea inherits. |
 | **E4** | **Save / load.** JSON file: list of `{q, r, type_name}` entries; load on launch repopulates the sparse map. | Persistence file format — the seed of dryopea's level format. |
 
 E1 is the foundation everything else stacks on; E2-E4 each add
 one capability on top.
+
+### E2 — named picker UI sketch
+
+The palette UI is a **vertical list of named swatches**, one
+row per palette entry from
+[`examples/palette.json`](../../../examples/palette.json).  Each
+row is a coloured swatch + the type's name + a hotkey hint;
+clicking a row or pressing the hotkey selects that type as
+active for painting.  The active row gets a visible highlight
+(e.g. brighter border or a leading arrow).
+
+```
+┌───────────────────────────────┐
+│ Palette                       │
+├───────────────────────────────┤
+│ ▶ ■ sea          [1]          │  ← active (highlighted)
+│   ■ water        [2]          │
+│   ■ rapids       [3]          │
+│   ■ waterfall    [4]          │
+│   ■ sand         [5]          │
+│   ■ grass        [6]          │
+│   ■ hill         [7]          │
+│   ■ rock         [8]          │
+│   ■ steep_rock   [9]          │
+│   ■ wall         [0]          │  ← placeholder colour, see GROUND_TYPES.md
+│   ■ wall_high    [-]          │  ← placeholder colour, see GROUND_TYPES.md
+└───────────────────────────────┘
+```
+
+Why a named picker, not colour-swatch-only:
+
+- Some palette colours are deliberately **placeholders** (the
+  red walls — see `color_status: "placeholder"` on those entries
+  in `palette.json`).  A picker that only shows colour gives the
+  player no name for "the red one"; with the name, the player
+  reads `wall_high` and the placeholder colour stops being
+  load-bearing.
+- The picker IS the palette's UI vocabulary.  Names appear in
+  the inspection HUD (plan 02 V5), in save files (E4), and in
+  later structures spec.  The picker exposes the same names so
+  the player learns them naturally.
+- Hotkeys `1` through `0` then `-` cover the 11 entries; click
+  still works for mouse-first users.
+
+Open Q (E2-internal): horizontal vs vertical layout (vertical
+read better for ≥10 entries); sub-palette headers (e.g. a
+divider line + "water" / "land" / "structure" group label
+between sections) — lean **yes**, makes the palette structure
+visible.  Make in E2; cheap to revisit.
 
 ## Open questions
 
