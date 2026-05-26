@@ -474,22 +474,28 @@ verbatim below** with three adjustments:
   must triage which orders (walls, towers, salvage runs)
   matter most.  Helpers in excess of 6 can't be ordered; the
   cap is a design pressure, not a soft target.
-- **2026-05-26 — Core landing is "area + random within."**  The
-  core building is always present in every base — it isn't
-  authored in the editor; it's placed at base start by the
-  game itself.  The player chooses a **starting LOCATION** (a
-  general area on the map / planet), and the game **lands the
-  rocket at a random hex within a small area** around that
-  chosen point.  Same shape as DESIGN.md § Future expansion's
-  "Players pick start spots" — agency on the *region*, variance
-  on the *exact tile* — but applied to every base, not just
-  planet-scale picks.  Consequence: the player must adapt the
-  defence plan to wherever the core actually lands.  Validation
-  rule of thumb: ~3-hex radius around the chosen centre, land
-  hexes only (re-roll if random pick is water / impassable
-  terrain).  Editor (plan 01) therefore does NOT paint a core
-  marker — the core's location is a runtime decision, not
-  authored content.
+- **2026-05-26 — Core landing is "area + random within + random
+  rotation + 2-hex obstruction clearance."**  The core building
+  is always present in every base — it isn't authored in the
+  editor; it's placed at base start by the game itself.  The
+  player chooses a **starting LOCATION** (a general area on the
+  map / planet), and the game **lands the rocket at a random
+  hex within a small area** around that chosen point.  Same
+  shape as DESIGN.md § Future expansion's "Players pick start
+  spots" — agency on the *region*, variance on the *exact tile*
+  — but applied to every base, not just planet-scale picks.
+  The core's **rotation is also random** (the lift-off / tower
+  / NPC sides point at arbitrary hex directions); this is fine
+  because the player has no walls built yet at landing, so
+  there are no perimeter commitments to preserve.
+  **Landing constraint: the core's 7-hex footprint plus a
+  2-hex buffer ring around it must be free of obstructions**
+  (water, `steep_rock`, painted-impassable features) — re-roll
+  until satisfied.  Net: the player always lands on workable
+  terrain with clear approaches; only the *direction* of the
+  openings varies.  Validation rule of thumb: ~3-hex radius
+  for the area pick.  Editor (plan 01) does NOT paint a core
+  marker.
 - **2026-05-26 — Carry-over scope: points only for now; richer
   later.**  The validation-tier scramble carry-over is the
   player's **unspent points** (added to the next base's

@@ -882,17 +882,24 @@ showing how many are waiting?  Lean **no** for validation —
 keeps the visual simple; the player can just look at the helper
 roster vs. the cap.)
 
-**Open question — face orientation on landing.**
+**Face orientation on landing — random + obstruction-clear.**
 
-When the core lands at a random hex (DESIGN.md § Updates on
-area-pick + random-within), does its **rotation** also
-randomise (each face points at a random hex direction), or is
-the rotation deterministic (e.g. lift-off face always points
-"north" / away from the largest spawn-marker cluster)?  Lean
-**deterministic, lift-off-faces-away-from-nearest-spawn** so
-the player can't be unlucky and have the wrong face pointing
-into a hostile sector; settle in plan 04 alongside the landing
-algorithm.
+The core's **rotation is random** on landing: the lift-off
+face (and therefore the tower-core face and the NPC-order
+face) points at an arbitrary one of the 6 hex directions per
+mission.  This is acceptable because **the player has no walls
+built yet at landing** — there are no perimeter commitments to
+preserve, so the player simply adapts their planned layout to
+whichever direction the opening landed.
+
+**Landing constraint — 2-hex obstruction clearance.**  The
+core will **never land within 2 hexes of any obstruction**
+(water hexes, `steep_rock`, painted-impassable features).  The
+random-within-area landing algorithm re-rolls until a position
+is found that keeps the core's 7-hex footprint + a 2-hex
+buffer ring around it free of obstructions.  Net: the player
+always lands on workable terrain with clear approaches; the
+ONLY variable is *direction* of the openings.
 
 **Lifetime.**  Retire when actual core building art lands (which
 needs to include the rocket-launch animation — the core IS the
