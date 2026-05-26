@@ -1,0 +1,61 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// World-coordinate primitives: hex grid + world-space conversions.
+//
+// Convention: axial flat-top hexes (matches lib/moros_*).
+// Hex diameter = 1.5 m (vertex-to-vertex); side = 0.75 m;
+// flat-to-flat ≈ 1.299 m.  See docs/NUMBERS.md + the
+// examples/numbers.json config for runtime tuning.
+//
+// Plan 01 phase E1.
+
+pub const HEX_DIAMETER: float = 1.5;            // m, vertex-to-vertex
+pub const HEX_FLAT_TO_FLAT: float = 1.299038;   // m, ≈ HEX_DIAMETER * sqrt(3)/2
+
+pub const HAZE_RADIUS_HEXES_DEFAULT: integer = 40;  // numbers.json camera.visible_radius_haze
+
+// A hex coordinate in axial flat-top.
+pub struct Hex {
+    q: integer not null,
+    r: integer not null,
+}
+
+// Hex centre in world-space metres (x, y).
+//
+// Axial flat-top:
+//   x = HEX_DIAMETER * 0.75 * q
+//   y = HEX_FLAT_TO_FLAT * (r + q/2)
+pub fn hex_to_world(h: Hex) -> (float, float) {
+    htw_x = HEX_DIAMETER * 0.75 * (h.q as float);
+    htw_y = HEX_FLAT_TO_FLAT * ((h.r as float) + 0.5 * (h.q as float));
+    (htw_x, htw_y)
+}
+
+// Hex-grid distance between two hexes (axial flat-top).
+pub fn hex_distance(a: Hex, b: Hex) -> integer {
+    hd_dq = a.q - b.q;
+    hd_dr = a.r - b.r;
+    hd_ds = -hd_dq - hd_dr;
+    // axial → cube distance
+    (abs(hd_dq) + abs(hd_dr) + abs(hd_ds)) / 2
+}
+
+// Enumerate every hex within `haze` of the centre — the "disc"
+// the camera renders.  Includes the centre itself.
+//
+// For radius N the disc count is 1 + 3*N*(N+1):
+//   N=0 → 1, N=1 → 7, N=2 → 19, N=3 → 37, ...
+pub fn visible_hexes(centre: Hex, haze: integer) -> vector<Hex> {
+    out: vector<Hex> = [];
+    for vh_dq in -haze..=haze {
+        // r-range constrained so the hex is within the disc:
+        // |vh_dq| + |vh_dr| + |vh_dq + vh_dr| <= 2 * haze
+        vh_r_min = max(-haze, -vh_dq - haze);
+        vh_r_max = min(haze, -vh_dq + haze);
+        for vh_dr in vh_r_min..=vh_r_max {
+            out += [Hex { q: centre.q + vh_dq, r: centre.r + vh_dr }];
+        }
+    }
+    out
+}

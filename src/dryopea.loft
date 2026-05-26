@@ -1,0 +1,11 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// dryopea — library entry point.  Aggregates submodules so external
+// consumers (tests + the eventual game binary) can `use dryopea;`
+// and have every public symbol in scope.
+//
+// Pattern: matches loft's moros_sim/src/moros_sim.loft aggregator.
+
+use world;
+use camera;

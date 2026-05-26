@@ -1,0 +1,69 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Editor camera + input model.
+//
+// Pattern follows moros (lib/moros_sim/src/editor.loft + player.loft):
+//   factory functions (camera_default / input_empty),
+//   pure tick (camera_update),
+//   InputState is a struct with named boolean fields per action,
+//   tests construct InputState directly + assert on field changes.
+//
+// Plan 01 phase E1.
+
+use world;
+
+// Editor camera — a hex position the world rotates around, plus a
+// zoom level.  Per-frame mutation through a reference (see
+// camera_update).  The in-game over-the-shoulder camera (plan 12)
+// is a separate concept and is NOT this struct.
+pub struct Camera {
+    pos:  Hex     not null,
+    zoom: integer not null,        // 1 = closest; higher = more world visible
+}
+
+// Pan direction + zoom signals, set true for the frame an action
+// is requested.  The input dispatcher upstream handles
+// discrete-vs-continuous semantics (key-just-pressed vs key-held).
+pub struct InputState {
+    in_pan_north: boolean,
+    in_pan_south: boolean,
+    in_pan_east:  boolean,
+    in_pan_west:  boolean,
+    in_zoom_in:   boolean,
+    in_zoom_out:  boolean,
+}
+
+pub const ZOOM_MIN: integer = 1;
+pub const ZOOM_MAX: integer = 10;
+
+// Factories — every state struct constructed by an explicit fn.
+pub fn camera_default() -> Camera {
+    Camera {
+        pos:  Hex { q: 0, r: 0 },
+        zoom: 1,
+    }
+}
+
+pub fn input_empty() -> InputState {
+    InputState {
+        in_pan_north: false,
+        in_pan_south: false,
+        in_pan_east:  false,
+        in_pan_west:  false,
+        in_zoom_in:   false,
+        in_zoom_out:  false,
+    }
+}
+
+// Pure tick: apply the input state to the camera.  Single per-tick
+// step in each axis — the dispatcher ensures held keys don't fire
+// at 60Hz.
+pub fn camera_update(c: &Camera, input: InputState) {
+    if input.in_pan_north { c.pos.r -= 1; }
+    if input.in_pan_south { c.pos.r += 1; }
+    if input.in_pan_west  { c.pos.q -= 1; }
+    if input.in_pan_east  { c.pos.q += 1; }
+    if input.in_zoom_in   { c.zoom = max(ZOOM_MIN, c.zoom - 1); }
+    if input.in_zoom_out  { c.zoom = min(ZOOM_MAX, c.zoom + 1); }
+}

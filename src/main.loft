@@ -1,0 +1,21 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// dryopea — runnable script for the eventual binary.  See
+// docs/DESIGN.md for the master design; plans/future/ for the
+// per-phase plans.
+//
+// Plan 01 phase E1 — main() verifies the world + camera primitives
+// wire together.  The GL window + render loop land in a follow-up
+// commit once the math is green under `loft --tests`.
+//
+// Run with:
+//   loft --path </path/to/loft>/ --lib src/ src/main.loft
+
+use dryopea;
+
+fn main() {
+    cam = camera_default();
+    visible = visible_hexes(cam.pos, HAZE_RADIUS_HEXES_DEFAULT);
+    println("dryopea: started with {len(visible)} visible hexes around the camera");
+}

@@ -5,17 +5,12 @@ loft    = ">=0.8.5"
 description = "Sci-fi free-build / tower-defence with scramble-and-salvage runs"
 license = "LGPL-3.0-or-later"
 
-[application]
-entry = "src/main.loft"
+[library]
+entry = "src/dryopea.loft"
 
-# Dependencies are intentionally empty until the in-game ground-type
-# editor (plans/future/01-ground-editor) starts.  When upstream
-# library plans (gridmesh, terrain-heightmap) migrate to their own
-# repos / the loft package registry, they will be added here.
-#
-# Likely future entries (placeholder names):
-#   graphics       = "..."
-#   gridmesh       = "..."   # from loft-libs-graphics
-#   terrain        = "..."   # from loft-libs-world
-#   world          = "..."   # from loft-libs-world
+# Dependencies are intentionally empty for plan 01 E1 (camera + world
+# math only).  Later phases add `graphics` (GL bindings) once the
+# renderer lands.  When upstream library plans (gridmesh, terrain-
+# heightmap) migrate to their own repos / the loft package registry,
+# they will be added here.
 [dependencies]
