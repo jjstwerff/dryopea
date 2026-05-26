@@ -241,6 +241,24 @@ verbatim below** with three adjustments:
   helpers they want to order before wave 1.  Future expansion:
   more separate landers can deliver supplies / helpers /
   additional towers, mirroring the planet-scale supply theme.
+- **2026-05-26 — Central space station is the inter-mission
+  hub.**  The player's cooperative **rents a spot at a shared
+  orbital station** outside the cordon.  The rented spot is
+  where persistent inventory lives (tower-tops, points,
+  blueprints, materials, stranded-helper rescue list), where
+  the **pre-mission loadout selection** happens (Q4 limited-
+  loadout pick), where the player **eventually buys
+  equipment** (vendors / fabricators / brokers), and where the
+  cooperative **ships to other places** (selling carry-outs,
+  cargo to other sites, unrelated jobs).  Permit
+  administration also runs through the station.  Tone:
+  shared / working-class orbital, NOT the player's; other
+  operators visible; cordon battleships visible from
+  observation viewports.  Validation tier does not yet visit
+  the station — inter-mission state is just the wallet carried
+  out — but when the multi-mission shape lands, the station
+  hub UI is what the player sees between sorties.  Full
+  section in [`SETTING.md`](SETTING.md) § Between missions.
 - **2026-05-26 — Player is the field-head of a small mining
   cooperative, hired to investigate.**  Identity-layer of the
   lore: not a marine, not a government agent, not a

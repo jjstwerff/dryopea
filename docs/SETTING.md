@@ -516,6 +516,61 @@ types**, producing visibly different swarm compositions across
 faction territories.  Authoring a map can hint at "this is
 faction X's region" through which robot types appear.
 
+## Between missions — the central space station
+
+Between sorties, the player's cooperative lives at a **central
+space station** — a shared orbital platform in the broader
+system, outside the planet's cordon, where small operator
+companies (mining co-ops, scientific consortia, salvage crews,
+freelancers) **rent a spot**.
+
+The rented spot is the cooperative's working address:
+
+- **Persistent inventory lives here.**  Tower-tops carried out
+  of past missions, points unspent, blueprints recovered
+  through scouting, materials brought back — all stored at
+  the rented hangar / bay.  Stranded helpers awaiting rescue
+  are listed here as well (the rescue-quest target board).
+- **Pre-mission loadout selection happens here.**  Before each
+  next sortie, the field-head **picks from inventory** which
+  specialised tower-tops to take down (per the limited-
+  loadout rule in DESIGN.md § Q4) — and which to leave at
+  home for future missions.
+- **Eventually, buying equipment.**  Other operators at the
+  station — vendors, fabricators, brokers — sell gear that
+  doesn't exist in the cooperative's existing inventory.
+  Carry-out points become spending power between sorties.
+- **Eventually, shipping to other places.**  The station has
+  routes outward: selling carry-out materials, sending
+  cargo to clients off-cordon, traveling to other
+  quarantined sites or unrelated jobs.  The cooperative's
+  business is *not* limited to this one planet; the cordoned
+  planet is a *contract*, not a base of operations.
+- **The permit administration also runs through the station.**
+  Whoever issues the cordon permits is reachable from here;
+  paperwork, mission briefings, intel debriefs all happen
+  during station turnaround.
+
+The station is the **meta-game hub**.  The validation tier
+does not yet visit it (validation is one base, one mission;
+inter-mission state is just the wallet carried out).  When the
+multi-mission run shape lands, the station hub UI is what the
+player sees between sorties — pick a map, brief the loadout,
+take the rocket down.
+
+Tone notes:
+
+- The station is **shared, not the player's**.  Other
+  operators are visible (other crews coming and going), other
+  rentals, other rockets prepping.  The cooperative is one
+  small business among many.
+- The station is **outside the cordon**, but not far.  The two
+  battleships' silhouettes are visible from the station's
+  observation viewports as a constant presence.
+- The station is **practical, not luxurious**.  Working-class
+  orbital — patched plating, scuffed floors, no fanfare.  The
+  cooperative pays rent; they don't own the place.
+
 ## The player — small mining co-op, field-head, hired to investigate
 
 Most of the lore above is **backdrop** — the world the player
