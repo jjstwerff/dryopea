@@ -310,7 +310,7 @@ skills.  Initial planned list:
 | Building | Faster wall / tower construction ticks |
 | Mining | Gather raw materials from the environment (terrain hexes) |
 | Scouting | Faster movement / wider visible range |
-| Hacking | Subvert enemy structures (links to @PLAN46 § Future expansion supply-line disruption) |
+| Hacking | (a) Subvert enemy **structures** (supply lines, mines, factories — links to @PLAN46 § Future expansion).  (b) Hack enemy **robots directly** in combat (disable / redirect / convert — exact effect TBD).  Robot enemies are hackable; other enemy types (insects, etc., per § Future expansion) are not. |
 | Engineering | Faster repair / boost work on towers |
 | Crafting | Produce items from gathered materials |
 

@@ -215,9 +215,11 @@ verbatim below** with three adjustments:
   helper carries per-character skills:
   **building** (faster construction), **mining** (gather raw
   materials from the environment), **scouting** (faster
-  movement / wider vision), **hacking** (subvert enemy
+  movement / wider vision), **hacking** ((a) subvert enemy
   structures — links to § Future expansion supply-line
-  disruption), **engineering** (faster repair / boost on
+  disruption — and (b) hack enemy **robots** directly in
+  combat: disable / redirect / convert, TBD; only robot
+  enemies are hackable, other types are not), **engineering** (faster repair / boost on
   towers), **crafting** (produce items from gathered
   materials).  For validation, helpers are interchangeable —
   no skills active.  Data model carries the per-helper id so
