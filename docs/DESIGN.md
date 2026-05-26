@@ -496,14 +496,42 @@ verbatim below** with three adjustments:
   openings varies.  Validation rule of thumb: ~3-hex radius
   for the area pick.  Editor (plan 01) does NOT paint a core
   marker.
-- **2026-05-26 — Carry-over scope: points only for now; richer
-  later.**  The validation-tier scramble carry-over is the
-  player's **unspent points** (added to the next base's
-  starting budget per the budget rule above).  Tower-tops
-  deposited in the core travel along the *mechanic* (they are
-  collected, parked at the core, survive force-launch) but
-  their **effect on the next base is deliberately left open**
-  for now — the validation scenario doesn't depend on it.
+- **2026-05-26 — Carry-over scope: points only for now;
+  specialised tower-tops as the future progression layer.**
+  The validation-tier scramble carry-over is the player's
+  **unspent points** (added to the next base's starting
+  budget per the budget rule above).  Tower-tops deposited in
+  the core travel along the *mechanic* (they are collected,
+  parked at the core, survive force-launch) but their
+  **effect on the next base is placeholder for validation** —
+  carried tops have no in-mission effect yet.
+
+  **Future model — specialised tops + limited-loadout
+  selection (closes Q4).**
+
+  - Each tower-top is **specialised by type** — a gun /
+    ammunition variant (anti-insect pulse, anti-elemental
+    dampener, anti-coordinated-robot disruptor, area-effect
+    splash, etc.; see the scouting-unlock tower catalogue).
+  - Tops survive scramble launches and accumulate in a
+    **persistent between-mission inventory** owned by the
+    player / cooperative.  Each successful sortie can
+    enlarge it; abandoned bases let the player lose tops
+    they didn't bring out.
+  - **Before each next mission**, the player **selects a
+    limited number** of tops from inventory to load onto the
+    rocket.  That selection is the mission's available top
+    pool; in-mission tower placements draw from it.  Tops
+    not selected stay in inventory at the cooperative's
+    home for future missions.
+  - The "limited number" is the mission's loadout cap
+    (number TBD; small enough to force tradeoffs).
+  - **Consequence for between-mission play:** picking the
+    loadout is the *meta-game* — what threats do I expect on
+    this map; which specialist tops counter them; which to
+    save for later.  Sortie quality compounds across runs
+    via *which* tops you carry out and *which* you keep
+    safe.
   When the carry-over economy expands, it will gain:
 
   - **Multiple material / point types** — the game's economy
