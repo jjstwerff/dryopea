@@ -237,6 +237,23 @@ verbatim below** with three adjustments:
   life-prolonging medicine — the reason the permits exist);
   carrying sap activates the insect chase.  Full lore in
   [`SETTING.md`](SETTING.md) § The other enemy.
+- **2026-05-26 — Planet history: prior humans, mountain caves,
+  underground civilization, faction wars.**  Long before the
+  colonization robots, an **ancient landing ship** put survivors
+  on the planet.  They first lived in **mountain caves** (high
+  altitude let them breathe), then developed air-quality
+  control and moved **deep underground**.  When the
+  colonization robots arrived later, the underground humans
+  **hacked them** and turned them into faction weapons.  The
+  "haywire AI" the outside government sees is partly real
+  AI corruption and partly the residue of **faction wars
+  between underground humans using hacked robots against each
+  other**.  The cordon may therefore also be containing the
+  *fact* of the underground civilization, not just the AI risk.
+  Full history in [`SETTING.md`](SETTING.md) § History.  This
+  opens design space (mountain caves, underground levels,
+  faction-tagged robots, human-faction encounters) without
+  forcing any of it into the validation tier.
 - **2026-05-26 — Setting: haywire colonization robots, military
   cordon, permit-bound sorties.**  The fiction the design sits
   on: civilian colonization robots were sent to terraform /

@@ -9,6 +9,72 @@ The world the player lands in.  Mechanics live in
 [`DESIGN.md`](DESIGN.md); this document explains **why those
 mechanics are what they are** in the fiction of the game.
 
+## History — the planet was already inhabited
+
+Before the colonization robots arrived, the planet had
+**already received an ancient landing ship**.  The history of
+that earlier arrival shapes everything that came after.
+
+- **An ancient landing.**  A vessel — origin unknown, era
+  unknown, fate unknown — touched down on this planet at some
+  point long before the events of the game.  The full story is
+  not the player's to know; the *consequences* are.
+- **Survivors retreated to mountain caves.**  Whatever
+  happened to the ship and its crew, **some of them survived**
+  and built lives in **caves high in the mountains**, because
+  the upper-altitude air was the only place they could
+  *breathe* — the planet's surface atmosphere did not match
+  their needs without help.  The mountain caves are the first
+  human settlements, the original refuges.
+- **Air-quality control let them go deeper.**  Over generations
+  the survivors developed **air-control technology**: closed
+  environments, scrubbers, oxygen recycling — whatever the
+  specifics, they perfected the means of breathing comfortably
+  in spaces the planet's natural atmosphere wouldn't allow.
+  Once that was solved, **they moved deep underground** — out
+  of the mountain caves and into a true subterranean
+  civilization, because below the surface there was *space,
+  protection, and resources* the mountain caves couldn't
+  match.  The mountain caves remain (some still inhabited or
+  used), but the centre of gravity is below.
+- **The colonization robots arrived later** — sent by some
+  outside civilization to prepare the planet for new arrivals,
+  with no working knowledge of the underground inhabitants
+  already present.  This is the "haywire colonization robots"
+  context from below.
+- **The hidden humans hacked the robots.**  Over time, the
+  underground civilization **gained control over the robots**
+  — hacking them, repurposing them, bending the original
+  colonization program toward their own ends.
+- **Factions, and faction wars.**  The underground humans are
+  **not a single civilization.**  They have **factions**, and
+  the factions **use hacked robots to wage war on each
+  other.**  The resulting chaos — robots fighting robots,
+  some on no one's behalf — is what the outside cordoning
+  authority sees as "haywire AI."  The truth is messier: the
+  AI is being driven, just by people who are not officially
+  acknowledged to exist.
+
+This history reframes the situation:
+
+- The **military cordon** isn't only about AI contagion.  It
+  also keeps the *existence of the underground human factions*
+  from leaking out.  Officially, the planet has a robot AI
+  problem.  Unofficially, the cordoning government may or may
+  not know there are humans down there directing the
+  apparent chaos.
+- **The robots are tools, not just broken machines.**  Their
+  haywire behaviour is partly the residue of the original
+  corruption, partly the active intervention of underground
+  factions.  Different robot encounters may behave
+  differently because they answer to different masters.
+- **Permits exist in a fog of half-truths.**  The official
+  reason for issuing permits may be intel, salvage, or
+  containment; the operator on the ground may discover the
+  underground humans, the faction wars, and the real shape of
+  the planet only by being there.  This is future-content
+  territory but the door is open.
+
 ## The premise — a quarantined colonization run
 
 Before the events of the game, robots were dispatched to
