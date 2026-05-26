@@ -1000,7 +1000,7 @@ A player can author a new starter map in the in-game editor
 and share the resulting JSON.  Both are first-day-of-shipping
 behaviours, not aspirational features.
 
-## 17a. Library evolution — dryopea trail-blazes
+## 17a. Library evolution — dryopea trail-blazes (loft proper off-limits)
 
 dryopea is the **first real consumer** of several loft library
 plans (lib-plan 19 gridmesh, lib-plan 20 terrain-heightmap, the
@@ -1026,6 +1026,31 @@ principle (see lib_plans § "toolkit not framework"
 discipline).  dryopea is the trail-blazer consumer; do not be
 afraid to change gridmesh or to add new `lib/*` directories
 as the implementation reveals what's actually shared.
+
+### Boundary — loft itself is off-limits
+
+**The loft compiler, language, runtime, and stdlib (the
+`default/*.loft` files + everything in `src/` of the loft
+crate) are NOT in dryopea's scope.**  Loft has its own
+dedicated agents — its complexity warrants focused attention
+that the dryopea agent does not duplicate.  Each agent
+focuses on its own properties.
+
+The rule:
+
+- **Library code (`lib/*`)** — fair game for dryopea to
+  modify, extend, or trail-blaze.  These are extractable per
+  the loft library-extraction plan; eventually they live in
+  their own repos.
+- **Loft itself** — the compiler, language semantics,
+  built-in types, stdlib (`default/*.loft`), runtime —
+  **off-limits from this repo**.  When dryopea surfaces a
+  need from loft (a language feature, a stdlib gap, a
+  runtime bug), file it in
+  [`../QUESTIONS_FOR_LOFT.md`](../QUESTIONS_FOR_LOFT.md) —
+  the outbound queue — and let loft's own agents address
+  it.  CLAUDE.md already enforces this; this section
+  records the *design rationale* for the boundary.
 
 ## 17b. Loft idiom alignment
 
