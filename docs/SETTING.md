@@ -396,6 +396,116 @@ Consequences for future design:
   is one mechanism for why an abandoned base **rots** over
   time in the planet-meta (§ Future expansion).
 
+### Why waves happen — robots seeking their lost signal
+
+This is the design payoff that ties everything together.
+
+**Robot "waves" against the player's base are not aggression
+in the human sense.**  They are *lost* robots trying to *find
+their way home*.
+
+- A robot that enters the scrambler bubble has its command
+  link broken.  It can no longer hear its faction-master.  From
+  its perspective, *something is wrong*.
+- Robots can **detect the position of the scrambling tower**
+  — the source of the interference is locatable, and they
+  converge on it.  The tower is, from their point of view, the
+  *problem*; removing it would restore their signal.
+- So the wave is **not a coordinated attack** (the scrambler
+  prevents coordination).  It is **the gradual accretion of
+  individual cut-off robots, each independently moving toward
+  the disruption source**.
+- When they reach the tower, they "nibble" — try to remove
+  the interference.  The tower is invulnerable in gameplay
+  terms (the player loses points, not core HP), which in the
+  fiction reads as the robots being *unable* to actually
+  destroy what they don't fully understand.  They keep trying
+  anyway.
+
+This reframes the whole wave system fictively:
+
+- **Spawn markers** = points where cut-off robots first enter
+  the bubble's edge and start sensing the disruption.  The
+  marker's direction is the heading they were going BEFORE
+  they were cut off; once inside the bubble, they pivot
+  toward the tower as the source of their loss.
+- The **pre-walk visibility interval** = the moment of
+  reorientation.  They appear at the marker, "lose signal,"
+  stand briefly while they detect the disruption source, then
+  begin walking toward it.
+- **Progressively harder waves** = the bubble is sitting in
+  a region with more and more passing-by robots over time.
+  More land within range means more robots become detached
+  and converge.  Or, in faction terms: the local faction is
+  *deliberately routing more units through the area* to break
+  the scrambler, which is the same observable behaviour from
+  the surface.
+- **Approach mode → engage mode handoff** = the moment the
+  robot enters the bubble's effective range and pivots from
+  "walking in its old heading" to "walking toward the
+  scrambler" (the flow-field gradient toward the core).
+  *This may be the cleanest definition of that handoff: it's
+  the bubble boundary itself.*
+
+So the *anger* of the wave is essentially: "Get this thing
+out of our way, we can't hear our orders."  Removing the
+scrambler — launching the rocket — *succeeds* from the
+robots' point of view (their comms come back), even as the
+player counts it as their own escape.
+
+## Robot diversity — roles in their own society
+
+The robots are not a uniform mass.  **Eventually different
+robot types will exist, each filling a specific role in their
+own society / colonisation programme.**  The taxonomy is open
+design space; sketched possibilities (any could ship, none are
+committed):
+
+- **Workers / construction bots** — the bulk of the
+  population; carry out the original colonisation programme
+  (mining, building, terraforming).
+- **Haulers** — move material along the supply lines.
+- **Scouts / surveyors** — map terrain; the eyes of the
+  swarm; presumably the first to detect a scrambler bubble.
+- **Defense / security bots** — built to engage threats; the
+  closest thing to "soldiers" in the original programme.
+- **Communications / relay bots** — maintain signal links;
+  may have weak counter-jamming capability (interesting
+  interaction with the scrambler bubble).
+- **Engineering / repair bots** — maintain the others;
+  presumably essential to the rocket-building programme the
+  factions have repurposed them for.  **This is the boss
+  class** (PROXY_ART.md § Boss enemy): the 2×2 platforms that
+  show up in waves to repair regulars on the move; their
+  size + non-combat role come from the fact that they are
+  *industrial repair equipment*, not soldiers.
+- **Specialised fabrication bots** — produce specific things
+  inside factories (a layer below the per-factory designation).
+- **Coordinator / command bots** — the comms-priority units
+  that relay faction-master orders; the *target class* a
+  hacking helper most wants to subvert.
+
+For validation, robots are interchangeable — all the
+placeholder magenta-purple cuboid.  Per-type behaviour /
+visuals / stats / vulnerabilities arrive later.  The taxonomy
+matters for two layers of design that *can* arrive without
+breaking validation:
+
+- **Encounter authoring** — a wave can specify "5 workers + 2
+  defense bots" instead of "7 robots."  Same wave-list shape
+  (extend the integer per wave to a typed list later).
+- **Helper hacking targets** — the hacking skill becomes
+  more nuanced when there are coordinators vs. plain workers
+  to subvert.  The reward of hacking a coordinator
+  potentially propagates: cut the local chain of command for
+  multiple units at once.
+
+This dovetails with the underground-faction picture: each
+faction may **specialise in repurposing particular robot
+types**, producing visibly different swarm compositions across
+faction territories.  Authoring a map can hint at "this is
+faction X's region" through which robot types appear.
+
 ## How the setting shapes the mechanics
 
 | Mechanic | Why it fits the setting |

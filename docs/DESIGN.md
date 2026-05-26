@@ -157,6 +157,19 @@ verbatim below** with three adjustments:
   helpers they want to order before wave 1.  Future expansion:
   more separate landers can deliver supplies / helpers /
   additional towers, mirroring the planet-scale supply theme.
+- **2026-05-26 — Boss = mobile REPAIR PLATFORM (the
+  engineering role in robot society).**  The boss class is in
+  the fiction the **repair / engineering robot** — heavy
+  industrial machinery, 2×2 footprint, NOT a combat unit.
+  Its phase-3 mechanic is **healing nearby damaged
+  regulars over time**; this is the tactical reason to
+  kill bosses first (without them, attrition shifts to the
+  player's favour).  "Guard me" command (regulars cluster
+  around it for repair + escort) and tower-attack retaliation
+  layer on top.  Unifies the size, the non-combat behaviour,
+  the cluster-around-boss formation play, and the priority-
+  target logic under one fictional role.  See PROXY_ART.md §
+  Boss enemy + SETTING.md § Robot diversity.
 - **2026-05-26 — Boss enemies: 2×2 footprint forces structural
   play; phase-3 leader commands; tower-attack retaliation.**
   Boss-class enemies occupy a **2×2-hex footprint** (twice the
@@ -237,6 +250,41 @@ verbatim below** with three adjustments:
   life-prolonging medicine — the reason the permits exist);
   carrying sap activates the insect chase.  Full lore in
   [`SETTING.md`](SETTING.md) § The other enemy.
+- **2026-05-26 — Waves = robots seeking their lost signal,
+  not aggression.**  Robot waves against the base are not
+  coordinated attacks (the scrambler prevents coordination)
+  and not aggression in the human sense.  Each robot that
+  enters the bubble has its command link cut; it can detect
+  the scrambling tower's location and **converges
+  individually** on the source of its interference, trying to
+  remove it.  The wave is the *accumulation of cut-off units
+  drawn to the disruption*, not a directed assault.
+
+  Retroactively explains:
+
+  - **Spawn markers** = where passing-by robots first lose
+    their signal as they enter the bubble's edge.  The
+    marker's authored direction is the heading they had
+    *before* the cut-off; the pre-walk visibility interval is
+    the reorientation moment when they detect the
+    interference source.
+  - **Approach → engage handoff** is naturally the **bubble
+    boundary itself**: outside, the robot still has its old
+    command-link heading; inside, it pivots toward the
+    scrambler (= the flow field's gradient toward the core).
+    Cleanest possible answer to Q11.
+  - **Progressively harder waves** = more local robots have
+    detached over time (or factions deliberately route units
+    through to break the scrambler — same observable shape).
+  - **Nibble** at the core = robots trying to *remove the
+    interference source* but unable to actually destroy it
+    (mechanically: invulnerable).
+  - **Launching the rocket** is the *successful* outcome from
+    the robots' point of view too — their comms come back.
+
+  Tightens the "anger" of the wave to "get this thing out of
+  our way, we can't hear our orders."  Full section in
+  [`SETTING.md`](SETTING.md) § Why waves happen.
 - **2026-05-26 — The core is a SCRAMBLING tower; that's why
   robots act un-coordinated inside the base.**  The central
   building is, in the fiction, a **signal-scrambling tower**.

@@ -154,11 +154,17 @@ sits in the game's render path; final art replaces it 1:1 (same
 hex footprint, same pivot, same facing convention).  No
 gameplay-side changes when art arrives.
 
-### Boss enemy — 2×2 footprint (phase 3, deferred)
+### Boss enemy — 2×2 repair-platform (phase 3, deferred)
 
 A larger enemy class that forces structural play because of its
-**size**, not its damage.  Out of scope for the validation tier;
-captured here so the data model + entrance topology leave room.
+**size**, not its damage.  In the fiction, **the boss is a
+mobile REPAIR PLATFORM** — the engineering / repair role from
+the robot taxonomy (SETTING.md § Robot diversity).  It is
+heavy industrial equipment, *not a combat unit* — which is why
+it never directly attacks towers and keeps pushing toward the
+core like any other comm-cut robot.  Out of scope for the
+validation tier; captured here so the data model + entrance
+topology leave room.
 
 | Property | Value |
 |---|---|
@@ -192,14 +198,24 @@ captured here so the data model + entrance topology leave room.
   § Systems #5 describes ("a boss that breaks walls → dirty
   re-mesh + path re-route").
 
-**Phase 3 — leader commands.**
+**Phase 3 — repair-platform behaviour + leader commands.**
 
-A boss has a per-boss order to **guard it** that it can issue
-to nearby regular enemies — they cluster near the boss instead
-of pathing solo to the core.  Regular enemies don't normally
-guard anyone; the command is a boss-only behaviour.  This adds
-formation play around bosses and is **deferred to phase 3**
-(after the validation + first-pass content are proven).
+The boss's **primary** mechanic in phase 3 is that it **repairs
+nearby damaged robots over time**, healing them while it
+operates.  Tactical consequence: killing the boss is high-
+priority because it stops the entire healing pool of the wave;
+leaving it alive means regulars keep regenerating and the
+attrition shifts in the enemy's favour.
+
+Two secondary phase-3 behaviours layered on top:
+
+- **"Guard me" command.**  The boss tells nearby regulars to
+  cluster around it (so it can repair them; so they cover its
+  approach).  Regulars don't normally guard anyone — the
+  command is boss-only.  Formation play around bosses falls
+  out of this.
+- **Localised tower-attack retaliation** (the existing rule).
+  See § Boss retaliation below.
 
 **Boss retaliation — localised, specific, command-driven.**
 
