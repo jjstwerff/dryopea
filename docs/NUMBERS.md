@@ -21,7 +21,7 @@ wave phase → free scramble or earlier exit.
 | Hex diameter (vertex-to-vertex) | **1.5 m** | DESIGN.md § World scale |
 | Hex side | **0.75 m** | = diameter / 2 |
 | Hex flat-to-flat | **1.30 m** | = diameter × √3 / 2 |
-| Hex layout convention | **axial flat-top** | Q13 settled.  Matches loft's `lib/moros_*` / `lib/audience_crystal` tradition. |
+| Hex layout convention | **axial flat-top** | Q13 settled.  Matches loft's `lib/moros_*` hex layout (the primary precedent).  The loft `gridmesh` library exposes a `HexLayout` adapter so both layouts coexist (audience_crystal uses offset pointy-top); dryopea consumes the `gridmesh` library and picks axial flat-top to share data shapes with moros / `loft-libs-world`. |
 | Default map play-area | **~50 × 50 hexes** (~65 × 60 m) | Plan 04 open Q.  Map bounded but visible only within haze. |
 | Atmosphere haze radius | **40 hexes** (~50 m) | Bounded camera view distance; SETTING.md § The atmosphere is thick |
 
