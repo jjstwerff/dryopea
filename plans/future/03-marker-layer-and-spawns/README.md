@@ -178,6 +178,226 @@ M5 closes the validation loop: paint a base, place spawns
 around it pointing inward, run the scenario, watch enemies
 flow in from multiple sides.
 
+## Implementation + testing
+
+### Phase M1 — Marker data layer
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/markers.loft` | `Marker` enum + sparse `hash<Marker[integer]>` (key packed (q,r)). |
+| `src/save.loft` | Extend save format from plan 01 E4 to include the `markers` array. |
+
+**Data**
+
+```loft
+enum Marker {
+    Spawn { direction: u8 },   // 0..5 cardinal hex direction
+}
+
+let markers: hash<Marker[integer]> = hash<Marker[integer]>::new()
+```
+
+**Test — `tests/scripts/03_m1_layer.loft`**
+
+```loft
+let m = hash<Marker[integer]>::new()
+m.insert(pack(3, 0), Marker::Spawn { direction: 2 })
+assert m.len() == 1
+match m.lookup(pack(3, 0)) {
+    Some(Marker::Spawn { direction }) => assert direction == 2,
+    None => panic("expected spawn marker"),
+}
+// Sparse: an unmarked hex returns None
+assert m.lookup(pack(0, 0)) == None
+
+// Save / load roundtrip with the painted layer (plan 01 E4)
+let palette = load_palette("examples/palette.json")
+let painted = hash<u8[integer]>::new()
+save_map_with_markers(&painted, &m, &Camera{...}, "/tmp/dryo.json")
+let (_, m2, _) = load_map_with_markers("/tmp/dryo.json", &palette)
+assert m2.len() == 1
+```
+
+**Pass criteria.** Parallel sparse layer round-trips through
+the save format; plan 01 tests still pass.
+
+### Phase M2 — Editor mode toggle
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/editor_mode.loft` | `enum EditorMode { Ground, Marker }` + toggle handler. |
+| `src/ui.loft` | HUD: small mode indicator (text label or icon) — corner overlay. |
+
+**Key functions**
+
+- `fn toggle_mode(mode: &mut EditorMode, keys: vector<text>)`
+  — Tab flips between Ground and Marker.
+- `fn render_mode_indicator(mode: EditorMode)` — small text:
+  `"GROUND"` / `"MARKER"` in a corner.
+
+**Test — `tests/scripts/03_m2_toggle.loft`**
+
+```loft
+let mode = EditorMode::Ground
+toggle_mode(&mut mode, ["Tab"])
+assert mode == EditorMode::Marker
+toggle_mode(&mut mode, ["Tab"])
+assert mode == EditorMode::Ground
+```
+
+**Pass criteria.** Tab visibly flips the editor's behaviour
+(paint vs marker-place); HUD reflects the current mode.
+
+### Phase M3 — Spawn placement + rotation
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/marker_place.loft` | Click → place / remove; R / Shift+R rotate. |
+| `src/marker_render.loft` | Triangle arrow at hex centre, oriented per direction. |
+
+**Key functions**
+
+- `fn place_marker(m: &mut hash<Marker[integer]>, q: integer, r: integer, dir: u8)`
+- `fn rotate_marker(m: &mut hash<Marker[integer]>, q: integer, r: integer, delta: integer)`
+  — `delta = +1` clockwise, `-1` counter-clockwise; wraps mod 6.
+- `fn render_marker(c: &Camera, hex: Hex, marker: Marker)` —
+  draws the hot-pink triangle (`#ff3060`) at hex centre,
+  oriented per `direction`.
+
+**Test — `tests/scripts/03_m3_placement.loft`**
+
+```loft
+let m = hash<Marker[integer]>::new()
+place_marker(&mut m, 5, 5, 0)
+match m.lookup(pack(5, 5)) {
+    Some(Marker::Spawn { direction }) => assert direction == 0,
+    _ => panic("expected"),
+}
+
+rotate_marker(&mut m, 5, 5, 1)
+match m.lookup(pack(5, 5)) {
+    Some(Marker::Spawn { direction }) => assert direction == 1,
+    _ => panic("expected"),
+}
+
+// Wrap-around
+for _ in 0..6 { rotate_marker(&mut m, 5, 5, 1) }
+match m.lookup(pack(5, 5)) {
+    Some(Marker::Spawn { direction }) => assert direction == 1,
+    _ => panic("wraparound failed"),
+}
+
+// Re-click removes
+place_marker(&mut m, 5, 5, 0)
+assert m.lookup(pack(5, 5)) == None
+```
+
+**Pass criteria.** In marker mode, clicks place / remove
+markers; R / Shift+R rotate; a ghost arrow previews the
+current rotation as the player hovers.
+
+### Phase M4 — Spawn render in-game
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/marker_render.loft` | Extend `render_frame` (plan 01 E1) to overlay markers after painted hexes — markers don't *replace* the ground colour, they sit on top. |
+
+**Key functions**
+
+- `fn render_markers(c: &Camera, m: &hash<Marker[integer]>)`
+  — for each visible marker, draw its triangle.
+
+**Test — `tests/scripts/03_m4_render.loft`**
+
+Visual / human test: place 3 spawn markers at different
+positions and directions; eye-check that arrows render where
+expected and point the right way.  No automated assertion
+(rendering correctness is visual).
+
+**Pass criteria.** Markers visible at any zoom; the arrow
+direction matches the data field.
+
+### Phase M5 — Runtime spawn execution
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/enemy.loft` | `Enemy { pos: Hex, heading: u8, hp: integer, state: EnemyState }` + spawn / update / kill. |
+| `src/wave_engine.loft` | `WaveState { current_wave: integer, alive: vector<Enemy>, …}` + per-frame tick. |
+| `src/spawn_director.loft` | Picks a random active marker per spawned enemy; assigns its heading from the marker's direction. |
+| `examples/waves.json` | Already exists; loaded at scenario start. |
+
+**Key functions**
+
+- `fn active_markers(m: &hash<Marker[integer]>, core: Hex, disable_radius: integer) -> vector<Hex>`
+  — return marker positions OUTSIDE the close-spawn-disable
+  radius from the core.
+- `fn pick_spawn(active: &vector<Hex>) -> Hex`
+  — random pick.
+- `fn spawn_wave(state: &mut WaveState, count: integer, markers: &hash<Marker[integer]>, core: Hex)`
+  — produce `count` enemies, each at a random active marker,
+  with the marker's direction as initial heading.
+- `fn enemy_tick(e: &mut Enemy, world: &WorldState, dt: single)`
+  — approach mode (walk along heading) until inside the
+  scrambler bubble, then engage mode (flow field toward core).
+
+**Test — `tests/scripts/03_m5_spawn.loft`**
+
+```loft
+// Fixed scenario with 3 markers around a central core
+let m = hash<Marker[integer]>::new()
+place_marker(&mut m, 10, 0, 3)
+place_marker(&mut m, 0, 10, 0)
+place_marker(&mut m, -10, -10, 1)
+// And one close marker that should be auto-disabled
+place_marker(&mut m, 2, 0, 0)
+
+let core = Hex { q: 0, r: 0 }
+let active = active_markers(&m, core, 10)  // close_spawn_disable_radius
+assert active.len() == 3                    // the close marker is excluded
+
+// Spawn a wave of 5 enemies
+let state = WaveState::new()
+spawn_wave(&mut state, 5, &m, core)
+assert state.alive.len() == 5
+
+// Each enemy's position is at one of the active markers
+for e in state.alive {
+    let found = active.iter().any(|h| h.q == e.pos.q && h.r == e.pos.r)
+    assert found
+}
+```
+
+**Pass criteria.** A wave's enemies appear at active markers
+only (close-disable rule respected); each has its marker's
+heading; visually visible at the spawn hex during the
+pre-walk window; begin walking after the interval.
+
+## Integration smoke test (plan 03 ↔ plan 01)
+
+`tests/scripts/03_integration.loft`:
+
+1. Load the painted layer + markers from a saved map.
+2. Render frame — confirm both layers visible together
+   (painted hexes underneath, marker arrows on top).
+3. Trigger wave 1 → enemies appear, walk, eventually arrive
+   at the core's hex.
+4. Eyeball: enemies originate from multiple markers, not all
+   the same one (random selection working).
+
+When this passes, plans 01 + 03 are integrated; the marker +
+wave mechanic is ready for plan 04 (map authoring) and plan
+05 (validation scenario).
+
 ## Approach mode vs engage mode (the future-AI hand-off)
 
 This plan ships a **placeholder approach behaviour** that gives

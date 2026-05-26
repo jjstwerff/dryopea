@@ -311,6 +311,164 @@ Failure modes (= validation NOT passing):
 - The wall-paint trail is confusing (paints when not wanted,
   doesn't paint when wanted).
 
+## Implementation milestones
+
+Plan 05 is integration, not a system layer.  Its
+"milestones" are checkpoints across the OTHER plans' phases —
+when each milestone passes, a chunk of the validation
+scenario is alive.  Each milestone produces a testable
+artefact.
+
+### Milestone M-S1 — Editor is paintable + persistent
+
+**Depends on:** plan 01 E1-E4 complete.
+
+**Test artefact:** `tests/scripts/05_ms1_paint_persist.loft`
+
+```loft
+// Cold start, paint, save, restart, load, verify.
+let palette = load_palette("examples/palette.json")
+let world = hash<u8[integer]>::new()
+paint(&mut world, 0, 0, 5)
+paint(&mut world, 1, 0, 9)
+save_map(&world, &Camera{q:0,r:0,zoom:1}, "/tmp/m_s1.json")
+let (w2, _) = load_map("/tmp/m_s1.json", &palette)
+assert lookup(&w2, 0, 0) == 5
+assert lookup(&w2, 1, 0) == 9
+```
+
+**Pass criteria.** A person can paint terrain in the editor,
+save, restart, load.  No combat yet.
+
+### Milestone M-S2 — Spawn markers placeable + the wave engine spins
+
+**Depends on:** plan 01 done + plan 03 M1-M5 complete.
+
+**Test artefact:** `tests/scripts/05_ms2_markers_waves.loft`
+
+```loft
+// Author a tiny map with one core position + 2 spawn markers;
+// trigger wave 1; assert enemies appear at marker positions.
+let (world, markers, _) = load_map_with_markers("tests/data/tiny.json", &palette)
+let core = Hex { q: 0, r: 0 }
+let state = WaveState::new()
+spawn_wave(&mut state, 5, &markers, core)
+assert state.alive.len() == 5
+// Each enemy on an active marker hex
+for e in state.alive {
+    assert markers.lookup(pack(e.pos.q, e.pos.r)) != None
+}
+```
+
+**Pass criteria.** Spawn markers (placed in the editor) emit
+enemies at wave start; markers within the auto-disable
+radius produce no enemies.
+
+### Milestone M-S3 — Starter map exists + loads from index
+
+**Depends on:** plan 04 L1-L4 complete (at least
+`starter_01.json`).
+
+**Test artefact:** `tests/scripts/05_ms3_starter_map.loft`
+
+```loft
+let idx = load_index("maps/index.json")
+assert idx.maps.len() >= 1
+let m = load_map_file("maps/starter_01.json", &palette)
+assert m.objective == "survive_waves"
+assert m.markers.len() >= 4
+assert m.waves.len() >= 1
+```
+
+**Plus human test:** launch the game, see the static planet
+view, click the marker for starter_01, confirm landing-spot
+pick UI appears.
+
+### Milestone M-S4 — Landing flow works end-to-end
+
+**Depends on:** plan 04 + the landing algorithm.
+
+**Test artefact:** `tests/scripts/05_ms4_landing.loft`
+
+```loft
+let m = load_map_file("maps/starter_01.json", &palette)
+let pick = Hex { q: 0, r: 0 }   // player picked centre
+
+let outcome = simulate_landing(&m, pick)
+assert outcome.core_pos != None                 // landed somewhere
+assert outcome.core_rotation in 0..6            // random rotation valid
+assert outcome.starter_tower_pos != None        // separate lander touched down
+assert outcome.helpers_emerged == 2             // 2 starting helpers
+assert outcome.wallet == 200                    // starting budget
+```
+
+**Pass criteria.** From cold start through landing, the game
+state is `{core landed, starter tower placed, 2 helpers,
+200 pts, wave 1 not yet triggered}`.
+
+### Milestone M-S5 — Wave 1 triggers + plays out
+
+**Depends on:** plans 01 + 03 + 04 + the wave engine + the
+tower engine.
+
+**Test artefact:** `tests/scripts/05_ms5_wave1.loft`
+
+```loft
+let game = start_mission(&load_map_file("maps/starter_01.json", &palette))
+// Player builds 8 walls (simulate paint)
+for i in 0..8 { game.paint_wall(i, 5) }
+// Helpers construct them (advance time)
+game.advance_time(80.0)   // ample for 2 helpers on 8 walls @ 10s each
+
+assert game.wave_state == Active(wave_index=0)   // wave 1 triggered
+// Run the wave for its natural duration
+game.advance_time(60.0)   // long enough for the 5 enemies to walk + die or arrive
+assert game.wave_state in [Active(_), Cleared(0), Failed(_)]
+```
+
+**Pass criteria.** 8 walls triggers wave 1; enemies appear at
+active markers and walk toward the core; the starter tower
+shoots them.  Wave 1 either clears or the player has a
+visible loss-of-points pressure.
+
+### Milestone M-S6 — Force-launch works (the exit)
+
+**Depends on:** all prior milestones + force-launch UX.
+
+**Test artefact:** `tests/scripts/05_ms6_launch.loft`
+
+```loft
+let game = start_mission(&load_map_file("maps/starter_01.json", &palette))
+game.advance_time(60.0)   // some play
+
+// Player drives into the core's opening
+game.drive_vehicle_into_core()
+assert game.launch_countdown_active
+
+// Wait the countdown
+game.advance_time(6.0)
+assert game.launched
+assert game.next_mission_ready
+assert game.next_mission_wallet_seed > 0  // some unspent points carried
+```
+
+**Pass criteria.** Driving into the opening starts the
+countdown (bottom pulse); 6 seconds later, the rocket
+launches; the game transitions to a "next mission" state
+(returns to the planet view for the next pick).
+
+### Milestone M-S7 — Whole loop, 30 minutes of cold-play
+
+**Depends on:** M-S1 through M-S6.
+
+**No automated test.**  A human picks the game up, plays
+through one base end-to-end without instructions, and reports
+back.  This is the actual validation criterion (see § Success
+criteria above).
+
+If M-S7 passes, **plan 05 is done** — validation milestone
+shipped.
+
 ## Open questions
 
 Almost none — the design has already settled the things plan

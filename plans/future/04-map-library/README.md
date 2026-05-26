@@ -117,6 +117,218 @@ Out of scope (deferred to later plans):
 | **L5** | **(deferred — placeholder)** Per-map objective variants: alternate goal conditions (hold N minutes, destroy specific target, escort, reach point).  Land when the validation default has proven sound. | Objective system extensibility. |
 | **L6** | **(deferred — placeholder)** Per-map event variance: position pools + per-event probability; runtime random selection at base start.  See § Variability. | Replay variance without auto-gen. |
 
+## Implementation + testing
+
+### Phase L1 — Map file format
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/map.loft` | `MapFile` struct + JSON loader / saver consolidating ground + markers + metadata. |
+| `maps/` | Directory holding authored map files. |
+
+**Format — `maps/<name>.json`**
+
+```json
+{
+  "version": 1,
+  "name": "starter_01",
+  "description": "Coast and hills with three approaches",
+  "difficulty": "easy",
+  "objective": "survive_waves",
+  "play_area": { "min": [-15, -15], "max": [15, 15] },
+  "ground": [
+    { "q": 0, "r": 0, "type": "grass" },
+    { "q": 0, "r": 1, "type": "grass" },
+    …
+  ],
+  "markers": [
+    { "kind": "spawn", "q": 10, "r": 0, "direction": 3 },
+    …
+  ],
+  "waves": [5, 8, 12, 20, 30, 50, 80],
+  "inter_wave_delay_seconds": 15
+}
+```
+
+**Key functions**
+
+- `fn load_map_file(path: text, palette: &vector<GroundType>) -> MapFile`
+- `fn save_map_file(m: &MapFile, path: text)` — sorted entries
+  for deterministic output.
+
+**Test — `tests/scripts/04_l1_format.loft`**
+
+```loft
+let palette = load_palette("examples/palette.json")
+
+// Build a tiny map programmatically
+let mf = MapFile {
+    version: 1,
+    name: "test",
+    description: "tiny",
+    difficulty: "easy",
+    objective: "survive_waves",
+    play_area: PlayArea { min: Hex{q:-5,r:-5}, max: Hex{q:5,r:5} },
+    ground: [GroundEntry { q: 0, r: 0, type_name: "grass" }],
+    markers: [MarkerEntry { kind: "spawn", q: 3, r: 0, direction: 0 }],
+    waves: [3, 5, 8],
+    inter_wave_delay_seconds: 15,
+}
+
+save_map_file(&mf, "/tmp/dryo_test.json")
+let mf2 = load_map_file("/tmp/dryo_test.json", &palette)
+
+assert mf2.name == "test"
+assert mf2.ground.len() == 1
+assert mf2.markers.len() == 1
+assert mf2.waves.len() == 3
+```
+
+**Pass criteria.** Map round-trips; the existing plan-01 +
+plan-03 save formats fold into the consolidated MapFile
+without regression.
+
+### Phase L2 — Map index
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `maps/index.json` | List of available maps with positional metadata for the planet view. |
+| `src/library.loft` | Loader for the index. |
+
+**Format — `maps/index.json`**
+
+```json
+{
+  "version": 1,
+  "maps": [
+    {
+      "name": "starter_01",
+      "file": "starter_01.json",
+      "description": "Coast and hills",
+      "difficulty": "easy",
+      "planet_marker": { "lat": 12.3, "lon": -45.6 }
+    }
+  ]
+}
+```
+
+`planet_marker` is the {latitude, longitude} on the placeholder
+planet sphere where the marker is drawn.
+
+**Test — `tests/scripts/04_l2_index.loft`**
+
+```loft
+let idx = load_index("maps/index.json")
+assert idx.maps.len() >= 1
+for entry in idx.maps {
+    // The referenced map file must exist + load
+    let m = load_map_file("maps/" + entry.file, &palette)
+    assert m.name == entry.name
+}
+```
+
+**Pass criteria.** The index is loadable; every listed map
+file exists and matches its index entry.
+
+### Phase L3 — Static planet-view selection UI
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/planet_view.loft` | Renders a placeholder sphere + markers; handles clicks. |
+| `src/main.loft` | Entry path: launch → planet view → click marker → load map → editor / play. |
+
+**Key functions**
+
+- `fn render_planet(idx: &MapIndex)` — placeholder sphere
+  geometry (low-poly globe) + a marker per indexed map at its
+  (lat, lon).
+- `fn screen_to_marker(idx: &MapIndex, screen_xy: (integer, integer)) -> Option<text>`
+  — return the clicked marker's map name, or None.
+
+**Test — `tests/scripts/04_l3_planet.loft`**
+
+Mostly human / visual: launch the game, see the planet, see
+one marker per indexed map, click one → game proceeds to
+landing-spot pick on that map.
+
+Programmatic test:
+
+```loft
+let idx = load_index("maps/index.json")
+// Synthesise a click at the screen position the first marker
+// would render at:
+let sxy = marker_screen_position(&idx, 0)
+let result = screen_to_marker(&idx, sxy)
+assert result == Some(idx.maps[0].name)
+```
+
+**Pass criteria.** The planet view is the cold-start screen
+(replacing any abstract menu); markers are clickable and
+route to the right map.
+
+### Phase L4 — Starter map set (the content)
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `maps/starter_01.json` | First hand-authored map.  ~30×30 hex play area; central plain (grass) + coast (sand) + hill+rock ridge with one steep_rock cliff + a small water patch.  5 spawn markers (2 moderate plain, 1 behind ridge, 1 coastal, 1 close to centre — the close one will be auto-disabled at landing).  Waves `[5,8,12,20,30,50,80]`.  Objective `survive_waves`. |
+| `maps/starter_02.json` (optional) | Second map varying terrain shape + marker layout. |
+| `maps/starter_03.json` (optional) | Third map. |
+| `maps/index.json` | Lists the maps with their planet positions. |
+
+**Authoring workflow.**
+
+1. Run the editor (plan 01 + 03 must already pass).
+2. Paint terrain hex by hex.
+3. Switch to marker mode, place spawn markers + rotate
+   directions.
+4. Save (plan 01 E4 / plan 03 M1 save format).
+5. Move the resulting JSON to `maps/`.
+6. Add an entry to `maps/index.json` with a planet position
+   chosen to feel sensible on the placeholder globe.
+
+**Test — `tests/scripts/04_l4_starter_maps.loft`**
+
+```loft
+let palette = load_palette("examples/palette.json")
+let idx = load_index("maps/index.json")
+assert idx.maps.len() >= 1  // at least starter_01
+
+let starter = load_map_file("maps/starter_01.json", &palette)
+assert starter.ground.len() >= 50          // non-trivial painted area
+assert starter.markers.len() >= 4          // enough markers (close-disable headroom)
+// At least one marker > 12 hex from origin (provocation trigger reachable)
+let any_far = starter.markers.iter().any(|m| (m.q.abs() + m.r.abs()) >= 12)
+assert any_far
+```
+
+**Pass criteria.** At least one playable starter map exists;
+the index lists it; the planet view shows its marker; the
+full cold-start → landing → play flow runs through it.
+
+### Phases L5 + L6 — deferred
+
+Out of validation scope.  Stub specs:
+
+- **L5 Objective variants.**  Extend the `objective` field
+  in MapFile to support `hold_time` / `reach_point` /
+  `destroy_target` / etc.  Each variant carries its own
+  parameter block in the map file.  Win condition becomes
+  per-objective.
+- **L6 Event variance.**  Extend MapFile with an `events`
+  array (per-event probability + position pool + trigger).
+  Runtime rolls at base start; firing scheduled by trigger
+  condition.
+
+Ship after the validation tier proves the loop.
+
 ## Objectives — variants (deferred)
 
 The validation default is **`survive_waves`**: clear the

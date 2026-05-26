@@ -122,6 +122,136 @@ this viewer, inspect the solver result, return to the editor,
 adjust the palette numbers or the painted shape, repeat.  This
 *is* the lib-plan-20 tuning workflow.
 
+## Implementation + testing
+
+Plan 02 is **optional for the validation tier** (per
+[`../05-validation-scenario/README.md`](../05-validation-scenario/README.md)).
+It exists to validate lib-plan-20 once that lands.  Implementation
+detail is therefore lighter than plans 01 / 03 / 04 — concrete
+enough to start when needed.
+
+### Phase V1 — Flat hex floor in 3D
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/viewer/floor3d.loft` | 3D draw of plan 01's painted layer at y=0. |
+| `src/viewer/orbital_cam.loft` | Pan / orbit / zoom camera (distinct from the game's locked over-the-shoulder). |
+| `src/viewer/main.loft` | Viewer entry point — separate binary or mode-switch from main. |
+
+**Key functions**
+
+- `fn render_floor_3d(c: &OrbitalCamera, painted: &hash<u8[integer]>)`
+  — for each visible hex, emit a flat quad at y=0 with the
+  palette colour.
+- `fn orbital_update(c: &mut OrbitalCamera, mouse: MouseInput)`
+  — drag = orbit, scroll = zoom, middle-drag = pan.
+
+**Test — `tests/scripts/02_v1_floor.loft`**
+
+Visual / human: load a small painted map, see flat coloured
+hexes at y=0; orbital camera works.
+
+```loft
+// Programmatic: camera math
+let c = OrbitalCamera { focus: (0.0, 0.0, 0.0), distance: 30.0, yaw: 0.0, pitch: -45.0 }
+orbital_update(&mut c, MouseInput::Scroll(-5.0))
+assert c.distance < 30.0   // zoomed in
+```
+
+**Pass criteria.** Painted map renders as a flat coloured
+plane at world scale; orbital camera navigates around it.
+
+### Phase V2 — Stub-solver mesh, full opacity
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/viewer/solver_stub.loft` | Placeholder solver: per-hex height = `slope × manhattan_distance_to_nearest_sea`. |
+| `src/viewer/mesh.loft` | Per-chunk mesh emit (calls into loft `gridmesh` library once available; minimal fallback in-tree otherwise). |
+
+**Key functions**
+
+- `fn stub_solve(painted: &hash<u8[integer]>, palette: &vector<GroundType>) -> hash<single[integer]>`
+  — returns per-hex height; sea hexes = 0; land hexes =
+  slope × hop-count to nearest sea.
+- `fn render_mesh(c: &OrbitalCamera, heights: &hash<single[integer]>, alpha: single)`
+  — emit triangle mesh; alpha for V3.
+
+**Test — `tests/scripts/02_v2_stub.loft`**
+
+```loft
+let palette = load_palette("examples/palette.json")
+let world = hash<u8[integer]>::new()
+paint(&mut world, 0, 0, 5)   // grass (slope 6)
+paint(&mut world, 1, 0, 5)   // grass adjacent
+paint(&mut world, 2, 0, 0)   // sea (drain)
+
+let h = stub_solve(&world, &palette)
+assert h.lookup(pack(2, 0)) == 0.0     // sea = 0
+assert h.lookup(pack(1, 0)) > 0.0      // grass adjacent to sea has some height
+assert h.lookup(pack(0, 0)) > h.lookup(pack(1, 0))  // further from sea = higher
+```
+
+**Pass criteria.** A meshed surface visibly *rises out of*
+sea level on land hexes; sea hexes stay at y=0.
+
+### Phase V3 — Dual-layer overlay
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/viewer/dual_render.loft` | Two-pass render: floor at full alpha, mesh at 40% alpha on top. |
+| `src/viewer/view_mode.loft` | Hotkeys 1 / 2 / 3 = flat / dual / mesh-only. |
+
+**Render order (V3 dual mode):**
+
+1. Clear depth + colour.
+2. Draw flat floor (alpha=1.0, writes depth).
+3. Draw mesh (alpha=0.4, depth-test ON, depth-write OFF).
+
+**Test — `tests/scripts/02_v3_overlay.loft`**
+
+Visual: load a painted map, switch to dual mode, see the
+floor's colour bleed through a faint meshed terrain on top.
+
+**Pass criteria.** Hotkey 1/2/3 cycles modes; dual mode
+shows both layers; mesh tint blends with painted colour
+underneath.
+
+### Phase V4 — Real solver wired in
+
+Substitute `stub_solve` for lib-plan-20's actual solver once
+that lands.  No code change in V1-V3 ideally; just
+re-targeting the `solve` function.
+
+**Pass criteria.** The viewer becomes the lib-plan-20
+acceptance test; bugs in the solver visibly manifest as
+mismatch between flat colours and meshed heights.
+
+### Phase V5 — Inspection HUD
+
+**Files**
+
+| File | Purpose |
+|---|---|
+| `src/viewer/inspect.loft` | Hover-to-tooltip showing per-hex stats. |
+
+**Tooltip content** for a hovered hex:
+
+- Painted type name
+- Solved height
+- Cumulative drop (for water hexes; sum along the chain)
+- Slope value
+- Flags: walkable_ground / walkable_vehicle / buildable
+
+**Pass criteria.** Hovering shows the data; toggling
+"stamp slope/drop on every hex" overlays small numbers on
+every hex.
+
 ## How the dual layer renders
 
 A sketch of the render pass:
