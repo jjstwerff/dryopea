@@ -298,9 +298,26 @@ visibly going to work.
 disposal.**
 
 Each helper has a **persistent identity** (eventually a name +
-a small skill profile; for validation, just an opaque id).
-The model below replaces any earlier "corpse + auto-respawn"
+a skill profile; for validation, just an opaque id).  The
+model below replaces any earlier "corpse + auto-respawn"
 sketch: helpers are *characters*, not interchangeable units.
+
+**Future skill set.**  Helpers eventually carry per-character
+skills.  Initial planned list:
+
+| Skill | Effect (sketch) |
+|---|---|
+| Building | Faster wall / tower construction ticks |
+| Mining | Gather raw materials from the environment (terrain hexes) |
+| Scouting | Faster movement / wider visible range |
+| Hacking | Subvert enemy structures (links to @PLAN46 § Future expansion supply-line disruption) |
+| Engineering | Faster repair / boost work on towers |
+| Crafting | Produce items from gathered materials |
+
+For validation: helpers are interchangeable; the data model
+just needs to carry an id so future skills can hang off it
+without re-engineering.  Skill effects + UI / character-sheet
+authoring all deferred.
 
 Damage flow:
 

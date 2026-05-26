@@ -210,6 +210,19 @@ verbatim below** with three adjustments:
 
   Helper-roster cap of 6 remains in force; NPC orders that
   would exceed the cap fail at the press.
+- **2026-05-26 — Helper skill set (future): building, mining,
+  scouting, hacking, engineering, crafting.**  Eventually each
+  helper carries per-character skills:
+  **building** (faster construction), **mining** (gather raw
+  materials from the environment), **scouting** (faster
+  movement / wider vision), **hacking** (subvert enemy
+  structures — links to § Future expansion supply-line
+  disruption), **engineering** (faster repair / boost on
+  towers), **crafting** (produce items from gathered
+  materials).  For validation, helpers are interchangeable —
+  no skills active.  Data model carries the per-helper id so
+  future skill effects hang off existing characters without
+  re-engineering.
 - **2026-05-26 — Helpers are persistent characters; damage
   needs retrieval, not auto-respawn; stranded helpers are
   future rescue targets.**  Each helper is an **identity**
