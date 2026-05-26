@@ -470,7 +470,8 @@ final vehicle art is years out.
 | Length | **~2.4 m** — slightly smaller than the enemy (~2.7 m) |
 | Width | **~1.1 m** — slightly smaller than the enemy (~1.3 m) |
 | Height | **~0.9 m** — flatter than the enemy (a more vehicle-like silhouette) |
-| Body colour | **`#f0f0f0`** (near-white) — the universal "this is the player" colour |
+| Body colour (paint mode OFF) | **`#f0f0f0`** (near-white) — the universal "this is the player" colour |
+| Body colour (paint mode ON) | **`#e09090`** (red-tinted near-white) — the vehicle itself signals wall-paint is active; visible at any zoom; no HUD icon needed |
 | **Front face colour** | **`#000000`** (black) — same facing convention as the enemy proxy; black = front |
 | Hover clearance above ground | **~0.4 m** standard; up to **~3 m** while boosting |
 | Origin / pivot | centre of the footprint, at terrain height (vehicle position interpolated above) |

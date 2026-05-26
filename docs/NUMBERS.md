@@ -170,13 +170,22 @@ wave phase → free scramble or earlier exit.
 
 ## Camera (game, not viewer)
 
+**Over-the-shoulder, locked in position; auto-swings only on
+sudden vehicle movement or terrain blocking the view of the
+player.**  No mouse orbit — the camera is automatic, not
+player-driven.  Matches the @PLAN46 "over-the-shoulder 3rd-
+person camera" framing in DESIGN.md.
+
 | Parameter | Value | Notes |
 |---|---|---|
-| Default mode | 3rd-person follow | Behind/above the vehicle |
-| Default height above vehicle | 15 m | Looking down |
-| Default angle (downward) | 50° | |
-| Zoom range | 10-30 m height | Scroll to adjust |
-| FOV | 60° | |
+| Default pose | **Over-the-shoulder** — slightly above and behind the vehicle | ~3 m above vehicle, ~5 m behind |
+| Camera lock | **Locked in pose** — does not orbit with mouse / right stick | Avoids cinematic burden on the player; movement triggers do the talking |
+| Auto-reframe trigger 1 | **Sudden vehicle movement** (sharp turn, boost start) | Camera swings smoothly to maintain framing |
+| Auto-reframe trigger 2 | **Terrain blocks line-of-sight to the player** (wall, `steep_rock` cliff, `wall_high`, etc.) | Camera swings to a position that *can* view the vehicle |
+| Swing easing | Smooth, ~0.5 s — visibly the camera *moves*, not snaps | Communicates "the camera adjusted because of geometry" |
+| Default look-ahead | Slight pitch forward (≈ 10°) | Player sees a bit further ahead than back |
+| Zoom range | **fixed for now** (placeholder) — single setting | Revisit if play needs variable zoom |
+| FOV | **60°** | |
 | Visible radius (effective) | ~haze radius (40 hexes) | Beyond, fade to atmospheric fog |
 
 ## Input scheme
