@@ -17,7 +17,7 @@ use world;
 // zoom level.  Per-frame mutation through a reference (see
 // camera_update).  The in-game over-the-shoulder camera (plan 12)
 // is a separate concept and is NOT this struct.
-pub struct Camera {
+pub struct EditorCamera {
     pos:  Hex     not null,
     zoom: integer not null,        // 1 = closest; higher = more world visible
 }
@@ -38,10 +38,20 @@ pub const ZOOM_MIN: integer = 1;
 pub const ZOOM_MAX: integer = 10;
 
 // Factories — every state struct constructed by an explicit fn.
-pub fn camera_default() -> Camera {
-    Camera {
+pub fn camera_default() -> EditorCamera {
+    EditorCamera {
         pos:  Hex { q: 0, r: 0 },
         zoom: 1,
+    }
+}
+
+// EditorCamera at a specific (q, r) with given zoom — for golden tests
+// that need to validate "with the camera here and that map, what
+// shows on screen?"
+pub fn camera_at(q: integer, r: integer, zoom: integer) -> EditorCamera {
+    EditorCamera {
+        pos:  Hex { q: q, r: r },
+        zoom: zoom,
     }
 }
 
@@ -59,7 +69,7 @@ pub fn input_empty() -> InputState {
 // Pure tick: apply the input state to the camera.  Single per-tick
 // step in each axis — the dispatcher ensures held keys don't fire
 // at 60Hz.
-pub fn camera_update(c: &Camera, input: InputState) {
+pub fn camera_update(c: &EditorCamera, input: InputState) {
     if input.in_pan_north { c.pos.r -= 1; }
     if input.in_pan_south { c.pos.r += 1; }
     if input.in_pan_west  { c.pos.q -= 1; }

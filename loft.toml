@@ -14,3 +14,12 @@ entry = "src/dryopea.loft"
 # heightmap) migrate to their own repos / the loft package registry,
 # they will be added here.
 [dependencies]
+# Path-dep into loft's monorepo while libraries haven't migrated to
+# the registry (see DESIGN.md § 17a — dryopea trail-blazes the loft
+# libraries it consumes).
+#
+# `graphics` provides the headless Canvas software rasterizer +
+# save_png (works without a GL context — see lib/graphics/tests/
+# canvas.loft for the pattern).  GL window functions also live in
+# this lib for when the live renderer lands.
+graphics = { path = "../loft/lib/graphics" }

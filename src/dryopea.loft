@@ -9,3 +9,6 @@
 
 use world;
 use camera;
+use painted;
+use render;
+use golden;

@@ -136,3 +136,84 @@ fn test_camera_no_input_noop() {
     assert(tc_q.pos.r == 0, "empty input → r unchanged");
     assert(tc_q.zoom  == 1, "empty input → zoom unchanged");
 }
+
+fn test_camera_at_specific() {
+    tc_a = camera_at(5, -3, 2);
+    assert(tc_a.pos.q ==  5, "camera_at q");
+    assert(tc_a.pos.r == -3, "camera_at r");
+    assert(tc_a.zoom  ==  2, "camera_at zoom");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// World-to-hex (inverse of hex_to_world) — round-trips
+// ─────────────────────────────────────────────────────────────────
+
+fn test_world_to_hex_origin() {
+    tw_h = world_to_hex(0.0, 0.0);
+    assert(tw_h.q == 0, "origin → q=0");
+    assert(tw_h.r == 0, "origin → r=0");
+}
+
+fn test_world_to_hex_roundtrip_axes() {
+    // Forward then inverse should land on the same hex.
+    tw_xy1 = hex_to_world(Hex { q: 1, r: 0 });
+    tw_h1 = world_to_hex(tw_xy1.0, tw_xy1.1);
+    assert(tw_h1.q == 1, "round-trip (1,0) → q=1");
+    assert(tw_h1.r == 0, "round-trip (1,0) → r=0");
+
+    tw_xy2 = hex_to_world(Hex { q: 0, r: 1 });
+    tw_h2 = world_to_hex(tw_xy2.0, tw_xy2.1);
+    assert(tw_h2.q == 0, "round-trip (0,1) → q=0");
+    assert(tw_h2.r == 1, "round-trip (0,1) → r=1");
+
+    tw_xy3 = hex_to_world(Hex { q: 2, r: -1 });
+    tw_h3 = world_to_hex(tw_xy3.0, tw_xy3.1);
+    assert(tw_h3.q ==  2, "round-trip (2,-1) → q=2");
+    assert(tw_h3.r == -1, "round-trip (2,-1) → r=-1");
+}
+
+fn test_world_to_hex_near_centre() {
+    // Points very close to a hex centre map to that hex.
+    tw_c = hex_to_world(Hex { q: 3, r: 2 });
+    tw_h = world_to_hex(tw_c.0 + 0.05, tw_c.1 - 0.05);
+    assert(tw_h.q == 3, "near-centre offset still picks (3,2).q");
+    assert(tw_h.r == 2, "near-centre offset still picks (3,2).r");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Painted layer — sparse storage
+// ─────────────────────────────────────────────────────────────────
+
+fn test_painted_default_is_sea() {
+    tp_w = painted_empty();
+    assert(painted_count(tp_w) == 0, "fresh world has 0 painted hexes");
+    assert(lookup_painted(tp_w, 0, 0)   == 0 as u8, "miss returns sea (0)");
+    assert(lookup_painted(tp_w, 99, 99) == 0 as u8, "any unpainted returns sea");
+}
+
+fn test_painted_paint_and_lookup() {
+    tp_p = painted_empty();
+    paint(tp_p, 0, 0, 5 as u8);   // grass at origin
+    paint(tp_p, 1, 0, 9 as u8);   // wall east of origin
+    assert(painted_count(tp_p) == 2, "two painted");
+    assert(lookup_painted(tp_p, 0, 0) == 5 as u8, "origin = grass");
+    assert(lookup_painted(tp_p, 1, 0) == 9 as u8, "east = wall");
+    assert(lookup_painted(tp_p, 0, 1) == 0 as u8, "unpainted neighbour = sea");
+}
+
+fn test_painted_repaint_overwrites() {
+    tp_o = painted_empty();
+    paint(tp_o, 0, 0, 5 as u8);
+    paint(tp_o, 0, 0, 7 as u8);     // overwrite grass with rock
+    assert(painted_count(tp_o) == 1, "still one entry");
+    assert(lookup_painted(tp_o, 0, 0) == 7 as u8, "now rock");
+}
+
+fn test_painted_paint_sea_erases() {
+    tp_e = painted_empty();
+    paint(tp_e, 0, 0, 5 as u8);
+    assert(painted_count(tp_e) == 1, "one painted");
+    paint(tp_e, 0, 0, 0 as u8);    // sea = remove
+    assert(painted_count(tp_e) == 0, "erased back to empty");
+    assert(lookup_painted(tp_e, 0, 0) == 0 as u8, "lookup returns sea");
+}

@@ -41,6 +41,48 @@ pub fn hex_distance(a: Hex, b: Hex) -> integer {
     (abs(hd_dq) + abs(hd_dr) + abs(hd_ds)) / 2
 }
 
+// Inverse of hex_to_world: which hex contains a given world-space
+// point (x, y)?  Axial flat-top inverse + cube_round (Red Blob
+// Games' standard hex-grid algorithm).
+//
+// Used by the renderer to map a pixel back to a hex.
+//
+// Inverse-hex factors precomputed to avoid float divisions
+// (loft warns on every `/` because of div-by-zero theoretical
+// hazard; these constants make the formulas multiplication-only):
+//   FLATTOP_Q_FACTOR  =  (2/3) / size
+//   FLATTOP_RX_FACTOR = (-1/3) / size
+//   FLATTOP_RY_FACTOR = (sqrt(3)/3) / size
+//   size = HEX_DIAMETER / 2 = 0.75
+pub fn world_to_hex(world_x: float, world_y: float) -> Hex {
+    wth_qf = world_x * 0.8888888888888889;                              // (2/3)/0.75
+    wth_rf = world_x * (-0.4444444444444444)                            // (-1/3)/0.75
+           + world_y *   0.7698003589195008;                            // (sqrt(3)/3)/0.75
+    // Convert axial fractional to cube fractional, round each axis,
+    // fix the one with the largest delta to keep x + y + z = 0.
+    wth_xf = wth_qf;
+    wth_zf = wth_rf;
+    wth_yf = -wth_xf - wth_zf;
+
+    wth_rx = round(wth_xf);
+    wth_ry = round(wth_yf);
+    wth_rz = round(wth_zf);
+
+    wth_dx = abs(wth_rx - wth_xf);
+    wth_dy = abs(wth_ry - wth_yf);
+    wth_dz = abs(wth_rz - wth_zf);
+
+    if wth_dx > wth_dy && wth_dx > wth_dz {
+        wth_rx = -wth_ry - wth_rz;
+    } else if wth_dy > wth_dz {
+        wth_ry = -wth_rx - wth_rz;
+    } else {
+        wth_rz = -wth_rx - wth_ry;
+    }
+
+    Hex { q: wth_rx as integer, r: wth_rz as integer }
+}
+
 // Enumerate every hex within `haze` of the centre — the "disc"
 // the camera renders.  Includes the centre itself.
 //

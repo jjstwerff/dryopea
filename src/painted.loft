@@ -1,0 +1,67 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Sparse painted-hex layer.
+//
+// loft hashes carry multiple key fields directly, so the design's
+// hash<GroundType[q, r]> intent (DESIGN.md § 17b) maps to:
+//
+//   pub struct PaintedHex { q, r, type }
+//   PaintedWorld.painted: hash<PaintedHex[q, r]>
+//
+// Sea (type index 0) is the *implicit default*: a hex with no entry
+// in the hash is sea.  Painting sea over a hex erases the entry to
+// preserve sparseness.
+//
+// Plan 01 phase E1/E3.
+
+use world;
+
+// One painted hex.
+//
+// `type` is an index into the palette (`examples/palette.json`).
+// Validation-tier defaults:
+//   0 = sea, 1 = water, 2 = rapids, 3 = waterfall,
+//   4 = sand, 5 = grass, 6 = hill, 7 = rock, 8 = steep_rock,
+//   9 = wall, 10 = wall_high
+//
+// The `u8` storage is i32 sentinel-friendly (palette has 11 entries;
+// 255 leaves room for many more types without changing the field
+// width).
+pub struct PaintedHex {
+    q:    integer not null,
+    r:    integer not null,
+    kind: u8      not null,
+}
+
+// The world container — a hash must be a struct field (loft idiom)
+// rather than a bare local.
+pub struct PaintedWorld {
+    painted: hash<PaintedHex[q, r]>,
+}
+
+// Factory: empty world (sea everywhere by implicit default).
+pub fn painted_empty() -> PaintedWorld {
+    PaintedWorld { painted: [] }
+}
+
+// Paint a hex.  Painting sea (type 0) ERASES the entry to keep the
+// storage sparse — sea is implicit on a miss.
+pub fn paint(w: &PaintedWorld, q: integer, r: integer, kind: u8) {
+    if kind == 0 as u8 {
+        w.painted[q, r] = null;        // remove
+    } else {
+        w.painted[q, r] = PaintedHex { q: q, r: r, kind: kind };
+    }
+}
+
+// Look up a hex.  Returns the palette index; 0 (sea) on miss.
+pub fn lookup_painted(w: const PaintedWorld, q: integer, r: integer) -> u8 {
+    e = w.painted[q, r];
+    if e == null { 0 as u8 } else { e.kind }
+}
+
+// Count of painted (non-sea) hexes.  Sparse — sea hexes are not stored.
+pub fn painted_count(w: const PaintedWorld) -> integer {
+    len(w.painted)
+}

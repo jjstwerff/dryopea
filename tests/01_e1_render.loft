@@ -1,0 +1,112 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 01 phase E1 — golden-image validation.
+//
+// Each test:
+//   1. Builds a known camera + painted world (the "sample map").
+//   2. Renders to a Canvas with render_to_canvas.
+//   3. Saves the actual PNG to tests/actual/<name>.png.
+//   4. Compares byte-for-byte against tests/golden/<name>.png.
+//
+// First-run workflow: add a test, run, see it fail with "golden
+// missing", review tests/actual/<name>.png, copy to tests/golden/
+// if correct, rerun.
+
+use dryopea;
+
+const RENDER_W: integer = 96;
+const RENDER_H: integer = 96;
+const RENDER_PPM: float = 16.0;       // 16 px / m → hex ~24 px wide
+
+// ─────────────────────────────────────────────────────────────────
+// Empty world — uniform sea
+// ─────────────────────────────────────────────────────────────────
+
+fn test_render_sea_origin() {
+    // Camera at origin, sea-default world.  Expected: 96x96 PNG of
+    // uniform dark blue.
+    re_cam = camera_default();
+    re_world = painted_empty();
+    re_cv = render_to_canvas(re_cam, re_world, RENDER_W, RENDER_H, RENDER_PPM);
+    assert_golden(re_cv, "01_e1_sea_origin");
+}
+
+fn test_render_sea_camera_offset() {
+    // Camera offset (5, -3); empty world.  Still uniform sea — the
+    // offset doesn't matter for an empty world but exercises the
+    // camera positioning math.  Render should byte-match the origin
+    // render.
+    rs_cam = camera_at(5, -3, 1);
+    rs_world = painted_empty();
+    rs_cv = render_to_canvas(rs_cam, rs_world, RENDER_W, RENDER_H, RENDER_PPM);
+    assert_golden(rs_cv, "01_e1_sea_camera_offset");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Sample map: a single painted hex
+// ─────────────────────────────────────────────────────────────────
+
+fn test_render_single_grass_at_origin() {
+    // Single grass hex at world (0, 0); camera at (0, 0).
+    // Expected: sea background + one green hex at canvas centre.
+    rg_cam = camera_default();
+    rg_world = painted_empty();
+    paint(rg_world, 0, 0, 5 as u8);   // grass
+    rg_cv = render_to_canvas(rg_cam, rg_world, RENDER_W, RENDER_H, RENDER_PPM);
+    assert_golden(rg_cv, "01_e1_grass_at_origin");
+}
+
+fn test_render_grass_offset_by_camera() {
+    // Single grass hex at world (0, 0); camera at (1, 0).
+    // Expected: sea background + green hex offset to the LEFT
+    // (camera moved east, world content stays put).
+    rgo_cam = camera_at(1, 0, 1);
+    rgo_world = painted_empty();
+    paint(rgo_world, 0, 0, 5 as u8);
+    rgo_cv = render_to_canvas(rgo_cam, rgo_world, RENDER_W, RENDER_H, RENDER_PPM);
+    assert_golden(rgo_cv, "01_e1_grass_camera_east");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Sample map: a small T-shaped pattern
+// ─────────────────────────────────────────────────────────────────
+
+fn test_render_tshape_around_origin() {
+    // A 6-hex T-shape exercises multiple colours + positions:
+    //
+    //   (q,r,kind):
+    //     ( 0, -1, sand=4)
+    //     ( 0,  0, grass=5)
+    //     ( 0,  1, hill=6)
+    //     (-1,  1, rock=7)
+    //     ( 1,  1, wall=9)
+    //     ( 0,  2, steep_rock=8)
+    rt_cam = camera_default();
+    rt_world = painted_empty();
+    paint(rt_world,  0, -1, 4 as u8);
+    paint(rt_world,  0,  0, 5 as u8);
+    paint(rt_world,  0,  1, 6 as u8);
+    paint(rt_world, -1,  1, 7 as u8);
+    paint(rt_world,  1,  1, 9 as u8);
+    paint(rt_world,  0,  2, 8 as u8);
+    rt_cv = render_to_canvas(rt_cam, rt_world, RENDER_W, RENDER_H, RENDER_PPM);
+    assert_golden(rt_cv, "01_e1_tshape_palette");
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Sample map: validates camera_at picks the right region
+// ─────────────────────────────────────────────────────────────────
+
+fn test_render_camera_at_painted_far() {
+    // Paint a wall_high cluster at (10, 0).  Camera at (10, 0) — the
+    // cluster should appear at the screen centre (regardless of how
+    // far from origin the world coords are).
+    rcf_cam = camera_at(10, 0, 1);
+    rcf_world = painted_empty();
+    paint(rcf_world, 10, 0,  10 as u8);   // wall_high
+    paint(rcf_world,  9, 0,  10 as u8);
+    paint(rcf_world, 11, 0,  10 as u8);
+    rcf_cv = render_to_canvas(rcf_cam, rcf_world, RENDER_W, RENDER_H, RENDER_PPM);
+    assert_golden(rcf_cv, "01_e1_camera_at_far_cluster");
+}

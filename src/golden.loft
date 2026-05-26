@@ -1,0 +1,82 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Golden-image test helper.
+//
+// Usage in a test:
+//
+//   cv = render_to_canvas(cam, world, 96, 96, 16.0);
+//   assert_golden(cv, "01_e1_sea_origin");
+//
+// The helper:
+//   - Saves the actual render to tests/actual/<name>.png  (always)
+//   - Loads the bytes of tests/golden/<name>.png
+//   - Compares the two PNGs byte-for-byte
+//   - On mismatch / missing golden: emits a loud `FAIL:` line to
+//     stdout AND writes a marker file `tests/actual/_FAILED_<name>.txt`
+//
+// Why marker files + println instead of assert/panic:
+//   loft's test runner currently doesn't surface
+//   runtime_error / had_fatal as a test failure (it only catches
+//   Rust panics).  An `assert(false, …)` halts the test function
+//   but the runner still reports "ok".  Filed in
+//   QUESTIONS_FOR_LOFT.md.  Until that lands, the workflow is:
+//     1. Run `loft test`.
+//     2. `ls tests/actual/_FAILED_*.txt` to see which tests
+//        actually failed.
+//     3. Manually review tests/actual/<name>.png for any
+//        new / changed test; if correct, copy to
+//        tests/golden/<name>.png.
+//   `scripts/check-goldens.sh` automates step 2.
+
+use graphics;
+
+// Compare two PNG files byte-for-byte.  PNG encoding is
+// deterministic in lib/graphics, so byte-equality is a valid
+// pixel-equality test for renders produced by the same code path.
+pub fn png_bytes_equal(path_a: text, path_b: text) -> boolean {
+    pb_fa = file(path_a);
+    pb_fb = file(path_b);
+    if !pb_fa.exists() || !pb_fb.exists() { return false; }
+    if pb_fa.size != pb_fb.size { return false; }
+
+    pb_fa#format = BigEndian;
+    pb_fb#format = BigEndian;
+    pb_n = pb_fa.size as integer;
+    for pb_i in 0..pb_n {
+        pb_ba = pb_fa#read as u8;
+        pb_bb = pb_fb#read as u8;
+        if pb_ba != pb_bb { return false; }
+    }
+    true
+}
+
+// Internal: write the failure marker file.
+fn write_failure_marker(name: text, reason: text) {
+    wfm_marker = file("tests/actual/_FAILED_{name}.txt");
+    wfm_marker.write(reason);
+}
+
+// Save the actual + compare to the golden.  On failure, log
+// clearly + write a marker file (the loft test runner does not yet
+// surface assertion failures — see file header).
+pub fn assert_golden(cv: Canvas, name: text) {
+    ag_actual = "tests/actual/{name}.png";
+    ag_golden = "tests/golden/{name}.png";
+
+    cv.save_png(ag_actual);
+
+    ag_golden_file = file(ag_golden);
+    if !ag_golden_file.exists() {
+        ag_reason1 = "golden missing for {name}: review {ag_actual} and copy to {ag_golden} if it looks correct";
+        println("FAIL: {ag_reason1}");
+        write_failure_marker(name, ag_reason1);
+        return;
+    }
+
+    if !png_bytes_equal(ag_actual, ag_golden) {
+        ag_reason2 = "golden mismatch for {name}: actual={ag_actual} golden={ag_golden}";
+        println("FAIL: {ag_reason2}");
+        write_failure_marker(name, ag_reason2);
+    }
+}

@@ -1,0 +1,163 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Software rasterizer for golden-image validation.
+//
+// Renders a (Camera, PaintedWorld) into a graphics::Canvas at a
+// chosen pixels-per-metre — headless, no GL context required.
+// Tests save the resulting Canvas with `save_png` and compare
+// byte-for-byte against a stored golden PNG in tests/golden/.
+//
+// Plan 01 phase E1 — golden-image validation.
+
+use graphics;
+use world;
+use camera;
+use painted;
+
+// ── Palette colours (mirrors examples/palette.json) ──────────────
+//
+// Inlined here rather than loaded from JSON so the renderer's
+// output is deterministic across test runs.  Keep in sync with
+// palette.json by hand for now; a later phase can load palette.json
+// directly once a JSON-to-runtime-palette path exists.
+
+pub const PALETTE_SIZE: integer = 11;
+
+pub fn palette_color(kind: u8) -> integer {
+    pc_k = kind as integer;
+    if pc_k == 0  { rgb(0x0a, 0x2c, 0x5e) }                   // sea
+    else if pc_k == 1  { rgb(0x2a, 0x7e, 0xc0) }              // water
+    else if pc_k == 2  { rgb(0x6f, 0xbc, 0xe8) }              // rapids
+    else if pc_k == 3  { rgb(0xe8, 0xf4, 0xfc) }              // waterfall
+    else if pc_k == 4  { rgb(0xf0, 0xd8, 0x60) }              // sand
+    else if pc_k == 5  { rgb(0x4c, 0xaf, 0x50) }              // grass
+    else if pc_k == 6  { rgb(0x8b, 0x62, 0x40) }              // hill
+    else if pc_k == 7  { rgb(0xb0, 0xb0, 0xb0) }              // rock
+    else if pc_k == 8  { rgb(0x55, 0x55, 0x55) }              // steep_rock
+    else if pc_k == 9  { rgb(0xd0, 0x48, 0x48) }              // wall (placeholder red)
+    else if pc_k == 10 { rgb(0x7a, 0x18, 0x18) }              // wall_high (placeholder dark red)
+    else { rgb(0xff, 0x00, 0xff) }                            // unknown → magenta
+}
+
+pub fn sea_color() -> integer { palette_color(0 as u8) }
+
+// ── Canvas / world projection ────────────────────────────────────
+
+// Translate a world-space (x, y) to canvas pixel coordinates given a
+// camera (positioned at a hex) and a pixels-per-metre scale.
+//
+// Canvas y grows DOWN (image convention); world y grows UP (math
+// convention), so the y axis is flipped here — pan-north (smaller r)
+// moves the visible world UP on screen.
+pub fn world_to_canvas(
+    cam:  EditorCamera,
+    wx:   float,
+    wy:   float,
+    cw:   integer,
+    ch:   integer,
+    ppm:  float,
+) -> (integer, integer) {
+    wtc_camw = hex_to_world(cam.pos);
+    wtc_dx_m = wx - wtc_camw.0;
+    wtc_dy_m = wy - wtc_camw.1;
+    // Half-pixel offset (0.5) so hex centres land on a single pixel
+    // rather than straddling two.
+    wtc_px = (cw as float)  * 0.5 + wtc_dx_m * ppm + 0.5;
+    wtc_py = (ch as float)  * 0.5 + wtc_dy_m * ppm + 0.5;   // no flip — world & screen both grow south
+    (wtc_px as integer, wtc_py as integer)
+}
+
+// ── Hex rendering primitive ─────────────────────────────────────
+//
+// Draws a single hex on the canvas at its world centre.  Uses
+// six fill_triangles (flat-top vertex layout) so the painted hex
+// reads cleanly to its edges, not as a circle.
+
+pub fn draw_hex(
+    cv:   Canvas,
+    cam:  EditorCamera,
+    h:    Hex,
+    color: integer,
+    cw:   integer,
+    ch:   integer,
+    ppm:  float,
+) {
+    dh_world = hex_to_world(h);
+    dh_centre = world_to_canvas(cam, dh_world.0, dh_world.1, cw, ch, ppm);
+    dh_cx = dh_centre.0;
+    dh_cy = dh_centre.1;
+
+    // Flat-top hex vertex offsets in metres (vertex-to-vertex
+    // diameter = HEX_DIAMETER, so |centre→vertex| = 0.75):
+    //   v0 ( 0.75,   0)         (east)
+    //   v1 ( 0.375, +0.6495)    (NE)  -- world y up
+    //   v2 (-0.375, +0.6495)    (NW)
+    //   v3 (-0.75,   0)         (west)
+    //   v4 (-0.375, -0.6495)    (SW)
+    //   v5 ( 0.375, -0.6495)    (SE)
+    // Convert to canvas pixel offsets (y flips).
+    dh_rx_m = HEX_DIAMETER * 0.5;          // 0.75
+    dh_ry_m = HEX_FLAT_TO_FLAT * 0.5;      // ~0.6495
+    dh_rx_px = (dh_rx_m * ppm + 0.5) as integer;
+    dh_hx_px = (dh_rx_m * 0.5 * ppm + 0.5) as integer;
+    dh_ry_px = (dh_ry_m * ppm + 0.5) as integer;
+
+    // Vertices (in canvas pixel coords).  No y-flip — world +y and
+    // screen +y both grow south.  Vertex offsets follow the
+    // standard flat-top hex layout (v0 east, going clockwise on
+    // screen).
+    dh_v0x = dh_cx + dh_rx_px;
+    dh_v0y = dh_cy;
+    dh_v1x = dh_cx + dh_hx_px;
+    dh_v1y = dh_cy + dh_ry_px;
+    dh_v2x = dh_cx - dh_hx_px;
+    dh_v2y = dh_cy + dh_ry_px;
+    dh_v3x = dh_cx - dh_rx_px;
+    dh_v3y = dh_cy;
+    dh_v4x = dh_cx - dh_hx_px;
+    dh_v4y = dh_cy - dh_ry_px;
+    dh_v5x = dh_cx + dh_hx_px;
+    dh_v5y = dh_cy - dh_ry_px;
+
+    // Six triangles, all sharing the centre.
+    cv.fill_triangle(dh_cx, dh_cy, dh_v0x, dh_v0y, dh_v1x, dh_v1y, color);
+    cv.fill_triangle(dh_cx, dh_cy, dh_v1x, dh_v1y, dh_v2x, dh_v2y, color);
+    cv.fill_triangle(dh_cx, dh_cy, dh_v2x, dh_v2y, dh_v3x, dh_v3y, color);
+    cv.fill_triangle(dh_cx, dh_cy, dh_v3x, dh_v3y, dh_v4x, dh_v4y, color);
+    cv.fill_triangle(dh_cx, dh_cy, dh_v4x, dh_v4y, dh_v5x, dh_v5y, color);
+    cv.fill_triangle(dh_cx, dh_cy, dh_v5x, dh_v5y, dh_v0x, dh_v0y, color);
+}
+
+// ── The render pipeline ─────────────────────────────────────────
+//
+// Sea-default + painted overlay.  Iterates the painted entries
+// (sparse — most hexes are sea) and draws each as a coloured hex
+// on top of the sea-filled canvas.
+//
+// `ppm` (pixels per metre) determines the visible scale.  At
+// ppm=16 with HEX_DIAMETER=1.5, a hex is 24 px wide vertex-to-
+// vertex.
+
+pub fn render_to_canvas(
+    cam:  EditorCamera,
+    pw:   PaintedWorld,
+    w:    integer,
+    h:    integer,
+    ppm:  float,
+) -> Canvas {
+    cv = canvas(w, h, sea_color());
+
+    // Iterate sparse painted entries.  Each non-sea hex draws on
+    // top of the sea-filled canvas.  An out-of-frustum hex still
+    // draws — fill_triangle clips internally; the cost is tiny
+    // for a sparse layer.
+    for entry in pw.painted {
+        draw_hex(cv, cam,
+                 Hex { q: entry.q, r: entry.r },
+                 palette_color(entry.kind),
+                 w, h, ppm);
+    }
+
+    cv
+}

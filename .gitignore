@@ -22,3 +22,7 @@ doc/*.html
 *.log
 result.txt
 /tmp/
+
+# Golden-image tests: actual outputs are regenerated every run;
+# only the goldens are checked in.
+tests/actual/

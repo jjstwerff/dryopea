@@ -31,7 +31,79 @@ fix / feature, move it to **Resolved**.
 
 ## Open
 
-*(none yet)*
+### Don't warn on division by a literal constant
+
+- **Found while:** Plan 01 E1 — implementing `world_to_hex`
+  (axial flat-top inverse).  The math is naturally written as
+  divisions by `0.75` and constants like `(2/3)/0.75` etc.
+- **Kind:** feature (warning suppression)
+- **What dryopea needs:** Loft warns on every `/` because of
+  the divide-by-zero hazard ("integer division may produce
+  null on divide-by-zero with no defensive check; consider
+  `a / b ?? 0` or wrap in `if b != 0 { ... }`").  The warning
+  also fires on **float division by a literal non-zero
+  constant** (e.g. `x / 2.0`, `x / 0.75`), which is
+  unconditionally safe — the divisor is statically known
+  non-zero.  Please suppress the warning when the RHS of `/`
+  is a non-zero literal constant (integer or float).
+- **Workaround in dryopea:** Precompute reciprocals as
+  named constants and multiply (`x * 0.8888...` instead of
+  `(x * 2.0 / 3.0) / 0.75`).  Works but the formulas read
+  less clearly than the math they implement; readers have
+  to consult comments to recover the original division
+  structure.
+- **Loft pointer:** unknown.  Warning emitted from somewhere
+  in the parser / type-checker that flags every `/` site.
+
+### Test runner doesn't surface assertion / runtime_error failures
+
+- **Found while:** Plan 01 E1 golden-image validation harness —
+  trying to make `assert(false, "golden missing")` fail the test.
+- **Kind:** bug (test framework)
+- **What dryopea needs:** `loft test` / `--tests` to mark a
+  test as FAILED when `state.database.runtime_error` is set
+  after the test function returns.
+
+  **Current behaviour:** when an `assert(condition, msg)` fires
+  with `!condition`, `n_assert` in `src/native.rs` populates
+  `stores.runtime_error` (the C66 "typed runtime error" path).
+  The dispatch loop in `state/mod.rs::execute_argv` short-
+  circuits (`code_pos = u32::MAX`) and `execute_argv` returns
+  cleanly.  No Rust panic occurs.  The test runner's
+  `catch_unwind(execute_argv(...))` returns `Ok(())` → the test
+  is reported as **PASSED** even though the assertion failed.
+
+  Reproducer:
+  ```loft
+  // tests/x.loft
+  fn test_failing_assert() {
+      println("about to assert(false)");
+      assert(false, "this should fail the test");
+      println("LINE AFTER — does not print, so execution halted");
+  }
+  ```
+  ```
+  $ loft --tests tests/x.loft
+  about to assert(false)
+    ok    tests/x.loft  (1 fn: test_failing_assert)
+  test result: ok. 1 passed; 1 file
+  ```
+  Same for `panic("msg")`, `div by zero`, and any
+  `runtime_error`-based fault.
+
+  **Suggested fix:** after `execute_argv` returns in the test
+  runner (`src/test_runner.rs:1033`), check
+  `state.database.runtime_error.is_some()` (and/or
+  `had_fatal`).  If so, treat the test as failed with the
+  error's message.
+- **Workaround in dryopea:** `assert_golden` in
+  `src/golden.loft` writes a loud failure marker to stderr +
+  a `tests/actual/_FAILED_<name>.txt` file on
+  mismatch.  CI / dev workflow greps for that marker after
+  `loft test` to determine real pass/fail.
+- **Loft pointer:** test_runner.rs:1033 (catch_unwind site);
+  native.rs:480 (n_assert sets runtime_error);
+  state/mod.rs:1966 (dispatch-loop short-circuit).
 
 ## Submitted
 
