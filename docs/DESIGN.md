@@ -49,6 +49,8 @@ bottom of this file for traceability.
 - [19. Validation tier scope](#19-validation-tier-scope)
 - [20. Future expansion](#20-future-expansion)
 - [21. Open questions](#21-open-questions)
+- [17a. Library evolution — dryopea trail-blazes](#17a-library-evolution--dryopea-trail-blazes)
+- [17b. Loft idiom alignment](#17b-loft-idiom-alignment)
 - [Appendix — Original @PLAN46 (2026-05-21)](#appendix--original-plan46-2026-05-21)
 
 ---
@@ -997,6 +999,33 @@ rate" by editing one line in `numbers.json` and re-launching.
 A player can author a new starter map in the in-game editor
 and share the resulting JSON.  Both are first-day-of-shipping
 behaviours, not aspirational features.
+
+## 17a. Library evolution — dryopea trail-blazes
+
+dryopea is the **first real consumer** of several loft library
+plans (lib-plan 19 gridmesh, lib-plan 20 terrain-heightmap, the
+loft-libs-world chunk in plan-12, etc.).  As such it has
+explicit licence to:
+
+- **Modify** those libraries when their current shape doesn't
+  fit.  If gridmesh's API gets in the way, change it; the
+  library is for us as much as we're for it.
+- **Extract** new libraries when a shape becomes reusable.
+  If dryopea's marker layer, wave engine, hex-input handling,
+  diegetic HUD primitives — anything — turns out to be useful
+  to a second consumer (moros, audience-demo, a future game),
+  promote it to `lib/<name>` in loft (or its own chunk in the
+  library-extraction plan).
+- **Drive** the API of shared primitives.  The validation
+  scenario is the integration test for the *libraries* as
+  well as the game.  When a library fails to fit, it's the
+  library that adjusts.
+
+This is the loft project's **"consumer drives the library"**
+principle (see lib_plans § "toolkit not framework"
+discipline).  dryopea is the trail-blazer consumer; do not be
+afraid to change gridmesh or to add new `lib/*` directories
+as the implementation reveals what's actually shared.
 
 ## 17b. Loft idiom alignment
 

@@ -105,6 +105,55 @@ Each phase produces a **standalone runnable** that exercises
 exactly its added capability.  Earlier-phase tests must keep
 passing when later phases land — no regressions allowed.
 
+### Testability discipline (built-in from the bottom up)
+
+dryopea follows the **moros pattern** (see `lib/moros_*/tests/*.loft`
+in the loft repo as the canonical reference):
+
+- **No global state.**  Every state struct (world, camera,
+  editor, game) is constructed by a factory function and
+  passed explicitly.  Examples: `editor_default()`,
+  `input_empty()`, `world_empty()`, `map_empty()` — pure
+  constructors, never side-effects.
+- **Pure functional ticks.**  Per-frame logic lives in
+  `tick(state, input, dt)` functions.  Tests call the tick
+  directly with synthesised input.  No render, no event
+  loop, no I/O required for the test to assert on state
+  transitions.
+- **Input is a data struct, not a callback.**  Tests
+  construct an `Input` struct (`in_tool_number = 2`,
+  `in_key_q_pressed = true`) and pass it; the tick reads it
+  like any other parameter.  No keyboard-listener stub
+  required.
+- **Direct field assertions.**  Tests read state struct
+  fields after a tick and `assert(...)` on them.  No HUD
+  scraping, no log parsing.
+
+Net: every module is testable **in isolation** without any
+graphics / OS / time / IO context.  A full integration test
+(`05_ms5_wave1.loft`) is just a sequence of ticks fed
+synthesised inputs; the renderer is *attached* in the real
+game but never required by a test.
+
+Cite this pattern as the **testability spine** of every plan;
+every `fn test_*()` in `tests/scripts/*.loft` follows it.
+
+### Save format — one format for editor and game
+
+The editor will **eventually edit every map parameter the
+game needs**, so the editor's save and the game's load
+**share one format** — the `MapFile` defined in
+[`plan 04 § L1`](../04-map-library/README.md#phase-l1--map-file-format).
+Plan 01 E4 writes a `MapFile`, even if early phases only
+populate a subset of its fields (just `ground` + `camera` for
+E4; `markers`, `waves`, `objective` etc. left empty / default
+until the relevant phase fills them in).
+
+Net: there is **no separate "editor save format" vs "game
+map format."**  Both phases write and read the same JSON
+schema; later editor phases add fields that earlier game
+phases simply ignore as default.
+
 ### Phase E1 — Infinite sea + camera
 
 **Files**
@@ -318,40 +367,34 @@ for q in 0..=4 { assert lookup(&world, q, 0) == 9 }
 - The test script passes.
 - E1 + E2 still pass.
 
-### Phase E4 — Save / load
+### Phase E4 — Save / load (writes a MapFile)
 
 **Files added/modified**
 
 | File | Purpose |
 |---|---|
-| `src/save.loft` | JSON serialisation of `painted` + camera state. |
-| `src/main.loft` | Save on `Ctrl+S`; load on startup if a save exists. |
+| `src/map_file.loft` | The single `MapFile` struct used by editor + game (see plan 04 § L1 for the full schema). |
+| `src/save.loft` | `MapFile` ↔ JSON. |
+| `src/main.loft` | Save on `Ctrl+S` (writes a `MapFile`); load on startup if a save exists. |
 
-**Save format** — `saves/last.json` (or a path passed on CLI):
+**Format — `MapFile` per plan 04 § L1.**  E4 writes the same
+JSON the game later reads.  Early-phase saves populate just
+`ground` + `camera`; later phases (markers, waves, objective,
+play_area) fill in additional fields as they land.  Existing
+loaders ignore unknown fields and default missing ones — no
+parallel "editor save" exists.
 
-```json
-{
-  "version": 1,
-  "camera": { "q": 0, "r": 0, "zoom": 1 },
-  "painted": [
-    { "q": 0, "r": 0, "type": "grass" },
-    { "q": 1, "r": 0, "type": "grass" },
-    { "q": 2, "r": 0, "type": "wall" }
-  ]
-}
-```
+**Key functions** (the MapFile API is shared with plan 04):
 
-`type` is the palette entry's **name** (not index) — robust to
-palette reordering.
-
-**Key functions**
-
-- `fn save_map(world: &hash<u8[integer]>, c: &Camera, path: text)`
-  — write JSON; one entry per painted hex; entries sorted by
-  (q,r) for deterministic output.
-- `fn load_map(path: text, palette: &vector<GroundType>) -> (hash<u8[integer]>, Camera)`
-  — read JSON; map each entry's `type` name back to its
-  palette index; assert all names exist in the palette.
+- `fn save_map_file(m: &MapFile, path: text)` — write JSON;
+  entries sorted (`(q,r)` for `ground` and `markers`) for
+  deterministic output.
+- `fn load_map_file(path: text, palette: &vector<GroundType>) -> MapFile`
+  — read JSON; resolve `type` names → palette indices;
+  default missing fields.
+- `fn paint_to_mapfile(world: &hash<PaintedHex[q, r]>, c: &Camera) -> MapFile`
+  — collect the painted-layer + camera into a `MapFile` with
+  everything else empty/default (E4 callsite).
 
 **Test — `tests/scripts/01_e4_saveload.loft`**
 
@@ -359,21 +402,29 @@ palette reordering.
 let palette = load_palette("examples/palette.json")
 
 // Build a small world
-let w = hash<u8[integer]>::new()
+let w: hash<PaintedHex[q, r]> = []
 paint(&mut w, 0, 0, 5)   // grass
 paint(&mut w, 1, 0, 9)   // wall
 paint(&mut w, 2, 0, 9)   // wall
 
 let c = Camera { pos: Hex { q: 0, r: 0 }, zoom: 1 }
+let mf = paint_to_mapfile(&w, &c)
 
-save_map(&w, &c, "/tmp/dryopea_test.json")
+save_map_file(&mf, "/tmp/dryopea_test.json")
 
-let (w2, c2) = load_map("/tmp/dryopea_test.json", &palette)
-assert w2.len() == 3
+let mf2 = load_map_file("/tmp/dryopea_test.json", &palette)
+assert mf2.ground.len() == 3
+// Reconstruct the hash from the MapFile's ground array
+let w2 = mapfile_to_painted(&mf2, &palette)
 assert lookup(&w2, 0, 0) == 5
 assert lookup(&w2, 1, 0) == 9
 assert lookup(&w2, 2, 0) == 9
-assert c2.pos.q == 0 && c2.pos.r == 0
+assert mf2.camera.q == 0 && mf2.camera.r == 0
+
+// Fields not yet populated default sensibly
+assert mf2.markers.len() == 0
+assert mf2.waves.len() == 0
+assert mf2.objective == "survive_waves"   // default
 ```
 
 **Pass criteria**

@@ -121,11 +121,20 @@ Out of scope (deferred to later plans):
 
 ### Phase L1 — Map file format
 
+**One format, used by editor + game.**  The editor's save
+(plan 01 § E4) and the game's mission load both use the
+**same `MapFile` schema** defined here.  Early-phase editor
+saves populate only the fields they touch (`ground` +
+`camera` for plan 01 E4); later phases fill in `markers`
+(plan 03 M1), `waves` + `objective` + `play_area` (plan 04
+L1).  Missing fields default; unknown fields ignore.  No
+parallel "editor save format" exists.
+
 **Files**
 
 | File | Purpose |
 |---|---|
-| `src/map.loft` | `MapFile` struct + JSON loader / saver consolidating ground + markers + metadata. |
+| `src/map_file.loft` | `MapFile` struct + JSON loader / saver.  Shared with plan 01's E4 save path. |
 | `maps/` | Directory holding authored map files. |
 
 **Format — `maps/<name>.json`**
