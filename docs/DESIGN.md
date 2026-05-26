@@ -237,6 +237,27 @@ verbatim below** with three adjustments:
   life-prolonging medicine — the reason the permits exist);
   carrying sap activates the insect chase.  Full lore in
   [`SETTING.md`](SETTING.md) § The other enemy.
+- **2026-05-26 — The core is a SCRAMBLING tower; that's why
+  robots act un-coordinated inside the base.**  The central
+  building is, in the fiction, a **signal-scrambling tower**.
+  It carves out a **bubble of broken comms** around the base
+  in which robots **can't reach their faction-master command
+  links** — so they fall back to local per-unit behaviour
+  (the wave-system rules the game already describes).
+  *Outside* the bubble, robots regain coordination → more
+  dangerous; this is why scouting / venturing out is a risk.
+  Insects and elementals are unaffected (not comms-driven).
+  A helper with the hacking skill bypasses the bubble for one
+  robot at a time.  Boss "short-range communication" for
+  retaliation orders is the boss briefly overcoming the
+  scrambling within its immediate vicinity.  When the core
+  launches (scramble), the bubble collapses; this contributes
+  to why abandoned bases rot over time (§ Future expansion).
+  The verb "scramble" (the player's force-launch) and
+  "scramble" (signal jam) converge by design.  Bubble radius
+  TBD with the numbers.  Full explanation in
+  [`SETTING.md`](SETTING.md) § The core is a scrambling
+  tower.
 - **2026-05-26 — The cordon is a naval blockade: two
   battleships; the real concern is robot-built escape
   rockets.**  The military maintains **two large battleships

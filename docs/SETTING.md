@@ -330,6 +330,72 @@ robots are everywhere by default, insects appear where
 trees do, elementals appear where their stones are.  The
 three tiers stack rather than replace.
 
+## The core is a scrambling tower — what it actually does
+
+The central building the player drops into every base is not
+just "the defend objective + escape rocket" mechanically — in
+the fiction it is a **signal-scrambling tower**.  Its purpose
+is to **disrupt the normal communication between robots** in
+its surrounding area.
+
+Effects in the fiction:
+
+- The robots on this planet are *not* genuinely autonomous;
+  they answer to their underground-faction masters via radio
+  / signal protocols (see § History above).  Take that link
+  away and the individual robot is back to behaving on its
+  own local programming — slower, less coordinated, easier
+  to deal with.
+- The core's scrambler **carves out a bubble of "broken
+  command"** around the base.  Inside that bubble, robots
+  act *without central structure* — they wander, react
+  locally, fail to coordinate group attacks.
+- This is **why the player can defend a base at all.**
+  Without the scrambler, robot waves would arrive as
+  coordinated swarms answering to their faction masters and
+  no perimeter could hold.  With it, the robots inside the
+  bubble are degraded to the per-unit behaviour the wave
+  system already describes.
+
+This explains a number of in-design rules retroactively:
+
+- "Robots don't coordinate by default; only bosses issue
+  guard / retaliation orders, and only at short range" — the
+  short range IS the bubble of degraded comms; the boss
+  briefly overcomes the scrambling, but only locally.
+- "Insects ignore the scrambler" — they're biological; no
+  comms link to disrupt.  The scrambler doesn't help against
+  them.  This is part of why insects are a *different* kind
+  of pressure than robots.
+- "Elementals ignore the scrambler" — same: they are not
+  comms-driven; they answer to stones, not radio.
+- "Hacking by a helper bypasses the scrambling" — a helper
+  with hacking skill can establish a *direct* link to a
+  robot, sidestepping the broken-comms environment.
+
+Etymology / double meaning:
+
+- **Scramble** (the verb the player does at force-launch) and
+  **scramble** (the signal-jamming the core does) are the
+  same word for a reason.  The core is a *scrambling tower*
+  that the player ultimately rides home; the launch is the
+  act of *un-scrambling* (departing the bubble) and committing
+  to exit.
+
+Consequences for future design:
+
+- The bubble has a **radius** (TBD with the numbers).  Inside
+  the radius: degraded comms → wave-system behaviour.
+  Outside: robots regain coordination → more dangerous.  This
+  is why "venture out for treasure / sap / scouting" is a
+  *risk* — the player drives out of their own scrambler's
+  protection.
+- An **abandoned base** still has its core there until / unless
+  it lifts off.  Once the core launches, the bubble collapses
+  and that region returns to full faction coordination — which
+  is one mechanism for why an abandoned base **rots** over
+  time in the planet-meta (§ Future expansion).
+
 ## How the setting shapes the mechanics
 
 | Mechanic | Why it fits the setting |
