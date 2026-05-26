@@ -37,6 +37,71 @@ final art lives.
 
 ## Active proxies
 
+### Wall outline — pre-construction marker
+
+The trail the player leaves while painting walls (DESIGN.md
+§ Updates on movement-trigger philosophy + wall-paint trail).
+Sits between "intent" and "construction": the outline shows
+where the player WANTS a wall, before any helper has started
+building.
+
+| Property | Value |
+|---|---|
+| Shape | flat hexagonal outline drawn on the ground of the painted hex |
+| Visual | a thin (~0.1 m) line tracing the hex's perimeter |
+| Colour | `#d04848` (same placeholder red as the wall body, but as an outline only — clearly distinguishable from a finished or growing wall by being flat, not extruded) |
+| Lifetime | persists from "player painted" until "a helper begins constructing" — at which point the outline is replaced by the rising-from-the-ground construction visual (see Construction state below) |
+
+**Erasure.**  Before a helper has started construction, the
+player can **erase a painted outline by driving over it again**.
+Re-driving on an outlined hex removes the outline; the hex
+returns to the painted ground beneath.  Once construction has
+started (the wall is rising), driving over it no longer erases
+— the order is committed.
+
+**Activation of the painting gesture: a key toggle (for now).**
+Wall-paint mode is flipped ON/OFF by a dedicated key.  While ON,
+every hex the vehicle traverses gets an outline (and
+re-traversal erases per above); while OFF, the vehicle drives
+normally with no marking effect.  Acknowledged exception to the
+movement-trigger philosophy — a purely spatial activation
+gesture would be preferred but no clean one has surfaced, so the
+toggle key is the placeholder.  Revisit if a spatial alternative
+emerges (e.g. picking up a "wall painter" carry-object at the
+core, dropping it back to disengage — but that conflicts with
+the single-carry-slot rule).
+
+### Construction state — structures rise out of the ground
+
+All player-built structures (walls, towers, eventually
+bridges) share one **construction-state visual**: the structure
+**grows out of the ground** as the helper works on it.  The
+geometry's bottom is anchored at terrain height and its top
+extends upward over time, so a half-built wall is visibly
+half-emerged from the ground; a half-built tower is a short
+cone with the same diameter as the final one, just stunted.
+
+| Property | Value |
+|---|---|
+| Start of construction | the structure's bottom is at terrain height; the structure is **0 % tall** (essentially invisible — a thin slab at ground level) |
+| Mid-construction | the structure's bottom stays at terrain height; the top rises smoothly, height = `final_height × progress` |
+| Construction complete | the structure reaches its final height (3 m for `wall`, 5 m for `wall_high`, ~6 m for a tower, etc.); colour / state goes to the normal "healthy" appearance |
+| Visual indicator beyond height | none for now — height progress is the whole readable.  Later, a full building animation replaces this (animated parts, scaffolding effects, etc.) |
+| Helper presence | the assigned helper stands at the construction hex (or adjacent for multi-hex structures) while ticks are applied; an unattended construction site simply pauses |
+
+Why this idiom:
+
+- **One rule for every structure.**  Wall, wall_high, tower, future bridges — they all grow vertically out of the ground.
+  No separate scaffolds for each kind.
+- **Height = progress, no HUD needed.**  The player reads
+  construction status at any zoom from the structure's height
+  alone.  No bars, no overlays.
+- **Cheap to implement, cheap to retire.**  A single vertical
+  scale parameter on the geometry; replaced by full building
+  animations later without any data-model change.
+
+
+
 ### Enemy — basic ground unit (first wave class)
 
 The first enemies to be testable on a painted map.  Purpose:
