@@ -474,28 +474,66 @@ verbatim below** with three adjustments:
   must triage which orders (walls, towers, salvage runs)
   matter most.  Helpers in excess of 6 can't be ordered; the
   cap is a design pressure, not a soft target.
-- **2026-05-26 — Core landing is "area + random within + random
-  rotation + 2-hex obstruction clearance."**  The core building
-  is always present in every base — it isn't authored in the
-  editor; it's placed at base start by the game itself.  The
-  player chooses a **starting LOCATION** (a general area on the
-  map / planet), and the game **lands the rocket at a random
-  hex within a small area** around that chosen point.  Same
-  shape as DESIGN.md § Future expansion's "Players pick start
-  spots" — agency on the *region*, variance on the *exact tile*
-  — but applied to every base, not just planet-scale picks.
-  The core's **rotation is also random** (the lift-off / tower
-  / NPC sides point at arbitrary hex directions); this is fine
-  because the player has no walls built yet at landing, so
-  there are no perimeter commitments to preserve.
-  **Landing constraint: the core's 7-hex footprint plus a
-  2-hex buffer ring around it must be free of obstructions**
-  (water, `steep_rock`, painted-impassable features) — re-roll
-  until satisfied.  Net: the player always lands on workable
-  terrain with clear approaches; only the *direction* of the
-  openings varies.  Validation rule of thumb: ~3-hex radius
-  for the area pick.  Editor (plan 01) does NOT paint a core
-  marker.
+- **2026-05-26 — Core landing closed: player picks any spot
+  (within reason + edge buffer), random rotation, 2-hex
+  obstruction clearance, close-spawn auto-disable.**
+
+  - **Player picks freely — ANY spot on the map.**  Picking
+    the centre of a lake or a mountain is *allowed*; the game
+    does not reject the choice up front, and there is no "you
+    can't land there" message.  Edge buffer (TBD; ~5 hex from
+    the playable-area boundary) is the only hard rule for
+    *where* the pick can be.
+  - **The rocket auto-steers off invalid hexes.**  During
+    landing, if the random-within candidate is invalid (water,
+    `steep_rock`, painted-impassable) OR fails the 7+2-hex
+    obstruction-clearance test below, the algorithm
+    **searches outward** for the nearest valid hex and lands
+    there.  Visually this reads as the rocket "steering off"
+    the bad ground — diegetic, no UI rejection.  Picking the
+    centre of a lake therefore makes the rocket land at the
+    shore; picking a mountain top makes it land on the
+    nearest flat shoulder.  The player's pick is a *target
+    region*; the rocket commits to a *valid landing within
+    that region*.
+  - **Random hex within ~3-hex radius around the pick** —
+    same "area + random within" shape as before; the outward
+    search expands further only if no valid hex exists in
+    the immediate area.
+  - **Random rotation** of the core's six faces (lift-off /
+    tower-core / NPC-order facing arbitrary hex directions).
+    Acceptable because no walls exist at landing time.
+  - **Obstruction clearance: 7-hex footprint + 2-hex buffer
+    ring must be free of obstructions** (water, `steep_rock`,
+    painted-impassable).  Re-roll until satisfied.
+  - **Spawn markers close to the landed core are
+    auto-disabled.**  Any authored spawn marker within a
+    disable radius of the core (TBD; ~10 hex — narrower than
+    the 25-hex scrambler bubble) is **deactivated for the
+    mission** — those markers will not produce enemies in any
+    wave.  The visible marker triangle remains on the map
+    (so the player can still see them as map atmosphere) but
+    it does not pulse / glow / spawn at wave start.
+  - **Map authoring guarantees enough surviving markers.**
+    The author places enough spawn markers across the map
+    that the disable radius never silences all of them; the
+    active set always contains at least a handful even after
+    the player has picked their landing spot.  This is the
+    map author's responsibility (validation guideline: a
+    starter map should have ≥ 4-6 spawn markers spread across
+    the map, so any reasonable landing leaves ≥ 2 active).
+
+  Net consequences:
+
+  - The player has full landing-spot agency without the map
+    author needing to coordinate where they'll land.
+  - Disabled close markers are visible as a *safety buffer*
+    around the core — they tell the player at a glance which
+    nearby spawn points won't fire on them in this mission.
+  - The active set forms the actual wave-source pool, which
+    differs from mission to mission on the same map.
+
+  Editor (plan 01) does NOT paint a core marker.
 - **2026-05-26 — Carry-over scope: points only for now;
   specialised tower-tops as the future progression layer.**
   The validation-tier scramble carry-over is the player's
