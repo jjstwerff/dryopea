@@ -87,3 +87,35 @@ pub fn mapfile_to_painted(
     }
     mtp_out
 }
+
+// Snapshot a painted world + camera and write the save in one
+// call.  The editor's primary save-on-Ctrl+S entry point.
+pub fn save_world(
+    pw:      PaintedWorld,
+    cam:     EditorCamera,
+    palette: vector<GroundType>,
+    name:    text,
+    path:    text,
+) {
+    sw_mf = paint_to_mapfile(pw, cam, palette, name);
+    save_map_file(sw_mf, path);
+}
+
+// Load a saved world + camera from `path`.  If the path doesn't
+// exist (cold start, first session, etc.) returns an empty
+// painted world and the default camera.  The editor's
+// load-on-startup entry point; the test harness pre-deletes the
+// path to exercise both code paths.
+pub fn load_map_or_empty(
+    path:    text,
+    palette: vector<GroundType>,
+) -> (PaintedWorld, EditorCamera) {
+    if file(path).exists() {
+        lme_mf  = load_map_file(path);
+        lme_pw  = mapfile_to_painted(lme_mf, palette);
+        lme_cam = camera_at(lme_mf.cam_q, lme_mf.cam_r, lme_mf.cam_zoom);
+        (lme_pw, lme_cam)
+    } else {
+        (painted_empty(), camera_default())
+    }
+}

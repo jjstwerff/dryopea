@@ -1,0 +1,100 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 01 integration smoke test — wires E1 (camera) + E2
+// (palette) + E3 (paint) + E4 (save/load) into a single
+// cold-start → paint → save → warm-start cycle.
+//
+// The wrapper script (scripts/test.sh) cleans tests/actual/
+// before each run, so the cold-start file path starts
+// non-existent and the test exercises both load_map_or_empty
+// branches in one run.
+
+use dryopea;
+
+const INT_SAVE: text = "tests/actual/01_integration_save.json";
+
+// ─── Cold-start branch — load_map_or_empty handles missing files ─
+
+fn test_cold_start_missing_save() {
+    tcs_pal = load_palette("examples/palette.json");
+    tcs_load = load_map_or_empty("tests/actual/_definitely_not_a_real_save.json", tcs_pal);
+    tcs_pw = tcs_load.0;
+    tcs_cam = tcs_load.1;
+    assert(painted_count(tcs_pw) == 0, "cold start: empty world");
+    assert(tcs_cam.pos.q == 0, "cold start: camera at origin (q)");
+    assert(tcs_cam.pos.r == 0, "cold start: camera at origin (r)");
+    assert(tcs_cam.zoom == 1, "cold start: default zoom");
+}
+
+// ─── Full editor cycle — paint, save, restart, reload, assert ───
+
+fn test_smoke_full_cycle() {
+    tsfc_pal = load_palette("examples/palette.json");
+
+    // 1. COLD START — no save file yet (scripts/test.sh just
+    //    cleaned tests/actual/).
+    tsfc_load1 = load_map_or_empty(INT_SAVE, tsfc_pal);
+    tsfc_pw1 = tsfc_load1.0;
+    tsfc_cam1 = tsfc_load1.1;
+    assert(painted_count(tsfc_pw1) == 0, "1: cold start empty");
+
+    // 2. PAINT — three hexes (E3 mechanic via paint(), no
+    //    screen-to-hex needed here).
+    paint(tsfc_pw1, 5, 5, 6 as u8);    // hill
+    paint(tsfc_pw1, 5, 6, 9 as u8);    // wall
+    paint(tsfc_pw1, 5, 7, 9 as u8);    // wall
+    assert(painted_count(tsfc_pw1) == 3, "2: 3 hexes painted");
+
+    // 3. PAN CAMERA — E1 mechanic via camera_update.  Capture
+    //    non-default camera state to prove save persists it.
+    tsfc_input = InputState {
+        in_pan_north: false, in_pan_south: false,
+        in_pan_east:  true,  in_pan_west:  false,
+        in_zoom_in:   false, in_zoom_out:  true,
+    };
+    camera_update(tsfc_cam1, tsfc_input);
+    assert(tsfc_cam1.pos.q == 1, "3: camera panned east");
+    assert(tsfc_cam1.zoom == 2,  "3: zoom incremented");
+
+    // 4. SAVE — E4 entry point.
+    save_world(tsfc_pw1, tsfc_cam1, tsfc_pal, "smoke", INT_SAVE);
+
+    // 5. SIMULATE RESTART — load the save back.
+    tsfc_load2 = load_map_or_empty(INT_SAVE, tsfc_pal);
+    tsfc_pw2 = tsfc_load2.0;
+    tsfc_cam2 = tsfc_load2.1;
+
+    // 6. ASSERT — paint + camera survived the round-trip.
+    assert(painted_count(tsfc_pw2) == 3, "6: 3 hexes after reload");
+    assert(lookup_painted(tsfc_pw2, 5, 5) == 6 as u8, "6: (5,5) hill restored");
+    assert(lookup_painted(tsfc_pw2, 5, 6) == 9 as u8, "6: (5,6) wall restored");
+    assert(lookup_painted(tsfc_pw2, 5, 7) == 9 as u8, "6: (5,7) wall restored");
+    assert(tsfc_cam2.pos.q == 1, "6: camera.q restored");
+    assert(tsfc_cam2.pos.r == 0, "6: camera.r restored");
+    assert(tsfc_cam2.zoom  == 2, "6: zoom restored");
+}
+
+// ─── Render the loaded world to confirm E1+E2+E3+E4 compose ─────
+
+fn test_smoke_loaded_world_renders() {
+    // After the full cycle, the loaded world should render
+    // identically to a freshly-built one.  We can't byte-
+    // compare against a golden here (paint order in the hash
+    // isn't deterministic across runs), but we can verify the
+    // canvas was produced + has the expected dimensions.
+    tslwr_pal = load_palette("examples/palette.json");
+    tslwr_pw0 = painted_empty();
+    paint(tslwr_pw0, 0, 0, 5 as u8);
+    tslwr_cam0 = camera_default();
+    save_world(tslwr_pw0, tslwr_cam0, tslwr_pal, "render_check", INT_SAVE);
+
+    tslwr_load = load_map_or_empty(INT_SAVE, tslwr_pal);
+    tslwr_pw = tslwr_load.0;
+    tslwr_cam = tslwr_load.1;
+
+    tslwr_cv = render_to_canvas(tslwr_cam, tslwr_pw, 64, 64, 12.0);
+    assert(tslwr_cv.width  == 64, "canvas width");
+    assert(tslwr_cv.height == 64, "canvas height");
+    assert(painted_count(tslwr_pw) == 1, "1 hex loaded");
+}

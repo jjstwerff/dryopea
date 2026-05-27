@@ -123,6 +123,52 @@ fix / feature, move it to **Resolved**.
 - **Loft pointer:** same site as the wide-sandwich bug
   above — `walk_parsed_struct` empty-array handling.
 
+### `return (a, b);` rejected when function returns a tuple of two struct types
+
+- **Found while:** Plan 01 integration smoke test —
+  implementing `load_map_or_empty(path, palette) ->
+  (PaintedWorld, EditorCamera)` with an early return for
+  the cold-start branch.
+- **Kind:** bug (type checker / parser disagreement)
+- **What dryopea sees:** the body's *final-expression* tuple
+  literal type-checks fine, but a `return (...)` tuple
+  literal of the same shape gets rejected with an error
+  whose two halves are textually identical:
+  ```
+  expected __tuple<PaintedWorld,EditorCamera>,
+       got (PaintedWorld, EditorCamera)
+  ```
+  (`__tuple<...>` is the internal type name; `(...)` is the
+  user-facing syntax — same underlying type, but the
+  comparison fails.)
+- **Reproducer (HANGS-FREE; just doesn't compile):**
+  ```loft
+  struct A { x: integer not null }
+  struct B { y: integer not null }
+
+  fn early_return_fails() -> (A, B) {
+      if true {
+          return (A { x: 1 }, B { y: 2 });   // PARSE ERROR
+      }
+      (A { x: 0 }, B { y: 0 })
+  }
+
+  fn if_else_works() -> (A, B) {
+      if true {
+          (A { x: 1 }, B { y: 2 })           // OK
+      } else {
+          (A { x: 0 }, B { y: 0 })
+      }
+  }
+  ```
+- **Workaround in dryopea:** rewrote
+  `load_map_or_empty` to use an if-else *expression* with no
+  early return.  Trivial; one-liner change.
+- **Loft pointer:** the `return` lowering of a tuple-typed
+  expression looks like it doesn't unify with the declared
+  function return type the same way the body's final
+  expression does.
+
 ### `{m:j}` JSON formatter OMITS empty / default field values
 
 - **Found while:** Plan 01 E4 — `paint_to_mapfile` produced
