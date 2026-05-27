@@ -1,21 +1,135 @@
 // Copyright (c) 2026 Jurjen Stellingwerff
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //
-// dryopea — runnable script for the eventual binary.  See
-// docs/DESIGN.md for the master design; plans/future/ for the
-// per-phase plans.
+// Plan 01 E1-live — the interactive editor entry point.
 //
-// Plan 01 phase E1 — main() verifies the world + camera primitives
-// wire together.  The GL window + render loop land in a follow-up
-// commit once the math is green under `loft --tests`.
+// Launch:
+//   loft --native --lib ../loft/lib src/main.loft
 //
-// Run with:
-//   loft --path </path/to/loft>/ --lib src/ src/main.loft
+// Controls:
+//   WASD              pan camera (held → debounced ~8 hexes/sec)
+//   scroll wheel      zoom in/out
+//   1..9, 0           select palette type (1=sea, 5=grass, 9=wall, …)
+//   Left-click/drag   paint hovered hex with active type
+//   Ctrl+S            save to dryopea_save.json
+//   Esc               save + exit
+//
+// On startup, loads dryopea_save.json if it exists; otherwise
+// starts on an empty (all-sea) world.  Saves on exit so paint
+// progress isn't lost when the window is closed without Ctrl+S.
 
 use dryopea;
+use graphics;
+
+const WINDOW_W: integer = 960;
+const WINDOW_H: integer = 720;
+const PPM: float = 24.0;
+const SAVE_PATH: text = "dryopea_save.json";
+
+// Debounce thresholds in microseconds (`ticks()` is microsecond-
+// precision).  Held keys fire at the rates below, not 60Hz.
+const PAN_DEBOUNCE_US:   integer = 120000;   // ~8 hexes/sec
+const PAINT_DEBOUNCE_US: integer = 50000;    // ~20 hexes/sec
+const SAVE_DEBOUNCE_US:  integer = 500000;   // 2 saves/sec max
 
 fn main() {
-    cam = camera_default();
-    visible = visible_hexes(cam.pos, HAZE_RADIUS_HEXES_DEFAULT);
-    println("dryopea: started with {len(visible)} visible hexes around the camera");
+    if !gl_create_window(WINDOW_W, WINDOW_H, "dryopea editor") {
+        println("dryopea: failed to open window");
+        return;
+    }
+    painter = create_painter_2d(WINDOW_W as float, WINDOW_H as float);
+
+    palette = load_palette("examples/palette.json");
+    picker = picker_default("examples/palette.json");
+
+    loaded = load_map_or_empty(SAVE_PATH, palette);
+    pw  = loaded.0;
+    cam = loaded.1;
+    println("dryopea: editor open ({painted_count(pw)} hexes loaded)");
+
+    last_pan_us:   integer = 0;
+    last_paint_us: integer = 0;
+    last_save_us:  integer = 0;
+
+    for _ in 0..1000000 {
+        if !gl_poll_events() { break; }
+        if gl_key_pressed(graphics::KEY_ESCAPE) { break; }
+
+        tnow = ticks();
+
+        // ── Input ───────────────────────────────────────────────
+
+        ctrl_held = gl_key_pressed(graphics::KEY_CTRL);
+        wheel = gl_mouse_wheel();
+
+        // Ctrl+S → save (debounced to avoid Ctrl+S held-down spam).
+        if ctrl_held && gl_key_pressed(graphics::KEY_S) {
+            if tnow - last_save_us > SAVE_DEBOUNCE_US {
+                save_world(pw, cam, palette, "interactive", SAVE_PATH);
+                last_save_us = tnow;
+                println("dryopea: saved ({painted_count(pw)} hexes)");
+            }
+        }
+
+        // Camera pan + zoom.  Pan-south is suppressed when Ctrl is
+        // held so Ctrl+S doesn't also pan.
+        if tnow - last_pan_us > PAN_DEBOUNCE_US {
+            in_state = InputState {
+                in_pan_north: gl_key_pressed(graphics::KEY_W),
+                in_pan_south: gl_key_pressed(graphics::KEY_S) && !ctrl_held,
+                in_pan_east:  gl_key_pressed(graphics::KEY_D),
+                in_pan_west:  gl_key_pressed(graphics::KEY_A),
+                in_zoom_in:   wheel > 0,
+                in_zoom_out:  wheel < 0,
+            };
+            if in_state.in_pan_north || in_state.in_pan_south
+            || in_state.in_pan_east  || in_state.in_pan_west
+            || in_state.in_zoom_in   || in_state.in_zoom_out {
+                camera_update(cam, in_state);
+                last_pan_us = tnow;
+            }
+        }
+
+        // Picker hotkeys.  Idempotent — held keys re-set to the
+        // same index, no need to debounce.
+        if gl_key_pressed(graphics::KEY_1) { picker_set_active(picker, 0); }
+        if gl_key_pressed(graphics::KEY_2) { picker_set_active(picker, 1); }
+        if gl_key_pressed(graphics::KEY_3) { picker_set_active(picker, 2); }
+        if gl_key_pressed(graphics::KEY_4) { picker_set_active(picker, 3); }
+        if gl_key_pressed(graphics::KEY_5) { picker_set_active(picker, 4); }
+        if gl_key_pressed(graphics::KEY_6) { picker_set_active(picker, 5); }
+        if gl_key_pressed(graphics::KEY_7) { picker_set_active(picker, 6); }
+        if gl_key_pressed(graphics::KEY_8) { picker_set_active(picker, 7); }
+        if gl_key_pressed(graphics::KEY_9) { picker_set_active(picker, 8); }
+        if gl_key_pressed(graphics::KEY_0) { picker_set_active(picker, 9); }
+
+        // Mouse — hover + paint on left-button.
+        mx = gl_mouse_x() as integer;
+        my = gl_mouse_y() as integer;
+        hovered = screen_to_hex(cam, mx, my, WINDOW_W, WINDOW_H, PPM);
+
+        if (gl_mouse_button() & 1) != 0 {
+            if tnow - last_paint_us > PAINT_DEBOUNCE_US {
+                paint(pw, hovered.q, hovered.r, picker.active as u8);
+                last_paint_us = tnow;
+            }
+        }
+
+        // ── Render ──────────────────────────────────────────────
+
+        cv = render_with_hover(cam, pw, hovered, WINDOW_W, WINDOW_H, PPM);
+        render_picker(cv, picker, 12, 12);
+
+        tex = gl_upload_canvas(cv.data, cv.width, cv.height);
+        gl_clear(rgb(0, 0, 0));
+        draw_texture_at(painter, tex, 0.0, 0.0, WINDOW_W as float, WINDOW_H as float);
+        gl_delete_texture(tex);
+
+        gl_swap_buffers();
+    }
+
+    // Save on exit so progress isn't lost when the window closes.
+    save_world(pw, cam, palette, "exit", SAVE_PATH);
+    println("dryopea: saved on exit ({painted_count(pw)} hexes)");
+    gl_destroy_window();
 }

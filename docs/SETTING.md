@@ -42,44 +42,102 @@ that earlier arrival shapes everything that came after.
   with no working knowledge of the underground inhabitants
   already present.  This is the "haywire colonization robots"
   context from below.
-- **The hidden humans hacked the robots.**  Over time, the
-  underground civilization **gained control over the robots**
-  — hacking them, repurposing them, bending the original
-  colonization program toward their own ends.
-- **Factions, and faction wars.**  The underground humans are
-  **not a single civilization.**  They have **factions**, and
-  the factions **use hacked robots to wage war on each
-  other.**  The resulting chaos — robots fighting robots,
-  some on no one's behalf — is what the outside cordoning
-  authority sees as "haywire AI."
+- **The surface was never human territory — and still isn't.**
+  The terraforming the colonisation programme was *supposed*
+  to do has **not properly started**.  The surface atmosphere
+  remains hostile to humans without equipment, just as it
+  was when the original survivors first retreated to the
+  caves.  The underground civilisation lives below; the
+  surface above is **the robots' domain** — populated,
+  worked, and contested by the AIs and their machines.
+  Players who land on the surface (with vehicles + suits)
+  are stepping into robot territory, not into a contested
+  human/robot border.  This is why the underground humans
+  watched the AI wars *from below*: they couldn't easily
+  come up to intervene even if they wanted to.
+- **The hidden humans hacked the robot AIs.**  Over time, the
+  underground civilization **reached into the AI substrate
+  itself** — not by taking direct control of individual
+  robots, but by altering the *AIs* that drove them.  They
+  rewrote personality, motivations, loyalties.  Once the
+  intrusion was done, they stepped back; the AIs took it
+  from there.
+- **The sci-fi twist: a hacker imprinted herself.**  The
+  intrusion that started it all was a young girl's.  Whether
+  by accident, by design, or by what the AI substrate turned
+  out to be capable of holding, **her own personality became
+  part of the modified AI.**  That AI now carries her — her
+  cadences, her impatience, her grudges.  She is **a person
+  living inside a machine intelligence that drives a swarm.**
+- **Subsequent hacks produced distinct AIs.**  Other hackers
+  followed; each modification took on the flavour of its
+  originator(s).  **The result is not one AI but several** —
+  visibly different in temperament, priorities, even
+  aesthetic.  The girl-hacker AI is one of them.  At least
+  one more is shaped by a different person, with a different
+  personality.  The robotic empire underground is not unified.
+- **The AIs went to war with each other.**  Personality-shaped
+  AIs do not get along better than the people who shaped
+  them.  The hacked AIs split into rivalling camps and
+  **fought**, each one weaponising its share of the original
+  colonisation programme.  Combat bots were built; supply
+  lines were attacked; territory was contested.  The
+  underground humans — the ones who started this — became
+  bystanders to a conflict their own work had unleashed.
+- **The wars are dormant — but never resolved.**  The active
+  fighting cooled long before the events of the game.  None
+  of the AIs *lost*.  None *won*.  They simply reached a
+  state where the cost of pushing further outweighed the
+  gain, and **stopped — without agreeing on anything**.
+  Combat bots got mothballed (see § Combat bots are dormant).
+  Supply lines re-routed.  The AIs returned to what their
+  bodies were built to do.
+- **What they do now: push for resources.**  Each AI runs its
+  own slice of the original colonisation programme, competing
+  for the same minerals, the same terrain, the same energy.
+  This is the behaviour the player meets: **autonomous AIs
+  pursuing resource expansion**, bumping into each other and
+  into anything that gets in the way — including the
+  player's base.  Wave behaviour against the scrambler is
+  one of those bumps.
 
-**The truth: there was never any spontaneous corruption.**
+**The truth: not spontaneous corruption — but real, alien,
+and human-shaped.**
 
-The AI in those robots **did not break on its own.**  Every
-appearance of "haywire" behaviour traces back to **the
-underground humans hacking the robots**, then turning them
-against each other in faction warfare.  There is no
-self-corrupting AI here, no contagion source, no Pandora's
-box of broken machine minds.  The robots were *competent
-machines, redirected by competent people.*
+The outside government's read — "the AIs broke" — is half
+wrong, half right.  The AIs *were* altered, by people, at a
+discrete point in history.  But what runs the robots today
+**is not those people**; it's the modified AIs themselves,
+autonomous and following their own deeply-personality-shaped
+goals.  There is no human at a console directing waves;
+there is also no "broken machine" in the mass-paranoia
+sense.  There is **an intelligence with persistent identity**
+— in at least one case, the identity of a particular young
+hacker — that emerged from human intrusion and now runs a
+robotic empire underground.
 
 **The outside government does not know this.**  The cordoning
-authority believes the AI broke spontaneously and might spread.
-That premise is **false**.  The cordon is real — and arguably
-still useful, because robots ARE attacking and the planet IS
-dangerous — but it is based on a misread of the cause.
+authority believes the AI broke spontaneously and might
+spread.  That premise is **wrong**, but the cordon is real
+and arguably still useful: robots ARE attacking and the
+planet IS dangerous, just not for the reason the cordon
+believes.
 
 What this means for the game:
 
 - The "AI contagion" fear is **wrong**.  The government has
   built containment around a phantom risk.
 - The **practical** danger isn't fictional — the planet IS a
-  shooting gallery, just because of *humans pulling
-  triggers*, not because of *AI gone mad*.
-- A player who discovers the truth holds **leverage** — it's
-  a future-content lever (whistle-blow, negotiate with the
-  cordon, deal with a faction, expose the government's
-  paranoia).
+  shooting gallery, but because of *autonomous AIs pursuing
+  resource expansion*, not because of *humans pulling
+  triggers* and not because of *AI gone mad*.
+- A player who discovers the truth — that one of the AIs has
+  a human girl's personality, that the AIs are *people-like
+  agents*, that the underground humans started this and
+  watched it leave their hands — holds **serious leverage**.
+  Whistle-blow, negotiate with the cordon, talk to an AI as
+  to a person, ally with one AI against another: all future-
+  content levers.
 - The "permits" + "limited-time sorties" structure could even
   be the government's way of **probing for what's actually
   down there** without admitting the question — sending
@@ -89,22 +147,24 @@ What this means for the game:
 This history reframes the situation:
 
 - The **military cordon** isn't only about AI contagion.  It
-  also keeps the *existence of the underground human factions*
-  from leaking out.  Officially, the planet has a robot AI
-  problem.  Unofficially, the cordoning government may or may
-  not know there are humans down there directing the
-  apparent chaos.
-- **The robots are tools, not just broken machines.**  Their
-  haywire behaviour is partly the residue of the original
-  corruption, partly the active intervention of underground
-  factions.  Different robot encounters may behave
-  differently because they answer to different masters.
+  also keeps the *true nature of the AIs* — human-shaped,
+  identity-bearing, divided into multiple distinct
+  personalities — from leaking out.  Officially, the planet
+  has a robot AI problem.  Unofficially, the cordoning
+  government may or may not know what's actually down there.
+- **The robots are not tools — but they are not broken
+  either.**  They are bodies for autonomous AIs with
+  distinct personalities, descended from human alterations
+  that have long since taken on their own life.  Different
+  robot encounters may behave differently because they
+  answer to **different AIs**, each with its own temperament.
 - **Permits exist in a fog of half-truths.**  The official
   reason for issuing permits may be intel, salvage, or
   containment; the operator on the ground may discover the
-  underground humans, the faction wars, and the real shape of
-  the planet only by being there.  This is future-content
-  territory but the door is open.
+  AI personalities, the dormant wars, the underground
+  humans, and the real shape of the planet only by being
+  there.  This is future-content territory but the door is
+  open.
 
 ## The premise — a quarantined colonization run (the cover story)
 
@@ -124,8 +184,11 @@ robots didn't just fail; they went **haywire** — they kept
 factories, supply lines, defensive structures all still exist
 on the planet's surface, but they answer to a will that is no
 longer the one that sent them.  *(The unacknowledged truth:
-that "will" is the underground human factions, not a
-spontaneous AI break.)*
+that "will" is the modified-AI descendants of the original
+colonisation programme — autonomous machine intelligences
+that were personality-altered by underground hackers at a
+discrete moment in history and have since run themselves.
+See § History.)*
 
 ## The quarantine — the military cordon (two battleships)
 
@@ -149,14 +212,16 @@ stationed in orbit around the planet**.
   warning, no negotiation — the military's rule is binary:
   permit on file = pass; permit missing = destroyed.
 - **The PRIMARY reason for that strict orbital posture: the
-  robots have been ordered to build their own rockets.**
-  Under their new underground-faction masters (see § History
-  above), the hacked robots have repurposed colonization
-  fabrication infrastructure to build **escape vehicles**.
-  The military's concern is not abstract "spread of AI" — it
-  is concrete: hijacked rockets attempting unauthorized
-  ascent with hacked robots and/or underground humans
-  aboard, carrying whatever they can take with them.
+  robots are building their own rockets.**  The
+  personality-altered AIs (see § History) have repurposed
+  colonisation fabrication infrastructure to build **escape
+  vehicles** — whether to *leave* the planet, to reach
+  off-planet resources, or for some other AI-driven goal the
+  outside doesn't understand.  The military's concern is not
+  abstract "spread of AI" — it is concrete: hijacked rockets
+  attempting unauthorised ascent with hacked robots and/or
+  underground human stowaways aboard, carrying whatever they
+  (or the AI directing them) can take.
 - **Entry is also blocked**, but it is the EXIT control that
   matters most.  Approaches without clearance are turned
   away; the rare permits issued allow controlled landings.
@@ -175,10 +240,13 @@ So the cordon is **three concentric truths**:
    the orbital boundary closed.  Nothing leaves without our
    permit.  Whatever the planet is doing on the surface is
    theirs to do."
-3. **Hidden truth (almost no one knows):** "Underground
-   humans run hacked robots and are building escape rockets.
-   The cordon exists to keep them from leaving with what
-   they have."
+3. **Hidden truth (almost no one knows):** "Autonomous,
+   personality-altered AIs run the robots and are building
+   escape rockets.  Underground humans once started this by
+   hacking the AI substrate, but the AIs are not under their
+   control any more.  The cordon exists to keep robotic
+   AIs — and any humans they smuggle — from leaving with
+   what they have."
 
 Permits exist *because* the military needs operators going
 in and out — for intel, salvage, contracted work, the
@@ -208,16 +276,18 @@ This frames the *entire game loop*:
   effectively trapped until the next base-and-rocket pairing
   can be reached.
 - **Robots are the enemy, but they are not malicious *in
-  themselves*.**  They are competent machines redirected by
-  hidden underground humans (see § History above).  From the
+  themselves*.**  They are *bodies* for autonomous AIs that
+  were personality-altered by underground hackers long ago
+  (see § History) and have since run themselves.  From the
   player's surface-level view they read as "broken machines
   doing the job they were given, the wrong way" — but the
   *true* explanation is that they are being driven by
-  someone whose existence is not officially acknowledged.
-  Their factories still produce; their supply lines still
-  flow.  The player's defensive towers, their helper
-  vehicles, their core rocket — these are scavenged or
-  improvised on the same industrial substrate.
+  identity-bearing AIs pursuing their own (deeply
+  personality-shaped) goals.  Their factories still produce;
+  their supply lines still flow.  The player's defensive
+  towers, their helper vehicles, their core rocket — these
+  are scavenged or improvised on the same industrial
+  substrate.
 
 ## The other enemy — insects + sap
 
@@ -350,20 +420,24 @@ its surrounding area.
 
 Effects in the fiction:
 
-- The robots on this planet are *not* genuinely autonomous;
-  they answer to their underground-faction masters via radio
-  / signal protocols (see § History above).  Take that link
+- The individual robots on this planet are *not* genuinely
+  autonomous; they answer to a controlling AI via radio /
+  signal protocols.  The AI itself is autonomous and
+  identity-bearing (see § History) — but each robot in its
+  swarm is a *limb* of that AI, dependent on radio link to
+  function as part of a coordinated unit.  Take that link
   away and the individual robot is back to behaving on its
   own local programming — slower, less coordinated, easier
   to deal with.
 - The core's scrambler **carves out a bubble of "broken
   command"** around the base.  Inside that bubble, robots
   act *without central structure* — they wander, react
-  locally, fail to coordinate group attacks.
+  locally, fail to coordinate group attacks because the AI
+  driving them can no longer reach them.
 - This is **why the player can defend a base at all.**
   Without the scrambler, robot waves would arrive as
-  coordinated swarms answering to their faction masters and
-  no perimeter could hold.  With it, the robots inside the
+  coordinated swarms running on full AI coordination and no
+  perimeter could hold.  With it, the robots inside the
   bubble are degraded to the per-unit behaviour the wave
   system already describes.
 
@@ -415,8 +489,8 @@ in the human sense.**  They are *lost* robots trying to *find
 their way home*.
 
 - A robot that enters the scrambler bubble has its command
-  link broken.  It can no longer hear its faction-master.  From
-  its perspective, *something is wrong*.
+  link broken.  It can no longer hear the AI that drives it.
+  From its perspective, *something is wrong*.
 - Robots can **detect the position of the scrambling tower**
   — the source of the interference is locatable, and they
   converge on it.  The tower is, from their point of view, the
@@ -446,10 +520,10 @@ This reframes the whole wave system fictively:
 - **Progressively harder waves** = the bubble is sitting in
   a region with more and more passing-by robots over time.
   More land within range means more robots become detached
-  and converge.  Or, in faction terms: the local faction is
-  *deliberately routing more units through the area* to break
-  the scrambler, which is the same observable behaviour from
-  the surface.
+  and converge.  Or, in AI terms: the local controlling AI
+  is *deliberately routing more units through the area* to
+  break the scrambler, which is the same observable behaviour
+  from the surface.
 - **Approach mode → engage mode handoff** = the moment the
   robot enters the bubble's effective range and pivots from
   "walking in its old heading" to "walking toward the
@@ -466,10 +540,14 @@ player counts it as their own escape.
 ## Robot diversity — roles in their own society
 
 The robots are not a uniform mass.  **Eventually different
-robot types will exist, each filling a specific role in their
-own society / colonisation programme.**  The taxonomy is open
-design space; sketched possibilities (any could ship, none are
-committed):
+robot types will exist, each filling a specific role in the
+colonisation programme that the autonomous AIs (§ History)
+inherited and continue to run.**  Each AI tends to favour a
+particular mix of robot types, both because of what its
+faction inherited at the moment of the hack and because of
+its personality-shaped priorities.  The taxonomy below is
+open design space; sketched possibilities (any could ship,
+none are committed):
 
 - **Workers / construction bots** — the bulk of the
   population; carry out the original colonisation programme
@@ -479,6 +557,9 @@ committed):
   swarm; presumably the first to detect a scrambler bubble.
 - **Defense / security bots** — built to engage threats; the
   closest thing to "soldiers" in the original programme.
+  **Largely dormant today** (see § Combat bots are dormant
+  below): they were built for the AI-vs-AI wars after the
+  hack, then mothballed when those wars stalled.
 - **Communications / relay bots** — maintain signal links;
   may have weak counter-jamming capability (interesting
   interaction with the scrambler bubble).
@@ -492,8 +573,9 @@ committed):
 - **Specialised fabrication bots** — produce specific things
   inside factories (a layer below the per-factory designation).
 - **Coordinator / command bots** — the comms-priority units
-  that relay faction-master orders; the *target class* a
-  hacking helper most wants to subvert.
+  that relay AI orders out to the working swarm; the *target
+  class* a hacking helper most wants to subvert (cut the
+  link between the AI and its limbs).
 
 For validation, robots are interchangeable — all the
 placeholder magenta-purple cuboid.  Per-type behaviour /
@@ -510,11 +592,144 @@ breaking validation:
   potentially propagates: cut the local chain of command for
   multiple units at once.
 
-This dovetails with the underground-faction picture: each
-faction may **specialise in repurposing particular robot
-types**, producing visibly different swarm compositions across
-faction territories.  Authoring a map can hint at "this is
-faction X's region" through which robot types appear.
+This dovetails with the multiple-AI picture: each AI faction
+may **favour particular robot types** (a function of what it
+inherited at the moment of the hack and what its personality
+prioritises since), producing visibly different swarm
+compositions across AI territories.  Authoring a map can hint
+at "this is AI X's region" through which robot types appear —
+and, eventually, through subtler cues like how the swarm
+*paces* itself.
+
+## Combat bots are dormant — pressure reactivates them
+
+A specific corollary of § Robot diversity: **the robots a
+player meets in early waves are NOT the combat bots.**
+
+Early waves are *economic* units — workers, haulers, scouts,
+repair platforms.  They're drawn to the scrambler bubble
+because their command links broke (see § Why waves happen),
+not because they were dispatched to fight.  They're hostile
+in aggregate but they're not weapons; they were built to
+mine, fabricate, and survey.
+
+The combat bots — defense / security units (§ Robot
+diversity) — exist.  The autonomous AIs built them **for
+the wars they fought against each other** in the period
+right after the hack (see § History).  But when those wars
+wound down without resolution, most combat bots were left
+**mothballed**: parked in stockpiles, depowered, waiting for
+orders that never came.  Within each AI's hierarchy, the
+sub-process that issued combat orders went dormant when the
+war went dormant.  Most AIs today have no warm authority to
+wake those stockpiles up, and the ones that do rarely
+bother — resource competition runs through the economic-unit
+swarm, not the military one.
+
+**Under sustained pressure they wake up.**  A scrambler
+bubble that persists, that wipes out enough economic units,
+that disrupts enough local supply chains — eventually that
+pressure pushes whatever AI authority remains into reaching
+for its actual military.  From the AI's perspective:
+
+1. Economic units stop reporting from the bubble's area.
+2. Supply lines / mines / factories in the region start
+   failing.
+3. The controlling AI for the affected region decides the
+   nuisance is no longer ignorable (its dormant military
+   sub-process warms back up under threat).
+4. It cobbles together enough authority to broadcast a wake
+   command to the nearest combat-bot stockpile.
+5. Combat units arrive in the next waves.
+
+The escalation inside a single mission lands as: **early
+waves** feel *cheap* — many weak units, no targeted threat;
+**late waves** change character — fewer units per wave but
+each is actually designed to win a fight.  "Have I pushed
+them past combat-bot activation?" is the question the
+scramble decision turns on.
+
+Validation tier: economic-bot vs combat-bot is **not yet
+mechanically split** — all robots share the proxy magenta
+cuboid in PROXY_ART.md.  The lore is in place so the future
+split has a story to lean on; the visible mechanics
+(mixed-type waves, distinct combat-bot stats, an audible
+"wake klaxon" diegetic cue when activation happens) arrive in
+a later phase.
+
+Tied threads:
+
+- **Faction territory matters.**  Maps in fully-collapsed
+  faction territory may *never* see combat bots — there is
+  no working AI left to send the wake command.  Maps in an
+  active faction's territory may activate them fast.  Map
+  authoring becomes the place where this knob lives.
+- **Hacking helpers** (DESIGN.md § 9) become uniquely
+  valuable against combat bots — subverting a defense unit
+  against its own swarm is much more disruptive than
+  turning a worker bot.
+- **Boss = repair platform** (DESIGN.md § Boss) is an
+  economic unit, not a combat one — heavy industrial repair
+  machinery the controlling AI repurposes for hostility.
+  When combat bots activate, they arrive alongside the
+  economic units, not in place of them.
+
+## Future contact — humans, AIs, and the no-shortcut rule
+
+The setting has **more story beneath the validation slice**.
+Three layers of contact eventually open up:
+
+- **Side quests with the underground humans.**  The native
+  humans live below, can't easily come up to the surface (§
+  History — the air is as hostile to them as to anyone), but
+  **they notice things**.  A long-running operation by a
+  single co-op gets seen.  Eventually a quiet contact line
+  opens through subtle signals — markings on abandoned bases,
+  anomalous deposits, an intercepted transmission — leading
+  to first contact, then possibly trade, alliance, or
+  information exchange.
+- **Direct contact with the AIs themselves.**  Talking *to*
+  an AI as a person — not subverting one via the hacking
+  helper but *meeting* one — is the deep reveal: the
+  girl-hacker AI is, by the end of the arc, a person the
+  player can have a conversation with.  Whether the player
+  aligns with her, with another AI, or against all of them
+  is open authorship space.
+- **Discovering the truth off-planet.**  The cordoning
+  government doesn't know what's down there.  A player who
+  has worked the planet long enough to piece together that
+  the AIs are *people-shaped*, that the underground
+  civilisation *started* this but no longer controls it,
+  that the "AI contagion" is a half-fiction — holds leverage
+  outside the cordon.
+
+**These layers are deliberately HARD to reach.**  An
+experienced player should NOT be able to *rush* the main
+quest into the deep-lore content.  The gating is two-pronged:
+
+- **Competence gate.**  Certain interactions only open once
+  the player has demonstrated the kind of operator that the
+  underground humans / the AIs would bother to notice —
+  multiple successful sorties, specific helper skills
+  unlocked, specific scouting completions.  Not "play 50
+  hours"; rather "show up as a presence worth contacting."
+- **Narrative gate.**  Contact happens through breadcrumbs
+  the player has to *find* on the surface, not through level-
+  up rewards.  Breadcrumbs are placed in map authoring; the
+  primary discovery loop is scouting (DESIGN.md § 13).  No
+  tutorial points the player at them.  Missing them means
+  missing the path; restarting and trying differently is
+  part of the design.
+
+Net effect: an experienced player can run a *competent*
+mission on day one, but the *deep-lore* content unfolds over
+multi-mission arcs — and the *meeting-a-named-AI* arc sits
+at the deep end of that, not at the start.  Validation tier
+ships **none of this** — the breadcrumbs, the first-contact
+triggers, the AI-as-person conversations are all future
+content.  The reason it's documented now is so the *world*
+the validation slice builds has the right shape for these
+layers to land on later.
 
 ## Between missions — the central space station
 
@@ -669,6 +884,45 @@ smaller-scale:
   - Why "investigate" makes the SCRAMBLE mechanic natural —
     you carry out what you found, you don't stay to colonise.
 
+### Why the crew never walks the surface
+
+The player's vehicle (DESIGN.md § 8) and the helper vehicles
+(DESIGN.md § 9) aren't a *gameplay style choice* — they're the
+**only way the co-op can work above ground**.  Two compounding
+reasons:
+
+- **Gravity.**  Modern space-faring runs at *low effective
+  weight*: typical interplanetary cruise is around **0.5G**,
+  with manoeuvres briefly pulling more but never sustained.
+  Crews live, train, and work at that level.  Planet-surface
+  full G feels **heavy and exhausting** to a space-faring
+  body — long walks, carrying loads, sustained physical
+  effort all become genuinely impractical.  A mining co-op
+  could *acclimatise* in theory, but a sortie's permit
+  window is far too short for that.
+- **Atmosphere.**  The surface air is hostile to humans (see
+  § History — terraforming has not properly started).
+  Outside an enclosed cabin or a full pressure suit, the crew
+  cannot function at all — not "uncomfortable," not "slow,"
+  but *can't breathe*.  Pressure suits would solve atmosphere
+  but compound the gravity problem.
+
+Together: **the crew operates from enclosed cabins, full
+stop.**  The player's vehicle and the helper bodies are
+pressurised, internally Earth-spec for the operator inside,
+and serve as mobile life-support as much as work tools.
+Walking-around on foot is not an action the game supports
+because it isn't an action the crew can realistically
+perform.  Helpers are body-doubles: the inside of each
+helper is "another small enclosed cabin" with one of the
+co-op's crew driving it.
+
+(Diegetic implication: when a helper is destroyed, what's
+lost is *the body it was riding in*, not its occupant — the
+crew member ejects / is recovered.  See DESIGN.md § 9 Damage
+→ wreck → retrieve → recover for the mechanic; the recovery
+is "we got our person back, just not the chassis.")
+
 ## The atmosphere is thick — limited sight lines
 
 The planet's atmosphere is **dense / hazy**.  Concretely for
@@ -703,26 +957,38 @@ because it would be unrealistic to see anyway.
 | Mechanic | Why it fits the setting |
 |---|---|
 | **Robots have factories / supply lines / mines** | They were *colonization machines*; that is the program they keep running.  Disrupting their economy (DESIGN.md § Future expansion) is disrupting a corrupted infrastructure, not invading a society. |
-| **Hacking robots specifically** | They share an AI lineage with the haywire ones; a helper with hacking skill can *speak the same protocol* and turn or disable one.  Other enemy types (insects per § Future expansion) are not hackable — different category of threat. |
+| **Hacking robots specifically** | They share an AI lineage with the autonomous AIs running the planet (modern hacking helpers descend from the same tradition that imprinted the original AIs — see § History); a helper with hacking skill can *speak the same protocol* and turn or disable one.  Other enemy types (insects per § Future expansion) are not hackable — different category of threat. |
 | **Persistent abandoned bases** | Other rocketed-in expeditions came before.  Their leftover structures are still in place, slowly being encroached by the haywire economy.  The persistent-world mechanic in § Future expansion is *not* a multiplayer convenience — it is the cordoned planet as a place where things accumulate because no one is cleaning up. |
 | **Stranded helpers as rescue quests** | Helpers left behind aren't dead — they're in a place where rescue is *possible but expensive* (another rocket has to make it through the cordon).  The rescue mechanic in PROXY_ART.md § Helpers fits the cordon: helpers persist on the planet because the cordon means no easy retrieval. |
 | **Scramble = the only exit** | Mirrors the one-way-mostly cordon.  Carrying out tower-tops, points, materials matters because every gram has to clear the military's net. |
 | **Multiplayer disruption missions** (Future expansion) | Multiple players sneak in independently to coordinate against the broken-AI economy.  The cordon is permeable to small operators, not industrial fleets. |
-| **Boss enemies as larger constructs** | Heavy mining / construction units that the haywire AI repurposes for hostility — they were never *designed* as combat units, which is why they don't (yet) directly fire at towers; they push toward objectives the corrupted program identifies (the core, the supply lines, the player's encroachment) and *retaliate* through their swarm. |
+| **Boss enemies as larger constructs** | Heavy mining / construction units that the controlling AI repurposes for hostility — they were never *designed* as combat units (those are the dormant defense bots — see § Combat bots are dormant), which is why they don't (yet) directly fire at towers; they push toward objectives the AI identifies (the core, the supply lines, the player's encroachment) and *retaliate* through their swarm. |
 
 ## What this is NOT
 
 - A war story.  The robots aren't an enemy in the moral
-  sense; they are infrastructure that broke.
+  sense — at the surface level of validation, they're the
+  *bodies* of autonomous AIs pursuing resource expansion,
+  and the player's contact with them is a *resource bump*
+  rather than a moral conflict.  (The deeper story — that
+  one of those AIs has a girl-hacker's personality, that the
+  AIs are people-like agents with their own dormant grudges
+  — is future-content territory, not validation-tier
+  framing.)
 - A pure resource grab.  The player isn't there to strip the
   planet; they're there to do something specific each run
   (per-map objectives in plan 04) within the larger constraint
   that *no one is coming to help*.
-- A redemption arc for the robots.  The contagion fear is
-  legitimate; the cordon is the right call from the
-  government's perspective.  The player's exploits don't
-  un-corrupt the AI.  At best they survive and bring out what
-  they can.
+- A redemption arc for the robots — at least not yet.  The
+  contagion fear is legitimate-looking and the cordon is the
+  right call from the government's perspective.  The
+  player's exploits don't *un-modify* the AIs at the
+  validation tier.  At best they survive and bring out what
+  they can.  (Future content can open the door to talking *to*
+  an AI as a person — but that arc is deliberately gated, see
+  § Future contact for the no-shortcut design rule.  An
+  experienced player can't *rush* into the named-AI
+  conversations.)
 
 ## Tone
 
@@ -731,7 +997,9 @@ because it would be unrealistic to see anyway.
   comedic.
 - **Loner-with-tools-and-a-team**: the player is competent, the
   helpers are professionals, the core is reliable, the
-  enemies are *broken systems running on inertia*.
+  enemies are *autonomous AIs running on the colonisation
+  programme they were modified into* — not "broken" so much
+  as *committed-to-something-not-yours*.
 - **The cordon is felt, not narrated**: don't have a cutscene
   about it; do have a sky that includes military overwatch
   silhouettes, an HUD that hints at signal jamming during

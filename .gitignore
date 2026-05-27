@@ -26,3 +26,7 @@ result.txt
 # Golden-image tests: actual outputs are regenerated every run;
 # only the goldens are checked in.
 tests/actual/
+
+# Interactive-editor save (E1-live writes to dryopea_save.json
+# in the cwd).
+dryopea_save.json

@@ -143,8 +143,8 @@ mechanic attaches to or is gated by it.
 In the fiction, the core is a **signal-scrambling tower** (see
 SETTING.md § The core is a scrambling tower).  It carves a
 **bubble of broken comms** around the base in which robots
-cannot reach their faction-master command links and fall back
-to local per-unit behaviour.  Outside the bubble, robots
+cannot reach the controlling AI that drives them and fall
+back to local per-unit behaviour.  Outside the bubble, robots
 regain coordination; scouting beyond it is a risk.
 
 Etymological convergence: the player's force-launch is called
@@ -294,6 +294,56 @@ Heights aren't just visual variety:
 Mixed perimeters (`wall` on robot sides, `wall_high` on
 insect-facing sides) become tactical.
 
+### Swap pits — hot-swap bay pattern (planned)
+
+For skilled tower play across the boost / overload / type-
+swap spectrum (§ 7 Tower overload + hot-swap), a standard
+closed perimeter doesn't leave room near each tower for a
+parked spare top.  Skilled wall authoring carves a **swap
+pit** — a short inward indentation beside each swap-ready
+tower, sized to hold a **full-wall-width spare top** and
+still leave the player vehicle's path clear for in/out swap
+traffic.  Without the pit, the spare top blocks the
+corridor and the swap loop can't run.
+
+A single pit supports **three patterns** at increasing
+skill levels:
+
+1. **Boost-cooldown mitigation** (mildest).  Park a same-
+   type spare; between engagements, swap the just-boosted
+   top out for the spare while the tired one repairs on
+   the ground.  Doubles effective boost frequency without
+   touching overload.
+2. **Overload strain-cycle.**  Same same-type-spare setup,
+   but used to sustain the more aggressive overload mode.
+3. **Tactical type-swap** (when future variants ship).
+   Park a different-type spare; mid-combat swap to match
+   the current threat profile.
+
+Maps with multiple expected threat types may carve **multi-
+stall pits** — wider indentations holding several spares
+(e.g. one same-type for strain-cycle + one different-type
+for weapon profile).
+
+**The pit also holds the player.**  Overload is presence-
+locked (§ 7 Tower overload), so the player vehicle sits
+parked at the tower for as long as overload runs.  A
+well-authored swap pit places the **player's parking hex
+behind the wall line** — out of enemy reach — so the player
+isn't simultaneously a blocker (§ 8 conditional damage)
+during the overload session.  Pit geometry therefore has
+three constraints: hold the spare top, leave the swap path
+clear, AND give the player a safe parking hex.  Tightly
+packed pits sacrifice one of the three; truly well-
+designed pits get all three.
+
+The wall toolset already supports the pattern as geometry
+(it's just authored shape, no new mechanics needed).  The
+tactical payoff arrives when overload + type-swap (§ 7)
+ship — until then, the pit is just an unused widening.
+Maps may still ship pits today as **affordance hints** for
+forward-compatible base layouts.
+
 ## 6. Spawn system + waves
 
 Plan 03 designs the spawn marker layer; plan 04 places markers
@@ -391,16 +441,60 @@ All towers ship validation as a single type: **pulsed laser**.
   per-time*.  An idle tower in a quiet corner never decays.
   A tower covering a busy entrance burns through its budget
   fast.  Player repairs to refill the budget.
+- **Repair rule.**  A **firing (red) tower cannot be
+  repaired** — repair only applies to a tower whose top is
+  either **black** (decayed in place, no longer firing) or
+  **detached** (sitting on the ground, off the tower).  The
+  player walks up to a black-in-place tower and refills the
+  budget, or up to a detached top on the ground and heals
+  it.  An actively-firing tower must be **stopped first**
+  (decay finishes, or player detaches the top to ground it)
+  before repair becomes possible.  This isn't arbitrary game
+  balance — engineering-wise it's just **bad practice to
+  fiddle with a heavy energy weapon while it's powered on**.
+  The mount cools, the capacitors discharge, the safety
+  interlocks unlatch — *then* maintenance is safe.  This is
+  the rule that makes Tower overload (§ below) a *swap-
+  mandatory* cycle.
 
 Tower top colour signals state at any zoom:
 
 - **Red** = healthy, firing.
 - **Black** = decayed or salvaged (uniform with body — instantly
   readable as "spent" from across the base).
-- **Pink** = boosted (cost: player time only for validation —
-  drive to tower, hold boost key; no points, no carried-top
-  consumed).  Higher fire rate / damage / range while pink;
-  reverts to red on duration end.
+- **Pink** = boosted — drive to a tower and press boost; the
+  laser pulses harder (higher fire rate / damage / range) for
+  a **fixed timed duration**, then reverts to red on its own.
+  Boost is **fire-and-forget for the player** — once engaged,
+  the player can drive away and the boost runs out on its
+  own.  No points cost, no carried-top consumed.  In the
+  **full mechanic** boost has a **small enduring cost**
+  attached, but the cost is **mostly proportional to shots
+  fired**, not to boost time: a boost engaged on an idle
+  tower with no targets in range costs almost nothing, while
+  a boost during heavy wave pressure burns shots fast and
+  brings the tower's maintenance window forward.  The wear
+  is the same kind of strain that the more aggressive
+  **overload** mode (§ Tower overload) accumulates rapidly
+  — boost just sits at the mild end of the same spectrum.
+- **Boost cooldown + active-maintenance mitigation.**  After
+  a boost ends, the tower needs **a window of normal-output
+  operation** before another boost is allowed (the rated-
+  output cool-off — capacitor recharge, optics realign).
+  Lazy play waits the cooldown out.  Skilled play
+  **mitigates it via active maintenance**: pull the top off
+  (it stops firing → repair allowed by the rule above) →
+  repair on the ground (resets strain *and* clears the
+  cooldown) → re-mount → boost again.  Net effect:
+  maintenance-effort caps boost frequency, not pure timer.
+  A player willing to do the pickup-drop-repair cycle
+  between engagements chains boosts at roughly twice the
+  lazy rate — the same swap-pit infrastructure that supports
+  overload also supports this milder loop.
+
+**Validation tier ships boost with strain disabled** as a
+simplification; strain + cooldown + overload + the hot-swap
+cycle arrive together in a later phase.
 
 ### Tower-top salvage — the scramble mechanic lived tactically
 
@@ -422,6 +516,137 @@ A tower's red top is a **detachable carry object**.
 
 The same disc, two mutually exclusive uses, decided every
 sortie.  The scramble decision lived inside every combat run.
+
+### Tower overload + hot-swap — high-skill upkeep loop (planned)
+
+Boost and overload are **two points on the same strain-vs-
+output curve**, but they have **opposite input models**:
+
+- **Boost** (§ above) is **timed and fire-and-forget**.  Tap
+  the boost on, the timer runs, the player is free to drive
+  off and deal with other things.  Strain is small and tied
+  to actual shots fired — boost in a quiet moment costs
+  almost nothing; boost during heavy fire brings the next
+  maintenance forward.
+- **Overload** is **player-presence-locked**.  The player
+  must remain at the tower for the entire duration —
+  vehicle parked on the engagement hex, holding the overload
+  key.  Leave the hex or release the key and overload ends.
+  Output is much higher than boost, **strain per shot is
+  also higher** (the laser runs even harder above rated
+  limits), and the player is *committed*: they can't ferry
+  tower-tops, can't escort helpers, can't reposition for a
+  different threat.  The player's own attention and position
+  are part of the cost.
+
+The strain mechanic is uniform across both modes — every
+shot fired adds a small amount of strain to the top, scaled
+by the output level (normal < boost < overload).  What
+changes between modes is **how fast strain accumulates per
+unit time of combat**.  Where boost-tier strain is
+recoverable by simply letting the tower idle for a bit,
+overload accumulates strain fast enough that the only way
+to sustain it is the hot-swap cycle below.
+Skilled play turns the strain into a manageable upkeep
+loop, and the same infrastructure also enables **tactical
+type-swapping** between different tower-top weapons.
+
+(Side-effect of the presence rule: a player parked at an
+overloading tower is also a *blocker* — see § 8 Player
+vehicle.  If their parked hex sits on an enemy path to the
+core, they take nibble damage for as long as they hold the
+overload.  Overload + safe parking = sustainable;
+overload + bad parking = quickly fatal.  Yet another reason
+swap pits (§ 5) are authored to keep the player's parking
+hex *behind* the wall line.)
+
+**The strain-cycle loop (swap-mandatory).**
+
+Because a firing tower **cannot be repaired in-place** (see
+§ Towers — Repair rule), the player can't shortcut the
+strain by standing at the tower and healing it.  Strain
+accumulates while the top is mounted and firing.  The only
+relief is to *get the top off the tower*:
+
+- **Hot-swap when strain reaches the player's chosen
+  threshold.**  Before strain burns the top out, the player
+  swaps in a **second tower-top parked in a swap pit
+  nearby** (same single pickup-drop verb as Tower-top
+  salvage).  Strained top drops to the ground; spare goes
+  onto the tower; firing resumes red instantly.  No mid-
+  combat stand-around rebuild.
+- **Repair-on-the-ground.**  Once the strained top is on
+  the ground, it's no longer firing, so repair *now*
+  applies.  The player (or helpers) heal it back to ready
+  while the active spare runs.
+- **Cycle.**  When the active spare reaches its own strain
+  threshold, swap back to the now-repaired original.  Two
+  tops alternating between *mounted-and-overloading* and
+  *grounded-and-repairing* keep overload-grade firepower
+  running indefinitely — the high-skill ceiling.
+
+The cadence the player must learn: swap **before** strain
+peaks, not after.  Mistime the swap and the top burns out
+mid-mount (forced black state) — still recoverable, but
+now you've lost the overload window and start the recovery
+behind the strain curve.
+
+**Tactical type-swap (when future tower variants ship).**
+
+The same swap-pit setup lets the player **switch weapon
+profiles mid-combat**: park a non-laser top (anti-insect
+pulse, area splash, anti-elemental dampener — see § Future
+tower types) in the pit instead of (or alongside) a same-
+type spare.  Mid-wave the player swaps the active top for
+whichever type the current threat calls for — no rebuild,
+no beacon-ferry, just a pickup-drop cycle.
+
+Cross-type swapping adds **ammo bookkeeping**: validation-
+era laser tops use attack-count decay only, but several of
+the future-variant weapons consume **ammo** (per-shot
+consumable, distinct from decay), so the swap workflow
+includes pre-loading the spare top and reloading on
+recovery.  More steps, more planning, more reward.
+
+**The opportunity-cost layer.**
+
+A spare top sitting in a swap pit **is a top that is NOT
+firing on a different tower**.  Every reserve top in the
+base is a slot of tower-firepower the player chose to keep
+in reserve instead of mounted active elsewhere.  Skilled
+play is a balance:
+
+- **Many active tops, no spares** — maximum firepower per
+  second, no type flex, no strain-cycle.  Vulnerable to
+  type-shifting threats and to overload-only kill windows.
+- **Many spares, fewer active** — fewer towers firing at
+  any moment, but every active tower can overload-cycle
+  indefinitely and switch type to match incoming threats.
+  Vulnerable in the cold-start phase before swapping pays
+  off.
+- The right ratio is **per-map, per-wave-composition**: a
+  map with mixed enemy types (insects + robots) rewards
+  type-swap; a map with mass-robot pressure rewards strain-
+  cycle; a map with thin-but-constant pressure rewards
+  active-firepower.
+
+**The bottleneck is physical space.**  A spare top parked
+beside a tower occupies roughly a full wall-section's width;
+a standard closed perimeter has no room to stash it without
+blocking the player vehicle's swap traffic.  Overload + type-
+swap therefore require walls authored with a **swap pit**
+(see § 5 Swap pits) — an indentation that holds the spare +
+keeps the swap path clear.  This pushes the strategic
+decision *back to base design time*: skilled players plan
+overload-ready and swap-ready towers as a wall-layout choice,
+not just an in-combat input.
+
+Validation tier: **deferred**.  Boost (pink, time-limited,
+no strain) ships at validation; overload + strain + spare-
+top swap + type-swap + ammo bookkeeping + swap-pit
+authoring arrive in a later phase, once the base tower
+model is stable, attack-count decay is tuned, and the
+future tower variants (with ammo) have landed.
 
 ### New towers via beacon ferry
 
@@ -644,6 +869,22 @@ to "find their way home"**.  Waves are accumulating cut-off
 units, not coordinated attacks.  The approach→engage handoff
 is the **bubble boundary itself**.  Full explanation in
 SETTING.md § Why waves happen.
+
+**Within tier 1, early-vs-late escalation is lore-driven.**
+The first waves a player meets are **economic units** —
+workers, haulers, scouts, repair platforms — built for
+non-combat roles in the original colonisation programme, only
+hostile because their command links broke.  **Combat-purposed
+bots** (defense / security units) exist but are *largely
+abandoned by their AI* after the underground faction wars;
+under sustained pressure the AI reactivates them and they
+arrive in later waves.  Full fiction in
+[`SETTING.md`](SETTING.md) § Combat bots are dormant.  The
+*mechanical* split between economic-bot and combat-bot waves
+is **not yet shipped** — all tier-1 enemies render as the
+same placeholder for validation — but the wave-list format
+(§ 6) is expected to extend to typed mixes once distinct
+stats + visuals + an audible activation cue arrive.
 
 ## 11. Movement + input philosophy
 
