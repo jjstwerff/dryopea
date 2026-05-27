@@ -104,6 +104,30 @@ fn test_empty_world_skips_write() {
     assert(!file(tews_path).exists(), "save_markers of empty world wrote nothing");
 }
 
+fn test_save_after_clearing_deletes_sidecar() {
+    // Edge case the original M1 README flagged: place markers,
+    // save (sidecar created), remove ALL markers, save again →
+    // sidecar must be DELETED, not left stale.  Without the
+    // delete a re-launch would resurrect the cleared markers.
+    tsac_path = "tests/actual/03_m1_clear_sidecar.json";
+
+    // Step 1 — place + save → sidecar exists with one marker.
+    tsac_w = marker_empty();
+    place_spawn(tsac_w, 1, 1, 0 as u8);
+    save_markers(tsac_w, "step1", tsac_path);
+    assert(file(tsac_path).exists(), "sidecar written after placing");
+
+    // Step 2 — remove the marker, save → sidecar must be GONE.
+    remove_marker(tsac_w, 1, 1);
+    assert(marker_count(tsac_w) == 0, "world is empty before save");
+    save_markers(tsac_w, "step2", tsac_path);
+    assert(!file(tsac_path).exists(), "sidecar deleted after clearing all markers");
+
+    // Step 3 — load-or-empty yields an empty world (no resurrection).
+    tsac_w2 = load_markers_or_empty(tsac_path);
+    assert(marker_count(tsac_w2) == 0, "load after clear yields empty world");
+}
+
 fn test_cold_start_missing_sidecar() {
     // Cold start (sidecar absent) yields an empty marker world.
     tcs_path = "tests/actual/03_m1_does_not_exist.json";

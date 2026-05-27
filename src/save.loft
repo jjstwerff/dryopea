@@ -180,18 +180,19 @@ pub fn markerfile_to_world(mf: MarkerFile) -> MarkerWorld {
     mftw_out
 }
 
-// Save the marker world to `path`, IF the world has any
-// markers.  An empty marker world writes NOTHING — callers
-// rely on file-absent = empty-world (avoiding the cast bug on
-// reload of an empty `markers: []`).
-//
-// Edge case: a world that previously had markers, then had
-// them all removed, then saved, will leave a stale sidecar.
-// M3 (the editor UI) handles the explicit delete then; M1
-// callers should manually remove the sidecar if they need a
-// clean slate.
+// Save the marker world to `path`.  Three cases:
+//   - count > 0: write the sidecar with the markers vector.
+//   - count == 0 AND sidecar exists: DELETE the sidecar so a
+//     subsequent load doesn't resurrect the pre-clear state.
+//     Sidesteps the empty-vector JSON cast bug (filed in
+//     QUESTIONS_FOR_LOFT.md): an absent sidecar load-or-empty
+//     yields an empty MarkerWorld, exact behaviour we want.
+//   - count == 0 AND sidecar absent: no-op.
 pub fn save_markers(mw: MarkerWorld, name: text, path: text) {
     if marker_count(mw) == 0 {
+        if file(path).exists() {
+            delete(path);
+        }
         return;
     }
     sm_mf = marker_world_to_file(mw, name);
