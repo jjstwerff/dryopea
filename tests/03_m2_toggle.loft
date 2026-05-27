@@ -1,0 +1,95 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 03 phase M2 — editor mode toggle + HUD indicator badge.
+//
+// Covers: mode constant distinctness, toggle correctness (both
+// directions), idempotent double-toggle, name mapping for logs,
+// and that the HUD badge renders SOMETHING to the canvas at the
+// requested position (pixel-changed-vs-blank check — visual
+// correctness is human-eye territory once GL is up).
+//
+// The Tab edge-detection logic lives in `src/main.loft`'s GL
+// loop and is not directly unit-testable; the toggle function
+// covers the state-machine behaviour that loop calls into.
+
+use dryopea;
+use graphics;
+
+// ─── Mode constants ─────────────────────────────────────────────
+
+fn test_mode_constants_distinct() {
+    assert(MODE_GROUND != MODE_MARKER, "GROUND and MARKER must be distinct");
+    assert(MODE_GROUND == 0, "GROUND is index 0 (zero = default)");
+    assert(MODE_MARKER == 1, "MARKER is index 1");
+}
+
+// ─── toggle_mode behaviour ──────────────────────────────────────
+
+fn test_toggle_ground_to_marker() {
+    ttg_m = toggle_mode(MODE_GROUND);
+    assert(ttg_m == MODE_MARKER, "GROUND → MARKER");
+}
+
+fn test_toggle_marker_to_ground() {
+    ttm_m = toggle_mode(MODE_MARKER);
+    assert(ttm_m == MODE_GROUND, "MARKER → GROUND");
+}
+
+fn test_toggle_double_is_identity() {
+    // Two presses must return to the starting mode.
+    tdi_g = toggle_mode(toggle_mode(MODE_GROUND));
+    tdi_m = toggle_mode(toggle_mode(MODE_MARKER));
+    assert(tdi_g == MODE_GROUND, "double-toggle from GROUND lands on GROUND");
+    assert(tdi_m == MODE_MARKER, "double-toggle from MARKER lands on MARKER");
+}
+
+fn test_toggle_unknown_mode_falls_back_to_ground() {
+    // An out-of-range mode value (e.g. from a corrupt session)
+    // should resolve to a sane state rather than getting stuck
+    // — toggle's else-branch returns GROUND, so unknown → GROUND.
+    tuf_m = toggle_mode(99);
+    assert(tuf_m == MODE_GROUND, "unknown mode → GROUND on toggle");
+}
+
+// ─── mode_name (debug / logging only) ───────────────────────────
+
+fn test_mode_name_ground() {
+    assert(mode_name(MODE_GROUND) == "GROUND", "ground name");
+}
+
+fn test_mode_name_marker() {
+    assert(mode_name(MODE_MARKER) == "MARKER", "marker name");
+}
+
+// ─── HUD badge render ───────────────────────────────────────────
+
+fn test_badge_renders_some_pixels_ground() {
+    // Blank canvas, paint badge, assert at least one pixel changed
+    // — that's enough to confirm the call path is wired; the
+    // golden-image tests cover the editor's full frame elsewhere.
+    tbr_cv = canvas(64, 64, 0x000000);
+    render_mode_indicator(tbr_cv, MODE_GROUND, 10, 10);
+    tbr_centre = tbr_cv.get_pixel(15, 15);
+    assert(tbr_centre != 0x000000, "ground badge wrote a non-black pixel at centre");
+}
+
+fn test_badge_renders_some_pixels_marker() {
+    tbm_cv = canvas(64, 64, 0x000000);
+    render_mode_indicator(tbm_cv, MODE_MARKER, 10, 10);
+    tbm_centre = tbm_cv.get_pixel(15, 15);
+    assert(tbm_centre != 0x000000, "marker badge wrote a non-black pixel at centre");
+}
+
+fn test_badge_colour_differs_between_modes() {
+    // Same canvas position, different mode → different pixel colour.
+    // Confirms the mode-discriminator path inside render_mode_indicator
+    // actually picks different fill colours, not just "draws something".
+    tcd_cv_g = canvas(64, 64, 0x000000);
+    tcd_cv_m = canvas(64, 64, 0x000000);
+    render_mode_indicator(tcd_cv_g, MODE_GROUND, 10, 10);
+    render_mode_indicator(tcd_cv_m, MODE_MARKER, 10, 10);
+    tcd_pix_g = tcd_cv_g.get_pixel(15, 15);
+    tcd_pix_m = tcd_cv_m.get_pixel(15, 15);
+    assert(tcd_pix_g != tcd_pix_m, "GROUND and MARKER badges paint different colours");
+}

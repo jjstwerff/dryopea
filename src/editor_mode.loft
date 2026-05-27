@@ -1,0 +1,61 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Editor mode — Ground vs Marker.
+//
+// The editor is a two-mode tool: one editor, one camera, one
+// hex grid, one selection mechanic; the mode determines WHICH
+// data layer a click writes to.  Tab toggles.  A small badge
+// in the top-right of the HUD shows the current mode at a
+// glance.
+//
+// Why integer constants instead of an enum: dryopea consistently
+// uses u8/integer discriminants (palette types, marker kinds);
+// keeping mode in the same idiom means one mental model for
+// every "what is this thing" lookup.  Enum-with-payload isn't
+// useful here (no per-variant data); migrating later is one
+// type-alias change if loft enums turn out preferable.
+//
+// Plan 03 phase M2.
+
+use graphics;
+
+// Mode discriminants.  APPEND new modes — never reorder, since
+// future on-disk save state may persist the current mode for
+// session restore.
+pub const MODE_GROUND: integer = 0;   // paint palette into the painted-hex layer
+pub const MODE_MARKER: integer = 1;   // place markers into the marker layer
+
+// Flip between the two modes.  Idempotent at two-cycles
+// (toggle_mode(toggle_mode(m)) == m).
+pub fn toggle_mode(m: integer) -> integer {
+    if m == MODE_GROUND { MODE_MARKER } else { MODE_GROUND }
+}
+
+// Human-readable name for logs / debug prints.  Not used by
+// the render path (the badge is colour-coded; see below).
+pub fn mode_name(m: integer) -> text {
+    if m == MODE_GROUND { "GROUND" } else { "MARKER" }
+}
+
+// ─── Render — HUD mode indicator badge ──────────────────────────
+//
+// A small coloured square that tells the player "this is the
+// layer your next click writes to."  No text — font loading
+// would drag a TTF dependency in for one HUD element; the badge
+// colour is unambiguous and matches each mode's data layer.
+
+pub const MODE_BADGE_PX:        integer = 12;        // badge edge length
+pub const MODE_BADGE_BORDER:    integer = 0xffffff;  // white outline
+pub const MODE_BADGE_GROUND_BG: integer = 0x80c060;  // grass-green
+pub const MODE_BADGE_MARKER_BG: integer = 0xff3060;  // spawn-arrow hot pink
+
+// Draw the mode indicator into the canvas at (x0, y0).  The
+// top-left corner of the badge sits at (x0, y0); caller picks
+// the screen position (typical: top-right corner with a small
+// margin).
+pub fn render_mode_indicator(cv: Canvas, mode: integer, x0: integer, y0: integer) {
+    rmi_bg = if mode == MODE_GROUND { MODE_BADGE_GROUND_BG } else { MODE_BADGE_MARKER_BG };
+    cv.fill_rect(x0, y0, MODE_BADGE_PX, MODE_BADGE_PX, rmi_bg);
+    cv.draw_rect(x0, y0, MODE_BADGE_PX, MODE_BADGE_PX, MODE_BADGE_BORDER);
+}

@@ -13,6 +13,11 @@
 //                     0=wall_high; - and = reserved for indices 10
 //                     and 11 as the palette grows past 9 types)
 //   Left-click/drag   paint hovered hex with active type
+//                     (ground mode) — marker placement in marker
+//                     mode lands in M3.
+//   Tab               toggle Ground ↔ Marker mode; the badge in
+//                     the top-right of the HUD shows the current
+//                     mode (grass-green = Ground, hot pink = Marker).
 //   Ctrl+S            save to dryopea_save.json
 //   Esc               save + exit
 //
@@ -74,6 +79,12 @@ fn main() {
     painting:       boolean = false;
     last_paint_hex: Hex     = Hex { q: 0, r: 0 };
 
+    // Editor mode + edge-detected Tab.  Tab held down across many
+    // frames must NOT oscillate the mode at 60Hz — track previous-
+    // frame state and only toggle on the rising edge.
+    mode:          integer = MODE_GROUND;
+    tab_held_prev: boolean = false;
+
     for _ in 0..1000000 {
         if !gl_poll_events() { break; }
         if gl_key_pressed(graphics::KEY_ESCAPE) { break; }
@@ -84,6 +95,15 @@ fn main() {
 
         ctrl_held = gl_key_pressed(graphics::KEY_CTRL);
         wheel = gl_mouse_wheel();
+
+        // Tab → toggle Ground ↔ Marker (edge-detected; held key
+        // doesn't oscillate).
+        tab_now = gl_key_pressed(graphics::KEY_TAB);
+        if tab_now && !tab_held_prev {
+            mode = toggle_mode(mode);
+            println("dryopea: mode = {mode_name(mode)}");
+        }
+        tab_held_prev = tab_now;
 
         // Ctrl+S → save (debounced to avoid Ctrl+S held-down spam).
         if ctrl_held && gl_key_pressed(graphics::KEY_S) {
@@ -133,7 +153,9 @@ fn main() {
         my = gl_mouse_y() as integer;
         hovered = screen_to_hex(cam, mx, my, WINDOW_W, WINDOW_H, PPM);
 
-        if (gl_mouse_button() & 1) != 0 {
+        if (gl_mouse_button() & 1) != 0 && mode == MODE_GROUND {
+            // Ground-mode paint: writes to the painted-hex layer.
+            // Marker-mode click handling lands in M3 (placement).
             if tnow - last_paint_us > PAINT_DEBOUNCE_US {
                 if painting {
                     // Continuation of a drag — fill the gap from
@@ -151,7 +173,10 @@ fn main() {
                 last_paint_us  = tnow;
             }
         } else {
-            // Button released — next press starts a fresh stroke.
+            // Button released OR mode changed → next press starts a
+            // fresh stroke.  (Switching to marker mode mid-drag
+            // shouldn't bridge a future ground-mode press to the
+            // pre-switch hex.)
             painting = false;
         }
 
@@ -159,6 +184,7 @@ fn main() {
 
         cv = render_with_hover(cam, pw, hovered, WINDOW_W, WINDOW_H, PPM);
         render_picker(cv, picker, 12, 12);
+        render_mode_indicator(cv, mode, WINDOW_W - MODE_BADGE_PX - 12, 12);
 
         tex = gl_upload_canvas(cv.data, cv.width, cv.height);
         gl_clear(rgb(0, 0, 0));
