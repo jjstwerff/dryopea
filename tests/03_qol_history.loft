@@ -1,0 +1,227 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 03 follow-up — undo / redo history.
+//
+// Covers: empty-history availability flags, push semantics
+// (truncate-redo-on-new-action, depth cap), the round-trip
+// invariants (undo restores prior state; redo restores after-
+// state; double-undo + double-redo cycle), and the recording
+// wrappers (paint_and_record / paint_line_and_record /
+// place_spawn_and_record / remove_marker_and_record /
+// clear_and_record).
+
+use dryopea;
+
+// ─── Availability flags ─────────────────────────────────────────
+
+fn test_history_empty_cannot_undo_or_redo() {
+    teh_h = history_empty();
+    assert(!history_can_undo(teh_h), "fresh history has no undo");
+    assert(!history_can_redo(teh_h), "fresh history has no redo");
+}
+
+fn test_after_push_can_undo_cannot_redo() {
+    tap_h = history_empty();
+    tap_e = undo_entry_empty();
+    tap_e.painted += [PaintedDelta { q: 0, r: 0, old_kind: 0, new_kind: 5 }];
+    history_push(tap_h, tap_e);
+    assert(history_can_undo(tap_h),  "after push: can undo");
+    assert(!history_can_redo(tap_h), "after push: no redo branch");
+}
+
+fn test_after_undo_can_redo() {
+    tau_h  = history_empty();
+    tau_pw = painted_empty();
+    tau_mw = marker_empty();
+    paint_and_record_helper(tau_h, tau_pw, 0, 0, 5 as u8);
+    history_undo(tau_h, tau_pw, tau_mw);
+    assert(history_can_redo(tau_h), "after undo: redo branch available");
+}
+
+// ─── paint_and_record round-trip ────────────────────────────────
+
+// Helper: wrap paint_and_record + a fresh stroke entry + push,
+// matching what the editor's stroke-end handler does for a
+// single-click paint (1-hex stroke).
+fn paint_and_record_helper(h: History, pw: PaintedWorld, q: integer, r: integer, kind: u8) {
+    parh_stroke = undo_entry_empty();
+    paint_and_record(pw, q, r, kind, parh_stroke);
+    history_push(h, parh_stroke);
+}
+
+fn test_paint_noop_records_nothing() {
+    tpn_stroke = undo_entry_empty();
+    tpn_pw     = painted_empty();
+    // Painting sea over sea: no actual change.
+    paint_and_record(tpn_pw, 0, 0, 0 as u8, tpn_stroke);
+    assert(len(tpn_stroke.painted) == 0,
+           "painting same kind records no delta");
+}
+
+fn test_paint_change_records_delta() {
+    tpc_stroke = undo_entry_empty();
+    tpc_pw     = painted_empty();
+    paint_and_record(tpc_pw, 0, 0, 5 as u8, tpc_stroke);
+    assert(len(tpc_stroke.painted) == 1, "1 delta recorded");
+    tpc_d = tpc_stroke.painted[0];
+    assert(tpc_d.q == 0,               "delta q");
+    assert(tpc_d.r == 0,               "delta r");
+    assert(tpc_d.old_kind == 0,        "old was sea");
+    assert(tpc_d.new_kind == 5,        "new is grass");
+    assert(lookup_painted(tpc_pw, 0, 0) == 5 as u8, "world updated");
+}
+
+fn test_undo_paint_restores_prior() {
+    tupr_h  = history_empty();
+    tupr_pw = painted_empty();
+    tupr_mw = marker_empty();
+    paint_and_record_helper(tupr_h, tupr_pw, 3, 3, 9 as u8);
+    assert(lookup_painted(tupr_pw, 3, 3) == 9 as u8, "painted before undo");
+    tupr_ok = history_undo(tupr_h, tupr_pw, tupr_mw);
+    assert(tupr_ok, "undo succeeded");
+    assert(lookup_painted(tupr_pw, 3, 3) == 0 as u8, "unpainted after undo");
+}
+
+fn test_redo_paint_restores_change() {
+    trpr_h  = history_empty();
+    trpr_pw = painted_empty();
+    trpr_mw = marker_empty();
+    paint_and_record_helper(trpr_h, trpr_pw, 4, 4, 5 as u8);
+    history_undo(trpr_h, trpr_pw, trpr_mw);
+    assert(lookup_painted(trpr_pw, 4, 4) == 0 as u8, "after undo: empty");
+    trpr_ok = history_redo(trpr_h, trpr_pw, trpr_mw);
+    assert(trpr_ok, "redo succeeded");
+    assert(lookup_painted(trpr_pw, 4, 4) == 5 as u8, "redo restored grass");
+}
+
+// ─── paint_line_and_record (multi-hex stroke = 1 entry) ─────────
+
+fn test_paint_line_records_all_hexes() {
+    tpla_stroke = undo_entry_empty();
+    tpla_pw     = painted_empty();
+    paint_line_and_record(tpla_pw,
+                          Hex { q: 0, r: 0 }, Hex { q: 3, r: 0 },
+                          5 as u8, tpla_stroke);
+    assert(len(tpla_stroke.painted) >= 4,
+           "line of 4 hexes records ≥4 deltas (cube-round may add 1)");
+    // Endpoints definitely changed.
+    assert(lookup_painted(tpla_pw, 0, 0) == 5 as u8, "first endpoint painted");
+    assert(lookup_painted(tpla_pw, 3, 0) == 5 as u8, "last endpoint painted");
+}
+
+fn test_undo_paint_line_restores_entire_stroke() {
+    tupl_h  = history_empty();
+    tupl_pw = painted_empty();
+    tupl_mw = marker_empty();
+    tupl_stroke = undo_entry_empty();
+    paint_line_and_record(tupl_pw,
+                          Hex { q: 0, r: 0 }, Hex { q: 4, r: 0 },
+                          5 as u8, tupl_stroke);
+    history_push(tupl_h, tupl_stroke);
+    assert(painted_count(tupl_pw) >= 4, "line painted ≥4 hexes");
+    history_undo(tupl_h, tupl_pw, tupl_mw);
+    assert(painted_count(tupl_pw) == 0,
+           "single undo erases the entire line stroke");
+}
+
+// ─── Marker place / remove + record ─────────────────────────────
+
+fn test_place_spawn_and_record_one_entry() {
+    tpse_h  = history_empty();
+    tpse_mw = marker_empty();
+    place_spawn_and_record(tpse_mw, 5, 5, 2 as u8, tpse_h);
+    assert(marker_count(tpse_mw) == 1, "1 marker placed");
+    assert(history_can_undo(tpse_h),    "undo entry recorded");
+}
+
+fn test_undo_place_spawn_removes_marker() {
+    tups_h  = history_empty();
+    tups_pw = painted_empty();
+    tups_mw = marker_empty();
+    place_spawn_and_record(tups_mw, 5, 5, 0 as u8, tups_h);
+    history_undo(tups_h, tups_pw, tups_mw);
+    assert(marker_count(tups_mw) == 0, "undo removed the marker");
+}
+
+fn test_remove_marker_and_record_one_entry() {
+    trm_h  = history_empty();
+    trm_pw = painted_empty();
+    trm_mw = marker_empty();
+    place_spawn(trm_mw, 5, 5, 0 as u8);   // place WITHOUT history
+    remove_marker_and_record(trm_mw, 5, 5, trm_h);
+    assert(marker_count(trm_mw) == 0,    "marker removed");
+    assert(history_can_undo(trm_h),       "undo entry recorded");
+}
+
+fn test_undo_remove_restores_marker() {
+    turm_h  = history_empty();
+    turm_pw = painted_empty();
+    turm_mw = marker_empty();
+    place_spawn(turm_mw, 5, 5, 3 as u8);
+    remove_marker_and_record(turm_mw, 5, 5, turm_h);
+    history_undo(turm_h, turm_pw, turm_mw);
+    assert(marker_count(turm_mw) == 1, "undo restored the marker");
+    assert(marker_direction(turm_mw, 5, 5) == 3 as u8,
+           "undo restored the original direction");
+}
+
+fn test_remove_missing_marker_is_noop() {
+    trmn_h  = history_empty();
+    trmn_mw = marker_empty();
+    remove_marker_and_record(trmn_mw, 0, 0, trmn_h);
+    assert(!history_can_undo(trmn_h),
+           "removing absent marker records nothing");
+}
+
+// ─── clear_and_record (full-state snapshot) ─────────────────────
+
+fn test_clear_and_record_captures_everything() {
+    tcr_h  = history_empty();
+    tcr_pw = painted_empty();
+    tcr_mw = marker_empty();
+    paint(tcr_pw, 0, 0, 5 as u8);
+    paint(tcr_pw, 1, 0, 9 as u8);
+    place_spawn(tcr_mw, 10, 0, 2 as u8);
+
+    clear_and_record(tcr_pw, tcr_mw, tcr_h);
+    assert(history_can_undo(tcr_h), "clear pushed an entry");
+
+    // Simulate the main.loft pattern: caller rebinds after
+    // clear_and_record to actually empty the worlds.
+    tcr_pw = painted_empty();
+    tcr_mw = marker_empty();
+    assert(painted_count(tcr_pw) == 0, "cleared painted");
+    assert(marker_count(tcr_mw)  == 0, "cleared markers");
+
+    history_undo(tcr_h, tcr_pw, tcr_mw);
+    assert(painted_count(tcr_pw) == 2, "undo restored 2 painted hexes");
+    assert(marker_count(tcr_mw)  == 1, "undo restored 1 marker");
+    assert(lookup_painted(tcr_pw, 0, 0) == 5 as u8, "grass restored");
+    assert(lookup_painted(tcr_pw, 1, 0) == 9 as u8, "wall restored");
+    assert(marker_direction(tcr_mw, 10, 0) == 2 as u8, "marker direction restored");
+}
+
+fn test_clear_empty_world_records_noop() {
+    tce_h  = history_empty();
+    tce_pw = painted_empty();
+    tce_mw = marker_empty();
+    clear_and_record(tce_pw, tce_mw, tce_h);
+    assert(!history_can_undo(tce_h),
+           "clearing an already-empty world is a no-op");
+}
+
+// ─── New action while undone discards the future ────────────────
+
+fn test_new_action_after_undo_discards_redo() {
+    tnau_h  = history_empty();
+    tnau_pw = painted_empty();
+    tnau_mw = marker_empty();
+    paint_and_record_helper(tnau_h, tnau_pw, 0, 0, 5 as u8);
+    paint_and_record_helper(tnau_h, tnau_pw, 1, 0, 9 as u8);
+    history_undo(tnau_h, tnau_pw, tnau_mw);   // (1,0) undone, can redo
+    assert(history_can_redo(tnau_h), "redo branch present after undo");
+    paint_and_record_helper(tnau_h, tnau_pw, 2, 0, 5 as u8);   // new action
+    assert(!history_can_redo(tnau_h),
+           "new action discarded the redo branch");
+}

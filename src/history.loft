@@ -1,0 +1,321 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Editor undo / redo history.
+//
+// Each "action" the user takes (paint stroke, marker place,
+// marker remove, clear-all) produces one `UndoEntry` capturing
+// the (old → new) delta for every hex / marker the action
+// touched.  The History keeps a linear timeline of those
+// entries plus a cursor — moves left for undo, right for redo,
+// any new action while cursor < len truncates the future-redo
+// branch.
+//
+// Delta fields use `integer` even where `u8` would fit, both
+// for safety (loft's `vector<Struct>` with trailing-u8 corrupts
+// on serialise — filed in QUESTIONS_FOR_LOFT.md; history is
+// session-only so the bug wouldn't bite, but the cost of
+// widening is tiny) AND for boolean tests that compare against
+// MARKER_KIND_SPAWN-style integer constants without a cast.
+//
+// Plan 03 follow-up — QoL polish.
+
+use world;
+use painted;
+use markers;
+
+// One painted-hex change: (q, r) went from `old_kind` to
+// `new_kind`.  Sea (kind 0) is the absence-of-paint sentinel;
+// painting it on a painted hex erases the entry (painted.loft's
+// sparse semantics).
+pub struct PaintedDelta {
+    q:        integer not null,
+    r:        integer not null,
+    old_kind: integer not null,
+    new_kind: integer not null,
+}
+
+// One marker change: (q, r) went from `(old_present, old_dir)`
+// to `(new_present, new_dir)`.  `*_present == false` means the
+// hex had no marker before / after; the *_direction value is
+// ignored in that case (kept as 0 for cleanliness).
+pub struct MarkerDelta {
+    q:             integer not null,
+    r:             integer not null,
+    old_present:   boolean not null,
+    old_direction: integer not null,
+    new_present:   boolean not null,
+    new_direction: integer not null,
+}
+
+// One user action's worth of changes.  An action might touch
+// multiple painted hexes (a paint-line drag) and/or multiple
+// markers (a future "select region + clear" — clear-all today
+// snapshots everything into one entry).
+pub struct UndoEntry {
+    painted: vector<PaintedDelta>,
+    markers: vector<MarkerDelta>,
+}
+
+// Linear action timeline.  Position `cursor` is "after the most
+// recent applied action": ops below cursor are undoable, ops at
+// and above cursor are redoable.  Truncation drops the future-
+// redo branch when a new action lands during undone state.
+pub struct History {
+    entries: vector<UndoEntry> not null,
+    cursor:  integer not null,
+}
+
+// Maximum undo depth.  When `entries` grows past this, the
+// oldest entries are dropped on each push.  50 is plenty for
+// a session; bigger values waste memory without benefit since
+// loft has no allocator pressure for a 50-deep list.
+pub const HISTORY_MAX_DEPTH: integer = 50;
+
+// ─── Factories ──────────────────────────────────────────────────
+
+pub fn undo_entry_empty() -> UndoEntry {
+    UndoEntry { painted: [], markers: [] }
+}
+
+pub fn history_empty() -> History {
+    History { entries: [], cursor: 0 }
+}
+
+// Has the entry actually got any deltas?  Used by callers to
+// skip pushing no-op actions (a paint stroke that painted the
+// hex it was already on, etc.).
+pub fn undo_entry_is_noop(e: const UndoEntry) -> boolean {
+    len(e.painted) == 0 && len(e.markers) == 0
+}
+
+// ─── Internal helpers — vector rebuilds ─────────────────────────
+//
+// Loft has no public vector pop/remove/slice today.  These
+// helpers rebuild the timeline as needed; O(n) per call,
+// acceptable for a 50-deep history.
+
+fn truncate_to(h: &History, te_n: integer) {
+    if te_n >= len(h.entries) { return; }
+    te_new: vector<UndoEntry> = [];
+    for te_i in 0..te_n {
+        te_new += [h.entries[te_i]];
+    }
+    h.entries = te_new;
+}
+
+fn drop_oldest(h: &History, doe_n: integer) {
+    if doe_n <= 0 || doe_n > len(h.entries) { return; }
+    doe_new: vector<UndoEntry> = [];
+    for doe_i in doe_n..len(h.entries) {
+        doe_new += [h.entries[doe_i]];
+    }
+    h.entries = doe_new;
+    h.cursor = h.cursor - doe_n;
+    if h.cursor < 0 { h.cursor = 0; }
+}
+
+// ─── Push / undo / redo / availability ──────────────────────────
+
+// Record a new action.  Discards any redo-branch past the
+// current cursor (the "new action while undone" pattern), then
+// appends + advances + caps depth.  No-op if the entry has no
+// deltas.
+pub fn history_push(h: &History, hp_entry: UndoEntry) {
+    if undo_entry_is_noop(hp_entry) { return; }
+    truncate_to(h, h.cursor);
+    h.entries += [hp_entry];
+    h.cursor = h.cursor + 1;
+    if len(h.entries) > HISTORY_MAX_DEPTH {
+        drop_oldest(h, len(h.entries) - HISTORY_MAX_DEPTH);
+    }
+}
+
+pub fn history_can_undo(h: const History) -> boolean { h.cursor > 0 }
+pub fn history_can_redo(h: const History) -> boolean { h.cursor < len(h.entries) }
+
+// Apply the inverse of the most recent action.  Returns true if
+// anything was undone, false on an empty history.
+pub fn history_undo(h: &History, pw: &PaintedWorld, mw: &MarkerWorld) -> boolean {
+    if !history_can_undo(h) { return false; }
+    // Explicit bound guard placates loft's OOB static check —
+    // `can_undo` already proves cursor ∈ 1..=len(entries) but
+    // the analyser doesn't propagate that.
+    hu_idx = h.cursor - 1;
+    if hu_idx < 0 || hu_idx >= len(h.entries) { return false; }
+    hu_entry = h.entries[hu_idx];
+    for hu_pd in hu_entry.painted {
+        paint(pw, hu_pd.q, hu_pd.r, hu_pd.old_kind as u8);
+    }
+    for hu_md in hu_entry.markers {
+        if hu_md.old_present {
+            place_spawn(mw, hu_md.q, hu_md.r, hu_md.old_direction as u8);
+        } else {
+            remove_marker(mw, hu_md.q, hu_md.r);
+        }
+    }
+    h.cursor = h.cursor - 1;
+    true
+}
+
+// Re-apply the most recently undone action.  Returns true if
+// anything was redone, false on an empty redo branch.
+pub fn history_redo(h: &History, pw: &PaintedWorld, mw: &MarkerWorld) -> boolean {
+    if !history_can_redo(h) { return false; }
+    hr_idx = h.cursor;
+    if hr_idx < 0 || hr_idx >= len(h.entries) { return false; }
+    hr_entry = h.entries[hr_idx];
+    for hr_pd in hr_entry.painted {
+        paint(pw, hr_pd.q, hr_pd.r, hr_pd.new_kind as u8);
+    }
+    for hr_md in hr_entry.markers {
+        if hr_md.new_present {
+            place_spawn(mw, hr_md.q, hr_md.r, hr_md.new_direction as u8);
+        } else {
+            remove_marker(mw, hr_md.q, hr_md.r);
+        }
+    }
+    h.cursor = h.cursor + 1;
+    true
+}
+
+// ─── Recording wrappers (called from main.loft instead of the
+//     bare paint / place_spawn / remove_marker primitives) ───────
+
+// Paint a single hex AND append a PaintedDelta to `stroke` if
+// the kind actually changed.  Use to accumulate per-frame paint
+// events into one stroke entry across a drag; main.loft pushes
+// the stroke onto the history on button release.
+pub fn paint_and_record(
+    pw:       &PaintedWorld,
+    q:        integer,
+    r:        integer,
+    new_kind: u8,
+    stroke:   &UndoEntry,
+) {
+    par_old = lookup_painted(pw, q, r);
+    if par_old != new_kind {
+        paint(pw, q, r, new_kind);
+        stroke.painted += [PaintedDelta {
+            q:        q,
+            r:        r,
+            old_kind: par_old as integer,
+            new_kind: new_kind as integer,
+        }];
+    }
+}
+
+// Paint a LINE of hexes (cube-round step, matches
+// painted.loft::paint_line) AND record one delta per hex that
+// actually changed.  Replaces a direct paint_line call when
+// the caller wants undo support.
+pub fn paint_line_and_record(
+    pw:       &PaintedWorld,
+    a:        Hex,
+    b:        Hex,
+    new_kind: u8,
+    stroke:   &UndoEntry,
+) {
+    pla_n = hex_distance(a, b);
+    if pla_n == 0 {
+        paint_and_record(pw, a.q, a.r, new_kind, stroke);
+        return;
+    }
+    pla_aq = a.q as float;
+    pla_ar = a.r as float;
+    pla_bq = b.q as float;
+    pla_br = b.r as float;
+    // pla_n > 0 guaranteed above; `?? 0.0` silences loft's
+    // div-by-zero static check.
+    pla_inv = (1.0 / (pla_n as float)) ?? 0.0;
+    for pla_i in 0..=pla_n {
+        pla_t  = (pla_i as float) * pla_inv;
+        pla_qf = pla_aq + (pla_bq - pla_aq) * pla_t;
+        pla_rf = pla_ar + (pla_br - pla_ar) * pla_t;
+        pla_h  = cube_round_axial(pla_qf, pla_rf);
+        paint_and_record(pw, pla_h.q, pla_h.r, new_kind, stroke);
+    }
+}
+
+// Place a spawn marker AND push a one-marker UndoEntry onto the
+// history.  Captures the prior state (absent or different
+// direction) for clean undo.
+pub fn place_spawn_and_record(
+    mw:            &MarkerWorld,
+    q:             integer,
+    r:             integer,
+    new_direction: u8,
+    history:       &History,
+) {
+    pssr_was = has_marker(mw, q, r);
+    pssr_old_dir: u8 = 0 as u8;
+    if pssr_was {
+        pssr_old_dir = marker_direction(mw, q, r);
+    }
+    place_spawn(mw, q, r, new_direction);
+    pssr_entry = undo_entry_empty();
+    pssr_entry.markers += [MarkerDelta {
+        q:             q,
+        r:             r,
+        old_present:   pssr_was,
+        old_direction: pssr_old_dir as integer,
+        new_present:   true,
+        new_direction: new_direction as integer,
+    }];
+    history_push(history, pssr_entry);
+}
+
+// Remove the marker at (q, r) AND push a one-marker UndoEntry.
+// No-op if there's no marker to remove.
+pub fn remove_marker_and_record(
+    mw:      &MarkerWorld,
+    q:       integer,
+    r:       integer,
+    history: &History,
+) {
+    if !has_marker(mw, q, r) { return; }
+    rmar_old_dir = marker_direction(mw, q, r);
+    remove_marker(mw, q, r);
+    rmar_entry = undo_entry_empty();
+    rmar_entry.markers += [MarkerDelta {
+        q:             q,
+        r:             r,
+        old_present:   true,
+        old_direction: rmar_old_dir as integer,
+        new_present:   false,
+        new_direction: 0,
+    }];
+    history_push(history, rmar_entry);
+}
+
+// Snapshot the entire editor state into a single UndoEntry and
+// push it.  Caller is responsible for actually clearing the
+// state afterward (rebinding `pw = painted_empty()` etc.) —
+// this function only captures the deltas to make the clear
+// undoable.
+pub fn clear_and_record(
+    pw:      PaintedWorld,
+    mw:      MarkerWorld,
+    history: &History,
+) {
+    car_entry = undo_entry_empty();
+    for car_pe in pw.painted {
+        car_entry.painted += [PaintedDelta {
+            q:        car_pe.q,
+            r:        car_pe.r,
+            old_kind: car_pe.kind as integer,
+            new_kind: 0,
+        }];
+    }
+    for car_me in mw.markers {
+        car_entry.markers += [MarkerDelta {
+            q:             car_me.q,
+            r:             car_me.r,
+            old_present:   true,
+            old_direction: car_me.direction as integer,
+            new_present:   false,
+            new_direction: 0,
+        }];
+    }
+    history_push(history, car_entry);
+}

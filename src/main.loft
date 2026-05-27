@@ -25,10 +25,17 @@
 //                     A faint outline ghost arrow at the hovered
 //                     hex previews where the next click will land.
 //   Ctrl+S            save to dryopea_save.json
+//   Ctrl+Z            undo the most recent action.  Strokes
+//                     count as ONE action (one drag = one undo).
+//                     50-deep history.
+//   Ctrl+Y            redo (re-apply the most recently undone).
+//                     Any non-undo action discards the redo
+//                     branch.
 //   Ctrl+N            clear all — empty painted layer, empty
 //                     marker layer, reset camera to origin.
-//                     Does NOT auto-save; the next Ctrl+S
-//                     commits the cleared state.
+//                     Recorded as one undoable action.  Does
+//                     NOT auto-save; the next Ctrl+S commits
+//                     the cleared state.
 //   H                 recentre camera at origin (without clearing
 //                     painted or marker layers).  Letter rather
 //                     than `Home` because graphics.loft doesn't
@@ -118,10 +125,21 @@ fn main() {
     // Save-state tracking.  `dirty` flips to true on every paint /
     // place / remove / clear and back to false on a successful
     // save.  The HUD save indicator reads this directly.  Other
-    // edge-detected modifier keys (Ctrl+N, H) also live here.
+    // edge-detected modifier keys (Ctrl+N, H, Ctrl+Z, Ctrl+Y) live
+    // here too.
     dirty:        boolean = false;
     n_held_prev:  boolean = false;
     h_held_prev:  boolean = false;
+    z_held_prev:  boolean = false;
+    y_held_prev:  boolean = false;
+
+    // Undo / redo history.  Per-stroke deltas are accumulated in
+    // `stroke_in_flight` while the mouse button is held; on
+    // release (or mode flip), the stroke is pushed onto `history`
+    // as one UndoEntry.  Marker place/remove and clear-all push
+    // their entries directly via the *_and_record helpers.
+    history:           History   = history_empty();
+    stroke_in_flight:  UndoEntry = undo_entry_empty();
 
     for _ in 0..1000000 {
         if !gl_poll_events() { break; }
@@ -139,6 +157,12 @@ fn main() {
         tab_now = gl_key_pressed(graphics::KEY_TAB);
         if tab_now && !tab_held_prev {
             mode = toggle_mode(mode);
+            // Flush any in-flight paint stroke before the mode
+            // flip — it's a complete stroke from the player's POV.
+            if !undo_entry_is_noop(stroke_in_flight) {
+                history_push(history, stroke_in_flight);
+                stroke_in_flight = undo_entry_empty();
+            }
             // Reset stroke + placement edge-detection on mode flip so
             // a held button doesn't bleed across the boundary.
             painting     = false;
@@ -171,12 +195,14 @@ fn main() {
             }
         }
 
-        // Ctrl+N → clear all.  Resets the editor's in-memory
-        // state to a fresh world.  Does NOT auto-save; the next
-        // Ctrl+S commits the cleared state.  Edge-detected so a
-        // held Ctrl+N doesn't re-clear every frame.
+        // Ctrl+N → clear all.  Records the pre-clear state as one
+        // undoable entry (Ctrl+Z restores it), then rebinds the
+        // worlds to fresh empties + recentres the camera.
+        // Edge-detected so a held Ctrl+N doesn't re-clear every
+        // frame.
         n_now = gl_key_pressed(KEY_N);
         if ctrl_held && n_now && !n_held_prev {
+            clear_and_record(pw, mw, history);
             pw    = painted_empty();
             mw    = marker_empty();
             cam   = camera_default();
@@ -186,6 +212,40 @@ fn main() {
             println("dryopea: cleared all (Ctrl+N)");
         }
         n_held_prev = n_now;
+
+        // Ctrl+Z → undo / Ctrl+Y → redo.  Edge-detected.  Both
+        // mark dirty since the in-memory state now differs from
+        // what's on disk.
+        z_now = gl_key_pressed(graphics::KEY_Z);
+        if ctrl_held && z_now && !z_held_prev {
+            // Push any in-flight stroke FIRST so the user can
+            // undo back through it.  Reset stroke + button-edge
+            // so the next click starts a fresh stroke.
+            if !undo_entry_is_noop(stroke_in_flight) {
+                history_push(history, stroke_in_flight);
+                stroke_in_flight = undo_entry_empty();
+                painting     = false;
+                mb_held_prev = false;
+            }
+            if history_undo(history, pw, mw) {
+                dirty = true;
+                println("dryopea: undo");
+            } else {
+                println("dryopea: nothing to undo");
+            }
+        }
+        z_held_prev = z_now;
+
+        y_now = gl_key_pressed(graphics::KEY_Y);
+        if ctrl_held && y_now && !y_held_prev {
+            if history_redo(history, pw, mw) {
+                dirty = true;
+                println("dryopea: redo");
+            } else {
+                println("dryopea: nothing to redo");
+            }
+        }
+        y_held_prev = y_now;
 
         // H → recentre camera (without disturbing painted or
         // marker layers).  Edge-detected so a held H doesn't
@@ -240,18 +300,19 @@ fn main() {
         mb_now = (gl_mouse_button() & 1) != 0;
 
         if mb_now && mode == MODE_GROUND {
-            // Ground-mode paint: writes to the painted-hex layer.
+            // Ground-mode paint: writes to the painted-hex layer
+            // AND accumulates per-hex deltas into stroke_in_flight
+            // for undo.  Whole drag = one UndoEntry, pushed on
+            // button release below.
             if tnow - last_paint_us > PAINT_DEBOUNCE_US {
                 if painting {
-                    // Continuation of a drag — fill the gap from
-                    // the previous paint hex to the current hovered
-                    // hex (paint_line handles same-hex as a no-op
-                    // single paint, so this is safe even when the
-                    // mouse barely moved).
-                    paint_line(pw, last_paint_hex, hovered, picker.active as u8);
+                    paint_line_and_record(pw, last_paint_hex, hovered,
+                                          picker.active as u8,
+                                          stroke_in_flight);
                 } else {
-                    // Start of a new stroke — single hex.
-                    paint(pw, hovered.q, hovered.r, picker.active as u8);
+                    paint_and_record(pw, hovered.q, hovered.r,
+                                     picker.active as u8,
+                                     stroke_in_flight);
                 }
                 last_paint_hex = hovered;
                 painting       = true;
@@ -260,21 +321,27 @@ fn main() {
             }
         } else {
             // Ground-mode stroke ended (button released, hover left,
-            // or mode flipped); next press starts a fresh stroke.
+            // or mode flipped); commit the stroke to history and
+            // reset for the next press.
+            if painting && !undo_entry_is_noop(stroke_in_flight) {
+                history_push(history, stroke_in_flight);
+                stroke_in_flight = undo_entry_empty();
+            }
             painting = false;
         }
 
         if mb_now && !mb_held_prev && mode == MODE_MARKER {
             // Marker-mode is edge-triggered: each press is one
             // place-or-remove event, not a drag.  Click an existing
-            // marker → remove (toggle behaviour the plan README
-            // calls for); click an empty hex → place a spawn with
-            // the current rotation.
+            // marker → remove (toggle); click an empty hex → place
+            // a spawn with the current rotation.  Both record one
+            // UndoEntry directly (no in-flight accumulation needed).
             if has_marker(mw, hovered.q, hovered.r) {
-                remove_marker(mw, hovered.q, hovered.r);
+                remove_marker_and_record(mw, hovered.q, hovered.r, history);
                 println("dryopea: removed marker at ({hovered.q}, {hovered.r})");
             } else {
-                place_spawn(mw, hovered.q, hovered.r, place_direction);
+                place_spawn_and_record(mw, hovered.q, hovered.r,
+                                       place_direction, history);
                 println("dryopea: placed spawn at ({hovered.q}, {hovered.r}) dir={place_direction as integer}");
             }
             dirty = true;

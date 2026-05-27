@@ -21,4 +21,5 @@ use marker_render;
 use editor_mode;
 use spawn;
 use hud;
+use history;
 use save;
