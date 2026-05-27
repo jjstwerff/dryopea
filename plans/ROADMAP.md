@@ -35,7 +35,7 @@ end-to-end and *fun-shaped*.
 | Integration smoke test (cold-start cycle) | **shipped** | [plan 01](future/01-ground-editor/README.md) | 72/72 green under `scripts/test.sh` |
 | Interactive GL editor (E1-live) | **shipped** | [plan 01 E1-live](future/01-ground-editor/README.md) | `src/main.loft`; human playtest pending |
 | 3D solver-validation viewer | drafted | [plan 02](future/02-solver-validation-viewer/README.md) | Painted layer + height-solved mesh overlay, 40% transparent |
-| Marker layer + spawn points | drafted | [plan 03](future/03-marker-layer-and-spawns/README.md) | Second sparse layer; multi-direction spawns |
+| Marker layer + spawn points | **shipped** | [plan 03](future/03-marker-layer-and-spawns/README.md) | M1-M5 done; sidecar JSON, mode toggle, placement + rotation, render overlay, wave engine + spawn director |
 | Map library + browser (planet-view UI) | drafted | [plan 04](future/04-map-library/README.md) | MapFile schema (L1), map index, content, selector |
 | End-to-end validation scenario | drafted | [plan 05](future/05-validation-scenario/README.md) | The "minimum playable thing" spec |
 

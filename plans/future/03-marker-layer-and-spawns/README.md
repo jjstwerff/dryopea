@@ -5,7 +5,27 @@ SPDX-License-Identifier: LGPL-3.0-or-later
 
 # Plan 03 — Marker layer + multi-direction spawn points
 
-**Status:** Future (design drafted 2026-05-26; no code).
+**Status:** **Shipped** 2026-05-27 — phases M1-M5 all landed,
+129/129 tests green.
+
+## Implementation status
+
+| Phase | What shipped | Commit |
+|---|---|---|
+| **M1** | `src/markers.loft` (sparse `hash<MarkerEntry[q, r]>` + `place_spawn`/`remove_marker`/`has_marker`/`marker_kind`/`marker_direction`/`marker_count`); `src/marker_file.loft` (sidecar `MarkerFile` schema); `src/save.loft` extended with `save_markers`/`load_markers_or_empty` — the marker world is a SIDECAR JSON file (`dryopea_save_markers.json`), kept separate from MapFile to dodge the 8-field cast bug.  11 tests. | `d8f311c` |
+| **M2** | `src/editor_mode.loft` (`MODE_GROUND`/`MODE_MARKER` + `toggle_mode` + `mode_name` + `render_mode_indicator` HUD badge — grass-green / hot pink); Tab edge-detected toggle in `src/main.loft`.  10 tests. | `d87d202` |
+| **M3** | `rotate_direction` + `rotate_marker_at` in markers.loft; new `src/marker_render.loft` (`draw_marker_arrow` + `render_markers` + `render_ghost_arrow` — hot-pink triangles oriented per direction); editor wiring in `main.loft` for marker-mode click (place/remove toggle), R / Shift+R direction rotation, ghost-arrow hover preview, marker save on Ctrl+S + exit, marker load on startup.  Surfaced two loft bugs (filed in QUESTIONS_FOR_LOFT.md): `vector<Struct>` with trailing `u8 not null` fields corrupts on `:j` save; parser rejects `(tuple_local.N as float)`.  Workaround for the first: separate on-disk `MarkerSaveEntry` (integer fields) ↔ in-memory `MarkerEntry` (u8) — mirrors painted-layer's `PaintedHex`/`GroundEntry` pattern.  15 tests. | `6afe68e` |
+| **M4** | In-game render overlay — covered by M3's `render_markers` integration in `main.loft`'s frame loop.  Markers paint on top of the painted layer, ground colour bleeds through (filled triangles don't fully occlude).  No separate phase commit; visual verification at extreme zoom is a human-eye test. | (in `6afe68e`) |
+| **M5** | `src/spawn.loft` — `Enemy` + `WaveState` + `wave_state_empty` + `hex_offset` (6 axial neighbours matching the M3 direction convention) + `active_spawn_markers` (close-disable filter) + `spawn_wave` (round-robin pick across active markers, heading = marker direction) + `enemy_tick` (approach-mode one-hex-per-tick walk) + `wave_tick` + `alive_count`.  No RNG dependency — loft hasn't exposed a user-callable RNG yet; round-robin produces multi-direction pressure deterministically.  21 tests. | `afc3a79` |
+
+The editor (M2-M3) and the wave engine (M5) are decoupled: the
+editor authors the marker layer + persists the sidecar; the
+runtime (future game) reads the same marker layer to drive
+spawns.  Plan 03 does NOT wire the wave engine into `main.loft`
+— `main.loft` is the editor, not a game runtime; the wave
+engine consumer lives in plans 04-05 (the validation scenario).
+
+**Status original (preserved for posterity):** Future (design drafted 2026-05-26; no code).
 
 ## Goal
 

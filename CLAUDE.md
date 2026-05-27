@@ -18,9 +18,14 @@ is a sequence of bases, chained by what you carry out.
 
 **Status: active implementation.**  Plan 01 (in-game ground-type
 editor) has shipped E1–E4 + an integration smoke test + the
-runnable E1-live editor (`src/main.loft`).  72/72 tests green
-under `scripts/test.sh`.  Plan 06 (editor-to-stencil pipeline)
-is drafted and waits on loft `lib_plan 24` for the shared
+runnable E1-live editor (`src/main.loft`).  Plan 03 (marker layer
++ multi-direction spawns) has shipped M1-M5 — sidecar JSON save,
+Tab-toggled Ground/Marker editor mode with HUD badge, spawn
+placement + R/Shift+R rotation, hot-pink triangle render
+overlay, and a runtime wave engine + spawn director with
+approach-mode enemy tick.  129/129 tests green under
+`scripts/test.sh`.  Plan 06 (editor-to-stencil pipeline) is
+drafted and waits on loft `lib_plan 24` for the shared
 substrate.  The full design lives in [`docs/DESIGN.md`](docs/DESIGN.md);
 the fiction in [`docs/SETTING.md`](docs/SETTING.md); the full
 feature roadmap in [`plans/ROADMAP.md`](plans/ROADMAP.md).
