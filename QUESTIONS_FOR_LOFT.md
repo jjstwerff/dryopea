@@ -31,129 +31,40 @@ fix / feature, move it to **Resolved**.
 
 ## Open
 
-*(none yet — the three filed entries are picked up by the loft
-agents; see § Submitted below.)*
+### Div-by-zero warning still fires on `float / int_literal`
+
+- **Found while:** Re-verifying the @P368 fix on 2026-05-27.
+  The headline cases (`x / 0.75`, `x / 2.0`, `n / 4`, `n / 2`)
+  no longer warn — but `12.0 / 3` (float dividend, integer
+  literal divisor) still emits the rewritten warning.
+- **Kind:** bug (partial-fix follow-up to @P368)
+- **What dryopea needs:** `lit_nonzero` in
+  `src/parser/operators.rs` recognises Int/Long/Float/Single
+  literals, but the mixed-type `float / int_literal` path
+  appears to widen the literal to float (or insert an `as
+  float` cast) *before* the warning check reaches the
+  divisor, so the literal-detection misses it.  Either lift
+  the check above the widening, or also match the cast-
+  wrapped literal.
+- **Reproducer:**
+  ```loft
+  fn test() {
+      x = 12.0;
+      _ = x / 3;        // warns (expected: no warn — 3 is a non-zero int literal)
+      _ = x / 3.0;      // no warn
+      _ = 12 / 3;       // no warn
+  }
+  ```
+- **Workaround in dryopea:** write `3.0` instead of `3` when
+  dividing a float by an integer-valued constant.  Trivial
+  but slightly fewer-bytes-on-disk-warts than the original
+  precomputed-reciprocal workaround.
+- **Loft pointer:** `src/parser/operators.rs::lit_nonzero` —
+  add the float-coerced-int-literal arm.
 
 ## Submitted
 
-> Picked up by the loft project agents (2026-05-27).  Listed
-> here for traceability; will move to § Resolved as each is
-> confirmed fixed (binary rebuilt + dryopea's reproducer
-> behaves as expected).
-
-### Don't warn on division by a literal constant
-
-- **Found while:** Plan 01 E1 — implementing `world_to_hex`
-  (axial flat-top inverse).  The math is naturally written as
-  divisions by `0.75` and constants like `(2/3)/0.75` etc.
-- **Kind:** feature (warning suppression)
-- **What dryopea needs:** Loft warns on every `/` because of
-  the divide-by-zero hazard ("integer division may produce
-  null on divide-by-zero with no defensive check; consider
-  `a / b ?? 0` or wrap in `if b != 0 { ... }`").  The warning
-  also fires on **float division by a literal non-zero
-  constant** (e.g. `x / 2.0`, `x / 0.75`), which is
-  unconditionally safe — the divisor is statically known
-  non-zero.  Please suppress the warning when the RHS of `/`
-  is a non-zero literal constant (integer or float).
-- **Workaround in dryopea:** Precompute reciprocals as
-  named constants and multiply (`x * 0.8888...` instead of
-  `(x * 2.0 / 3.0) / 0.75`).  Works but the formulas read
-  less clearly than the math they implement; readers have
-  to consult comments to recover the original division
-  structure.
-- **Loft pointer:** unknown.  Warning emitted from somewhere
-  in the parser / type-checker that flags every `/` site.
-
-### `text as vector<Struct>` returns empty vector on valid JSON (silent failure)
-
-- **Found while:** Plan 01 E2 — loading `examples/palette.json`
-  (3328 bytes, valid JSON, 11 entries) via
-  `file(path).content() as vector<GroundType>` returns
-  `vector<GroundType>` with `len == 0`.  No error to stderr;
-  `json_errors()` would presumably help but the silent-empty
-  result is hard to debug.
-- **Kind:** bug (JSON cast)
-- **Suspected cause:** the JSON entries carry **extra fields** the
-  target struct doesn't declare.  My `GroundType` has 9 fields;
-  each `palette.json` entry has 13 (4 extras: `variant`,
-  `color_status`, `height_override`, `end_drivable`).  The cast
-  may bail silently when JSON has fields the struct doesn't.
-  Adding fields to the struct, or trimming the JSON, may fix it
-  — but the **silent** behaviour is the bug.
-- **Reproducer:**
-  ```loft
-  struct Item { tag: text, amount: integer }
-
-  fn test_extra_field() {
-      // JSON has an "extra" key the struct doesn't declare.
-      items = `[{{"tag":"a","amount":1,"extra":"x"}}]` as vector<Item>;
-      println("len = {len(items)}");   // observed: 0 (expected: 1)
-  }
-  ```
-  Combined with the assert-doesn't-fail-tests bug below, the
-  failure presents as "all tests pass" while every payload
-  access reads null.
-- **What dryopea needs:** either (a) the cast accepts extra
-  fields and ignores them, or (b) the cast errors loudly when
-  the JSON has fields the struct doesn't.  Silent empty is
-  the worst combination.
-- **Workaround in dryopea:** add every extra JSON field to the
-  target struct, OR strip the extras from palette.json before
-  parsing.
-- **Loft pointer:** unknown — the `text as <T>` cast lowering
-  in the parser / typer + the JSON cast in
-  `src/state/codegen.rs` or wherever the cast runtime lives.
-
-### Test runner doesn't surface assertion / runtime_error failures
-
-- **Found while:** Plan 01 E1 golden-image validation harness —
-  trying to make `assert(false, "golden missing")` fail the test.
-- **Kind:** bug (test framework)
-- **What dryopea needs:** `loft test` / `--tests` to mark a
-  test as FAILED when `state.database.runtime_error` is set
-  after the test function returns.
-
-  **Current behaviour:** when an `assert(condition, msg)` fires
-  with `!condition`, `n_assert` in `src/native.rs` populates
-  `stores.runtime_error` (the C66 "typed runtime error" path).
-  The dispatch loop in `state/mod.rs::execute_argv` short-
-  circuits (`code_pos = u32::MAX`) and `execute_argv` returns
-  cleanly.  No Rust panic occurs.  The test runner's
-  `catch_unwind(execute_argv(...))` returns `Ok(())` → the test
-  is reported as **PASSED** even though the assertion failed.
-
-  Reproducer:
-  ```loft
-  // tests/x.loft
-  fn test_failing_assert() {
-      println("about to assert(false)");
-      assert(false, "this should fail the test");
-      println("LINE AFTER — does not print, so execution halted");
-  }
-  ```
-  ```
-  $ loft --tests tests/x.loft
-  about to assert(false)
-    ok    tests/x.loft  (1 fn: test_failing_assert)
-  test result: ok. 1 passed; 1 file
-  ```
-  Same for `panic("msg")`, `div by zero`, and any
-  `runtime_error`-based fault.
-
-  **Suggested fix:** after `execute_argv` returns in the test
-  runner (`src/test_runner.rs:1033`), check
-  `state.database.runtime_error.is_some()` (and/or
-  `had_fatal`).  If so, treat the test as failed with the
-  error's message.
-- **Workaround in dryopea:** `assert_golden` in
-  `src/golden.loft` writes a loud failure marker to stderr +
-  a `tests/actual/_FAILED_<name>.txt` file on
-  mismatch.  CI / dev workflow greps for that marker after
-  `loft test` to determine real pass/fail.
-- **Loft pointer:** test_runner.rs:1033 (catch_unwind site);
-  native.rs:480 (n_assert sets runtime_error);
-  state/mod.rs:1966 (dispatch-loop short-circuit).
+*(none — the three filed entries are now Resolved; see § Resolved.)*
 
 ## Investigated — no bug
 
@@ -199,4 +110,69 @@ palette.
 
 ## Resolved
 
-*(none yet)*
+> Verified against `~/Documents/loft/target/release/loft` built
+> from commit 42f8228 ("Fix @P366/@P367/@P368") on 2026-05-27.
+> Dryopea suite 60/60 still green; per-bug reproducers in
+> `$TMPDIR/p_followups/loft_fixes/`.
+
+### @P367 — Test runner now surfaces assertion / runtime_error failures
+
+- **Loft commit:** 42f8228 (`src/test_runner.rs`)
+- **Fix:** test runner now extracts `had_fatal` +
+  `runtime_error.message` from the run closure and routes
+  typed-runtime-error halts through `matches_expect_fail`,
+  so `assert(false, msg)` / `panic` / div-by-zero / any C66
+  fault scores FAILED.  Side-effect: also repaired
+  `@EXPECT_FAIL` for typed-error paths the panic-only code
+  had silently broken.
+- **Verified by dryopea:** `loft --tests
+  $TMPDIR/p_followups/loft_fixes/p367_assert_fail.loft` now
+  prints `FAIL  p367_assert_fail.loft::test_failing_assert
+  — assertion failed: this should fail the test`, exit 1.
+  A passing neighbour test in the same file still reports
+  `ok` correctly.
+- **Workaround retired:** `scripts/test.sh`'s marker-file
+  grep (`_FAILED_*.txt`) is still active because
+  `assert_golden` writes markers as a side-effect — but the
+  marker is now a **redundant safety net**, not a primary
+  failure signal.  The test runner alone is now sufficient.
+  Marker-file path will be removed in a future cleanup.
+
+### @P366 — `text as vector<Struct>` accepts JSON with extra fields
+
+- **Loft commit:** 42f8228 (`src/database/structures.rs`)
+- **Fix:** `walk_parsed_struct` now skips unknown JSON keys
+  lenient-ignore style (one shared site, both backends),
+  matching the dynamic `JsonValue` walker.  Missing declared
+  fields still default-fill.  The strict-reject assertion in
+  `tests/data_structures.rs::record` was flipped to expect
+  the new behaviour.
+- **Verified by dryopea:** dropped the 4 workaround fields
+  (`variant`, `color_status`, `height_override`,
+  `end_drivable`) from `GroundType` in `src/palette.loft`.
+  All 18 `tests/01_e2_palette.loft` tests still green,
+  golden renders byte-match.  Reproducer:
+  `$TMPDIR/p_followups/loft_fixes/p366_json_extras.loft`.
+- **Workaround retired:** GroundType matches the design intent
+  (9 fields) instead of mirroring every key in palette.json.
+
+### @P368 — No warning on division by a non-zero literal constant (PARTIAL)
+
+- **Loft commit:** 42f8228 (`src/parser/operators.rs`)
+- **Fix:** `lit_nonzero` now matches Int/Long/Float/Single
+  literals (was Int-only), so `x / 0.75`, `x / 2.0`, `n / 4`,
+  `n / 2` no longer warn.  Warning wording also reworded
+  ("integer division/modulus" → generic "division").
+- **Verified by dryopea:** all-float and all-int literal-
+  divisor forms suppress cleanly.  Reproducer:
+  `$TMPDIR/p_followups/loft_fixes/p368_div_warn.loft`.
+- **Remaining gap:** `float / int_literal` (e.g. `12.0 / 3`)
+  still warns.  Filed as a new § Open entry above.  Not
+  blocking — the residual is one-character workaround
+  (`3.0` instead of `3`).
+- **Workaround partially retired:** the mid-precision
+  precomputed-reciprocal pattern in `src/world.loft` is no
+  longer strictly necessary, but kept for clarity / standard
+  graphics idiom.  The other warn-suppressor — `1.0 / ppm`
+  in `src/render.loft` — would still warn (variable
+  divisor) and is unrelated to @P368.

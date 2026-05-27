@@ -23,15 +23,6 @@ pub struct GroundType {
     walk_ground:     boolean,
     walk_vehicle:    boolean,
     buildable:       boolean,
-    // Optional fields present on some palette.json entries.
-    // Declared here because the language's text-as-vector<T>
-    // JSON cast silently returns an empty vector when the JSON
-    // has fields the struct doesn't declare (filed in
-    // QUESTIONS_FOR_LOFT.md).
-    variant:         text,
-    color_status:    text,
-    height_override: float,
-    end_drivable:    boolean,
 }
 
 pub fn load_palette(path: text) -> vector<GroundType> {
