@@ -24,8 +24,9 @@ if [[ ! -x "$LOFT" ]]; then
     exit 2
 fi
 
-# Drop stale actuals so a vanished test can't leave a PNG behind.
-rm -f "$ROOT"/tests/actual/*.png
+# Drop stale actuals so a vanished test can't leave a PNG or JSON
+# behind from a previous run.
+rm -f "$ROOT"/tests/actual/*.png "$ROOT"/tests/actual/*.json
 
 cd "$ROOT"
 exec "$LOFT" test --lib "$LIB" --no-warnings

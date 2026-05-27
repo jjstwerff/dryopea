@@ -1,0 +1,179 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 01 phase E4 — save / load round-trip.
+//
+// Tests the on-disk MapFile JSON path: paint_to_mapfile,
+// save_map_file (writes JSON), load_map_file (reads JSON),
+// mapfile_to_painted (rebuilds the painted hash + resolves
+// kind names back to palette indices).
+//
+// Empty-world / empty-vector cases are deliberately NOT
+// exercised yet — they hit two known loft JSON-cast bugs
+// (cast hangs on missing fields; cast corrupts a text field
+// preceding an empty vector).  See QUESTIONS_FOR_LOFT.md
+// "Open" section.  E4's MapFile schema is the minimum
+// non-empty subset; plan 04 § L1 fills the rest after the
+// bugs ship.
+
+use dryopea;
+
+const E4_SAVE: text = "tests/actual/01_e4_saveload.json";
+
+// ─── palette_index_of (name → index lookup) ────────────────────
+
+fn test_palette_index_of_known() {
+    tpi_pal = load_palette("examples/palette.json");
+    assert(palette_index_of(tpi_pal, "sea")   == 0, "sea is index 0");
+    assert(palette_index_of(tpi_pal, "grass") == 5, "grass is index 5");
+    assert(palette_index_of(tpi_pal, "wall")  == 9, "wall is index 9");
+}
+
+fn test_palette_index_of_missing() {
+    tpim_pal = load_palette("examples/palette.json");
+    assert(palette_index_of(tpim_pal, "nonexistent_kind") == -1, "missing → -1");
+    assert(palette_index_of(tpim_pal, "") == -1, "empty → -1");
+}
+
+// ─── paint_to_mapfile (hash → MapFile) ─────────────────────────
+
+fn test_paint_to_mapfile_basic() {
+    tptm_w = painted_empty();
+    paint(tptm_w, 0, 0, 5 as u8);
+    paint(tptm_w, 1, 0, 9 as u8);
+    paint(tptm_w, 2, 0, 9 as u8);
+    tptm_cam = camera_at(3, -2, 2);
+    tptm_pal = load_palette("examples/palette.json");
+
+    tptm_mf = paint_to_mapfile(tptm_w, tptm_cam, tptm_pal, "tiny");
+
+    assert(tptm_mf.version == 1, "version");
+    assert(tptm_mf.name == "tiny", "name");
+    assert(len(tptm_mf.ground) == 3, "3 ground entries");
+    assert(tptm_mf.cam_q == 3, "cam_q");
+    assert(tptm_mf.cam_r == -2, "cam_r");
+    assert(tptm_mf.cam_zoom == 2, "cam_zoom");
+}
+
+fn test_paint_to_mapfile_resolves_names() {
+    tpmn_w = painted_empty();
+    paint(tpmn_w, 5, 7, 5 as u8);   // grass
+    paint(tpmn_w, 5, 8, 9 as u8);   // wall
+    tpmn_cam = camera_default();
+    tpmn_pal = load_palette("examples/palette.json");
+
+    tpmn_mf = paint_to_mapfile(tpmn_w, tpmn_cam, tpmn_pal, "named");
+
+    // At least one entry per kind, with the palette name
+    tpmn_has_grass = false;
+    tpmn_has_wall  = false;
+    for tpmn_e in tpmn_mf.ground {
+        if tpmn_e.kind == "grass" { tpmn_has_grass = true; }
+        if tpmn_e.kind == "wall"  { tpmn_has_wall  = true; }
+    }
+    assert(tpmn_has_grass, "grass kind name preserved");
+    assert(tpmn_has_wall,  "wall kind name preserved");
+}
+
+// ─── save + load round-trip ────────────────────────────────────
+
+fn test_save_load_round_trip() {
+    tslr_w = painted_empty();
+    paint(tslr_w, 0, 0, 5 as u8);   // grass
+    paint(tslr_w, 1, 0, 9 as u8);   // wall
+    paint(tslr_w, 2, 0, 9 as u8);   // wall
+    tslr_cam = camera_at(3, -2, 2);
+    tslr_pal = load_palette("examples/palette.json");
+
+    tslr_mf = paint_to_mapfile(tslr_w, tslr_cam, tslr_pal, "tiny");
+    save_map_file(tslr_mf, E4_SAVE);
+
+    tslr_mf2 = load_map_file(E4_SAVE);
+
+    assert(tslr_mf2.version == 1, "version round-trips");
+    assert(tslr_mf2.name == "tiny", "name round-trips");
+    assert(len(tslr_mf2.ground) == 3, "3 ground entries round-trip");
+    assert(tslr_mf2.cam_q == 3, "cam_q round-trips");
+    assert(tslr_mf2.cam_r == -2, "cam_r round-trips");
+    assert(tslr_mf2.cam_zoom == 2, "cam_zoom round-trips");
+}
+
+fn test_round_trip_recovers_kinds() {
+    trtk_w = painted_empty();
+    paint(trtk_w, 0, 0, 5 as u8);
+    paint(trtk_w, 1, 0, 9 as u8);
+    paint(trtk_w, 2, 0, 9 as u8);
+    trtk_cam = camera_default();
+    trtk_pal = load_palette("examples/palette.json");
+
+    trtk_mf = paint_to_mapfile(trtk_w, trtk_cam, trtk_pal, "recover");
+    save_map_file(trtk_mf, E4_SAVE);
+    trtk_mf2 = load_map_file(E4_SAVE);
+    trtk_w2 = mapfile_to_painted(trtk_mf2, trtk_pal);
+
+    assert(painted_count(trtk_w2) == 3, "3 entries painted on rebuild");
+    assert(lookup_painted(trtk_w2, 0, 0) == 5 as u8, "grass at (0,0)");
+    assert(lookup_painted(trtk_w2, 1, 0) == 9 as u8, "wall at (1,0)");
+    assert(lookup_painted(trtk_w2, 2, 0) == 9 as u8, "wall at (2,0)");
+}
+
+// ─── mapfile_to_painted edge cases ─────────────────────────────
+
+fn test_unknown_kind_is_skipped() {
+    // A MapFile with a bogus kind name shouldn't paint the bad
+    // entry; valid neighbours still paint.
+    tuks_mf = MapFile {
+        version:  1,
+        name:     "bad",
+        cam_q: 0, cam_r: 0, cam_zoom: 1,
+        ground: [
+            GroundEntry { q: 0, r: 0, kind: "grass" },
+            GroundEntry { q: 1, r: 0, kind: "no_such_kind" },
+            GroundEntry { q: 2, r: 0, kind: "wall" },
+        ],
+    };
+    tuks_pal = load_palette("examples/palette.json");
+    tuks_w = mapfile_to_painted(tuks_mf, tuks_pal);
+
+    assert(painted_count(tuks_w) == 2, "bogus kind skipped (2 of 3 painted)");
+    assert(lookup_painted(tuks_w, 0, 0) == 5 as u8, "grass at (0,0)");
+    assert(lookup_painted(tuks_w, 1, 0) == 0 as u8, "(1,0) sea (skipped)");
+    assert(lookup_painted(tuks_w, 2, 0) == 9 as u8, "wall at (2,0)");
+}
+
+fn test_save_overwrites_existing_file() {
+    // Saving twice should replace the file contents, not append.
+    tso_w = painted_empty();
+    paint(tso_w, 0, 0, 5 as u8);
+    tso_cam = camera_default();
+    tso_pal = load_palette("examples/palette.json");
+
+    save_map_file(paint_to_mapfile(tso_w, tso_cam, tso_pal, "first"), E4_SAVE);
+
+    paint(tso_w, 10, 10, 9 as u8);
+    save_map_file(paint_to_mapfile(tso_w, tso_cam, tso_pal, "second"), E4_SAVE);
+
+    tso_mf = load_map_file(E4_SAVE);
+    assert(tso_mf.name == "second", "second save overwrote first");
+    assert(len(tso_mf.ground) == 2, "second save has 2 entries (overwrite, not append)");
+}
+
+// ─── JSON cast lenient on extras (regression for @P366) ────────
+
+fn test_load_ignores_unknown_json_keys() {
+    // Hand-craft JSON with an extra top-level key the struct
+    // doesn't declare.  Under @P366's lenient-ignore, this must
+    // still parse cleanly.
+    tljk_json = `{{
+        "version": 1, "name": "extras",
+        "cam_q": 0, "cam_r": 0, "cam_zoom": 1,
+        "ground": [{{"q": 0, "r": 0, "kind": "grass"}}],
+        "future_unknown_field": "should be ignored",
+        "another_extra": 42
+    }}`;
+    tljk_mf = tljk_json as MapFile;
+
+    assert(tljk_mf.name == "extras", "parses despite extras");
+    assert(tljk_mf.version == 1, "version parsed");
+    assert(len(tljk_mf.ground) == 1, "ground entry parsed");
+}

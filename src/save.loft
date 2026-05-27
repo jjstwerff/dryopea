@@ -1,0 +1,89 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Save / load — MapFile <-> JSON on disk + painted-hash adapters.
+//
+// The save format is pretty-printed JSON (the human-readable
+// `{m:#}` formatter), so authored maps + tweaks can be reviewed
+// in a text editor before reloading.  Plan 04 § L1 is the
+// canonical schema; src/map_file.loft holds the in-memory shape.
+//
+// Plan 01 phase E4.
+
+use map_file;
+use palette;
+use painted;
+use camera;
+
+// Linear scan for the palette index of a given type name.
+// Returns -1 if the name is unknown — callers treat that as
+// sea (no entry painted).
+pub fn palette_index_of(palette: vector<GroundType>, name: text) -> integer {
+    for pi_g in palette {
+        if pi_g.name == name {
+            return pi_g#index;
+        }
+    }
+    -1
+}
+
+// Snapshot the current painted world + camera into a fresh
+// MapFile.  Translates each painted hex's u8 palette index back
+// to a name string so the save survives palette additions.
+// Fields not yet edited by E4 (markers, waves, …) populate with
+// placeholders / empty defaults — later plan phases fill them in.
+pub fn paint_to_mapfile(
+    pw:      PaintedWorld,
+    cam:     EditorCamera,
+    palette: vector<GroundType>,
+    name:    text,
+) -> MapFile {
+    ptm_ground: vector<GroundEntry> = [];
+    for ptm_e in pw.painted {
+        ptm_name = palette[ptm_e.kind as integer].name;
+        ptm_ground += [GroundEntry { q: ptm_e.q, r: ptm_e.r, kind: ptm_name }];
+    }
+    MapFile {
+        version:  1,
+        name:     name,
+        cam_q:    cam.pos.q,
+        cam_r:    cam.pos.r,
+        cam_zoom: cam.zoom,
+        ground:   ptm_ground,
+    }
+}
+
+// Write a MapFile to `path` as compact JSON.  Overwrites any
+// existing file.  Uses `:j` (compact) instead of `:#` (pretty)
+// because `:#` produces loft's Debug pretty-print, not JSON.
+// Re-flowing for human-editability lands when loft gets a
+// stable pretty-JSON formatter.
+pub fn save_map_file(m: MapFile, path: text) {
+    smf_out = file(path);
+    smf_out.write("{m:j}");
+}
+
+// Read a MapFile back from `path`.  Kind strings stay as text
+// in the returned struct; convert to a paintable hash with
+// mapfile_to_painted when ready to render.
+pub fn load_map_file(path: text) -> MapFile {
+    file(path).content() as MapFile
+}
+
+// Materialise the painted-world hash from a loaded MapFile.
+// Resolves each entry's `kind` name to a palette u8 index;
+// entries whose name doesn't match the palette are skipped
+// (treated as sea, which leaves the hex unpainted).
+pub fn mapfile_to_painted(
+    m:       MapFile,
+    palette: vector<GroundType>,
+) -> PaintedWorld {
+    mtp_out = painted_empty();
+    for mtp_e in m.ground {
+        mtp_kind = palette_index_of(palette, mtp_e.kind);
+        if mtp_kind > 0 {
+            paint(mtp_out, mtp_e.q, mtp_e.r, mtp_kind as u8);
+        }
+    }
+    mtp_out
+}

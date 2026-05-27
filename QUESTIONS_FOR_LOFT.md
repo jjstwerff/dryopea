@@ -31,6 +31,127 @@ fix / feature, move it to **Resolved**.
 
 ## Open
 
+### `text as Struct` HANGS when the struct has ≥8 declared fields with a vector-of-struct field
+
+- **Found while:** Plan 01 E4 — implementing MapFile save/load.
+  My MapFile had 10 fields (`version`, `name`, four `pa_*`
+  bounds, three `cam_*`, `ground: vector<GroundEntry>`).
+  `text as MapFile` hangs indefinitely.  Bisecting by field
+  count narrowed the trigger to a hard threshold.
+- **Kind:** bug (JSON cast — infinite loop on overflow path)
+- **What loft needs:** the cast walker for struct types
+  appears to overflow a fixed-size scratch buffer / field
+  table when the declared struct has ≥8 fields including
+  a `vector<Struct>`.  Either an off-by-one in the bound
+  check, or an unchecked grow path.  Tight reproducer:
+  ```loft
+  struct Inner { q: integer not null, r: integer not null, kind: text not null }
+  struct G7 {
+      b1: integer not null, b2: integer not null, b3: integer not null,
+      b4: integer not null, b5: integer not null, b6: integer not null,
+      bv: vector<Inner>,
+  }
+  struct G8 {
+      c1: integer not null, c2: integer not null, c3: integer not null,
+      c4: integer not null, c5: integer not null, c6: integer not null,
+      c7: integer not null,
+      cv: vector<Inner>,
+  }
+
+  fn test_g7_works() {
+      json = `{{"b1":1,"b2":2,"b3":3,"b4":4,"b5":5,"b6":6,"bv":[{{"q":0,"r":0,"kind":"grass"}}]}}`;
+      s = json as G7;       // OK
+      println("G7 b1={s.b1}");   // prints "G7 b1=1"
+  }
+
+  fn test_g8_hangs() {
+      json = `{{"c1":1,"c2":2,"c3":3,"c4":4,"c5":5,"c6":6,"c7":7,"cv":[{{"q":0,"r":0,"kind":"grass"}}]}}`;
+      s = json as G8;       // HANGS forever
+      println("never reached");
+  }
+  ```
+  G7 = 7 fields (6 ints + 1 vector) → works.
+  G8 = 8 fields (7 ints + 1 vector) → hangs.
+  No timeout, no error — just an infinite loop.
+- **Related observations** (the wide-sandwich shape I
+  originally suspected is just a special case of the
+  field-count threshold — `Wide4 (4) + ground (1) +
+  Wide3 (3) = 8` declared slots in the outer struct):
+  - Two NESTED structs sandwiching a `vector<Struct>` also
+    hangs when the nested-struct widths sum to ≥7 outer
+    fields; single-field nested types fit under the
+    threshold and don't trigger it.
+- **Workaround in dryopea:** keep MapFile at 6 fields
+  (`version`, `name`, `cam_q`, `cam_r`, `cam_zoom`,
+  `ground`).  Plan 04 § L1 expands once this ships.
+- **Loft pointer:** `src/database/structures.rs::walk_parsed_struct`
+  (the @P366 fix site) — likely a 7-entry or 8-entry field
+  table that overflows.
+
+### `text as Struct` CORRUPTS the field preceding an empty `[]` array
+
+- **Found while:** Plan 01 E4 — empty `markers: []` / `waves: []`
+  in MapFile JSON wrecked the field immediately before them.
+- **Kind:** bug (JSON cast — scanner position lost)
+- **What loft needs:** when the cast encounters an empty
+  array `[]`, it appears to advance the input pointer
+  incorrectly, so the NEXT field is matched against the
+  PREVIOUS key's slot.  Net: the previous field's value
+  reads back wrong.
+- **Reproducer:**
+  ```loft
+  struct Item { x: integer not null }
+  struct Box { name: text not null, items: vector<Item> }
+  fn test() {
+      json = `{{"name":"b","items":[]}}`;
+      b = json as Box;
+      println("name=[{b.name}]");  // observed: name=[]  (corrupted)
+                                    // expected: name=[b]
+  }
+  ```
+  Variants:
+  - `vector<integer>` instead of `vector<Item>` → same bug,
+    but corruption flavour differs (`name` came back as " ").
+  - Empty `[]` BEFORE the populated field (`{"items":[],"name":"b"}`)
+    → no corruption (works fine).  Only `[]`-then-field is broken.
+  - Non-empty array (`{"name":"b","items":[{"x":1}]}`) → no
+    corruption.  Only EMPTY `[]` triggers it.
+- **Workaround in dryopea:** structurally avoid empty
+  vectors in the saved JSON.  E4 ships without `markers` /
+  `waves` / `description` fields; plan 04 § L1 adds them
+  once this bug ships.
+- **Loft pointer:** same site as the wide-sandwich bug
+  above — `walk_parsed_struct` empty-array handling.
+
+### `{m:j}` JSON formatter OMITS empty / default field values
+
+- **Found while:** Plan 01 E4 — `paint_to_mapfile` produced
+  a MapFile with `description: ""`, `markers: []`, `waves: []`;
+  `{m:j}` formatter dropped all three from the output.
+- **Kind:** bug (silent data loss on save side)
+- **What loft needs:** `{m:j}` should emit EVERY declared
+  field, including empty strings / empty vectors / zero
+  integers.  Today it drops them, so the round-trip
+  `save_map_file → load_map_file` parses JSON that doesn't
+  match the declared struct shape — which then either
+  default-fills (a feature) or hangs (the bug above).
+  Even with the cast bugs fixed, silently emitting partial
+  JSON is hostile to consumers who hand-edit the file.
+- **Reproducer:**
+  ```loft
+  struct S { a: text not null, b: vector<integer>, c: integer not null }
+  fn test_omits() {
+      s = S { a: "", b: [], c: 0 };
+      println("{s:j}");
+      // observed: {}
+      // expected: {"a":"","b":[],"c":0}
+  }
+  ```
+- **Workaround in dryopea:** drop fields whose values would
+  ever be empty (markers, waves, description, etc.) and
+  hand-author placeholder content for the rest.  Constrains
+  the editor's save schema until this ships.
+
 ### Div-by-zero warning still fires on `float / int_literal`
 
 - **Found while:** Re-verifying the @P368 fix on 2026-05-27.

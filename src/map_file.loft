@@ -1,0 +1,45 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// MapFile — the on-disk JSON shape for a saved map.
+//
+// One format, shared between editor (this plan) and game
+// (plan 04 § L1).  Plan 01 E4 ships a MINIMAL schema —
+// six fields — to dodge an 8+-field loft JSON-cast hang
+// (`text as Struct` hangs forever when the struct has
+// 8+ declared fields including a vector-of-struct).
+//
+// Why ≤7 fields: empirically, a struct with version + name +
+// pa_* + cam_* + ground = 10 fields hangs; trimming to 6
+// fields works.  See QUESTIONS_FOR_LOFT.md for the
+// minimal reproducer.  Plan 04 § L1 expands the schema
+// (markers / waves / objective / play_area) once the loft
+// bug ships.
+//
+// Deviation from plan 04's draft schema: ground entries use
+// `"kind": "<name>"` instead of `"type": "<name>"` because
+// `type` is a reserved keyword in loft (can't be a field name).
+//
+// Plan 01 phase E4.
+
+// One persisted hex.  `kind` is the palette type *name* (e.g.
+// "grass"), NOT the u8 palette index — names stay stable as
+// the palette grows; indices don't.
+pub struct GroundEntry {
+    q:    integer not null,
+    r:    integer not null,
+    kind: text    not null,
+}
+
+// The save record.  Six top-level fields; vector last.
+// `cam_*` are inlined as primitives rather than a CameraSave
+// nested struct because two nested structs around a vector
+// trip the same loft cast bug at a smaller threshold.
+pub struct MapFile {
+    version:  integer not null,
+    name:     text    not null,
+    cam_q:    integer not null,
+    cam_r:    integer not null,
+    cam_zoom: integer not null,
+    ground:   vector<GroundEntry>,
+}
