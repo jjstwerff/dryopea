@@ -1,0 +1,154 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 03 phase M1 — marker data layer + sidecar save/load.
+//
+// Covers: sparse hash semantics (place / remove / lookup, absent =
+// no marker), kind/direction round-trip, MarkerWorld → MarkerFile
+// → JSON → MarkerFile → MarkerWorld round-trip, the "skip empty
+// save" rule (avoids the loft empty-vector cast bug on reload),
+// and the load-or-empty cold-start path.
+
+use dryopea;
+
+const M1_SAVE: text = "tests/actual/03_m1_markers.json";
+
+// ─── Sparse semantics (place / lookup / remove) ────────────────
+
+fn test_marker_default_is_empty() {
+    tmdie_w = marker_empty();
+    assert(marker_count(tmdie_w) == 0, "empty world has 0 markers");
+    assert(!has_marker(tmdie_w, 0, 0), "no marker at (0,0) on empty");
+    assert(marker_kind(tmdie_w, 0, 0) == -1, "lookup miss returns -1");
+}
+
+fn test_place_spawn_inserts() {
+    tpsi_w = marker_empty();
+    place_spawn(tpsi_w, 3, -1, 2 as u8);
+    assert(marker_count(tpsi_w) == 1, "1 marker placed");
+    assert(has_marker(tpsi_w, 3, -1), "has_marker at placed hex");
+    assert(marker_kind(tpsi_w, 3, -1) == MARKER_KIND_SPAWN, "kind is spawn");
+    assert(marker_direction(tpsi_w, 3, -1) == 2 as u8, "direction stored");
+}
+
+fn test_place_spawn_overwrites_direction() {
+    tpsod_w = marker_empty();
+    place_spawn(tpsod_w, 5, 5, 0 as u8);
+    place_spawn(tpsod_w, 5, 5, 4 as u8);
+    assert(marker_count(tpsod_w) == 1, "still 1 marker (overwrite, not append)");
+    assert(marker_direction(tpsod_w, 5, 5) == 4 as u8, "direction updated to 4");
+}
+
+fn test_remove_marker_clears() {
+    trmc_w = marker_empty();
+    place_spawn(trmc_w, 1, 1, 3 as u8);
+    place_spawn(trmc_w, 2, 2, 1 as u8);
+    assert(marker_count(trmc_w) == 2, "2 placed");
+
+    remove_marker(trmc_w, 1, 1);
+    assert(marker_count(trmc_w) == 1, "1 left after remove");
+    assert(!has_marker(trmc_w, 1, 1), "removed hex has no marker");
+    assert(has_marker(trmc_w, 2, 2), "other hex still has its marker");
+}
+
+fn test_remove_missing_is_noop() {
+    trmn_w = marker_empty();
+    remove_marker(trmn_w, 7, 7);   // nothing to remove
+    assert(marker_count(trmn_w) == 0, "still empty");
+    // Placing then double-removing should not underflow / panic
+    place_spawn(trmn_w, 7, 7, 0 as u8);
+    remove_marker(trmn_w, 7, 7);
+    remove_marker(trmn_w, 7, 7);
+    assert(marker_count(trmn_w) == 0, "double-remove is idempotent");
+}
+
+fn test_sparse_only_placed_hexes_stored() {
+    tsoph_w = marker_empty();
+    place_spawn(tsoph_w, 0, 0, 0 as u8);
+    place_spawn(tsoph_w, 100, -100, 5 as u8);   // far apart
+    assert(marker_count(tsoph_w) == 2, "sparse — only 2 entries despite range");
+    assert(!has_marker(tsoph_w, 50, -50), "untouched hex has nothing");
+}
+
+// ─── Save / load round-trip ────────────────────────────────────
+
+fn test_save_load_round_trip() {
+    tslr_w = marker_empty();
+    place_spawn(tslr_w, 10, 0, 0 as u8);
+    place_spawn(tslr_w, 0, 10, 2 as u8);
+    place_spawn(tslr_w, -10, -10, 4 as u8);
+
+    save_markers(tslr_w, "roundtrip", M1_SAVE);
+
+    tslr_w2 = load_markers_or_empty(M1_SAVE);
+    assert(marker_count(tslr_w2) == 3, "3 markers round-trip");
+    assert(marker_direction(tslr_w2, 10, 0) == 0 as u8, "dir 0 preserved");
+    assert(marker_direction(tslr_w2, 0, 10) == 2 as u8, "dir 2 preserved");
+    assert(marker_direction(tslr_w2, -10, -10) == 4 as u8, "dir 4 preserved");
+    assert(marker_kind(tslr_w2, 10, 0) == MARKER_KIND_SPAWN, "kind preserved");
+}
+
+fn test_empty_world_skips_write() {
+    // An empty marker world MUST NOT write the sidecar — the
+    // empty-vector reload would trip the loft cast bug.  Verify
+    // by saving an empty world and then asserting load returns
+    // empty without error.
+    tews_path = "tests/actual/03_m1_empty_skip.json";
+    tews_w = marker_empty();
+    save_markers(tews_w, "empty", tews_path);
+
+    // file should not exist (or be ignored on load); load returns
+    // an empty world either way
+    tews_w2 = load_markers_or_empty(tews_path);
+    assert(marker_count(tews_w2) == 0, "load of skipped save is empty");
+    assert(!file(tews_path).exists(), "save_markers of empty world wrote nothing");
+}
+
+fn test_cold_start_missing_sidecar() {
+    // Cold start (sidecar absent) yields an empty marker world.
+    tcs_path = "tests/actual/03_m1_does_not_exist.json";
+    // Pre-clean — the path must NOT exist
+    if file(tcs_path).exists() {
+        // Truncate to a known empty state; even an empty file
+        // counts as exists, but for cold-start we want absence.
+        // The cleanest portable trick: leave it alone if it
+        // doesn't exist (the assertion below covers the path).
+    }
+    tcs_w = load_markers_or_empty(tcs_path);
+    assert(marker_count(tcs_w) == 0, "missing sidecar = empty");
+}
+
+fn test_overwrites_existing_sidecar() {
+    // Saving twice replaces the file contents (not append).
+    toes_w = marker_empty();
+    place_spawn(toes_w, 1, 1, 0 as u8);
+    save_markers(toes_w, "first", M1_SAVE);
+
+    place_spawn(toes_w, 2, 2, 3 as u8);
+    save_markers(toes_w, "second", M1_SAVE);
+
+    toes_w2 = load_markers_or_empty(M1_SAVE);
+    assert(marker_count(toes_w2) == 2, "second save has both markers (overwrite, not append)");
+    assert(has_marker(toes_w2, 1, 1), "first marker still present");
+    assert(has_marker(toes_w2, 2, 2), "second marker present");
+}
+
+fn test_unknown_kind_skipped_on_load() {
+    // A sidecar containing a future marker variant we don't yet
+    // recognise should load WITHOUT it (forward-compat) — known
+    // kinds still materialise.
+    tuks_mf = MarkerFile {
+        version: 1,
+        name:    "future",
+        markers: [
+            MarkerEntry { q: 0, r: 0, kind: MARKER_KIND_SPAWN as u8, direction: 0 as u8 },
+            MarkerEntry { q: 1, r: 0, kind: 99 as u8,                direction: 0 as u8 },
+            MarkerEntry { q: 2, r: 0, kind: MARKER_KIND_SPAWN as u8, direction: 3 as u8 },
+        ],
+    };
+    tuks_w = markerfile_to_world(tuks_mf);
+    assert(marker_count(tuks_w) == 2, "future kind 99 skipped (2 of 3 loaded)");
+    assert(has_marker(tuks_w, 0, 0), "spawn at (0,0) loaded");
+    assert(!has_marker(tuks_w, 1, 0), "future kind at (1,0) skipped");
+    assert(has_marker(tuks_w, 2, 0), "spawn at (2,0) loaded");
+}

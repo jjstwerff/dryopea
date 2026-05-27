@@ -1,0 +1,97 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Sparse marker layer — placeholder content the runtime reads
+// but the painted palette doesn't represent (spawn points,
+// future item positions, patrol nodes, …).  Parallel to the
+// painted ground layer (`src/painted.loft`): same sparse
+// `hash<...[q, r]>` discipline, same two-keys-as-coords pattern,
+// same "absent = nothing here" implicit default.
+//
+// Flat-struct shape over an enum-with-payload because:
+//   - dryopea's existing palette layer already uses a u8
+//     discriminant (`PaintedHex.kind`), and the parallel reads
+//     better when both layers share that idiom.
+//   - One on-disk JSON shape carries every marker variant
+//     (just adds fields per future kind), so plan 04's map file
+//     doesn't have to enumerate enum tags.
+//   - Loft's enum-with-variant-payload support hasn't been
+//     exercised in dryopea yet; sticking to the proven
+//     struct + u8-discriminant pattern keeps M1 boring.
+//
+// Plan 03 phase M1.
+
+use world;
+
+// Marker kind discriminants.  Add a new constant per kind as it
+// lands; the on-disk format carries the integer, so renumbering
+// is a breaking change — always APPEND, never reorder.
+pub const MARKER_KIND_SPAWN: integer = 0;
+
+// One placed marker.  `direction` is meaningful only for spawn
+// markers (0..5 hex cardinal directions); future kinds may
+// reinterpret the field (e.g. item kind id), repurpose it, or
+// ignore it.  The flat shape keeps the on-disk JSON one schema.
+pub struct MarkerEntry {
+    q:         integer not null,
+    r:         integer not null,
+    kind:      u8      not null,
+    direction: u8      not null,
+}
+
+// The marker layer container — a hash must be a struct field
+// (loft idiom; see painted.loft § PaintedWorld for the same
+// shape).
+pub struct MarkerWorld {
+    markers: hash<MarkerEntry[q, r]>,
+}
+
+// Factory: empty marker world (no markers anywhere).
+pub fn marker_empty() -> MarkerWorld {
+    MarkerWorld { markers: [] }
+}
+
+// Place a spawn marker.  Overwrites an existing marker at the
+// same hex — last-write-wins on direction.  Use `remove_marker`
+// to clear a placed marker.
+pub fn place_spawn(w: &MarkerWorld, q: integer, r: integer, direction: u8) {
+    w.markers[q, r] = MarkerEntry {
+        q:         q,
+        r:         r,
+        kind:      MARKER_KIND_SPAWN as u8,
+        direction: direction,
+    };
+}
+
+// Remove the marker at (q, r), if any.  No-op on an empty hex.
+pub fn remove_marker(w: &MarkerWorld, q: integer, r: integer) {
+    w.markers[q, r] = null;
+}
+
+// Is there a marker at (q, r)?  Sparse default: absent hex = false.
+pub fn has_marker(w: const MarkerWorld, q: integer, r: integer) -> boolean {
+    e = w.markers[q, r];
+    e != null
+}
+
+// Look up the marker kind at (q, r).  Returns -1 on miss so the
+// caller can distinguish "no marker" from "kind 0 (spawn)" without
+// needing the boolean check.
+pub fn marker_kind(w: const MarkerWorld, q: integer, r: integer) -> integer {
+    e = w.markers[q, r];
+    if e == null { -1 } else { e.kind as integer }
+}
+
+// Look up the marker direction at (q, r).  Returns 0 on miss
+// (callers should guard with `has_marker` first if "no marker"
+// matters — direction 0 is a valid spawn heading).
+pub fn marker_direction(w: const MarkerWorld, q: integer, r: integer) -> u8 {
+    e = w.markers[q, r];
+    if e == null { 0 as u8 } else { e.direction }
+}
+
+// Count of placed markers across all kinds.  Sparse — empty hexes
+// are not stored.
+pub fn marker_count(w: const MarkerWorld) -> integer {
+    len(w.markers)
+}

@@ -1,0 +1,33 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// MarkerFile — the on-disk JSON shape for the marker sidecar.
+//
+// Stored ALONGSIDE the main save (`map_file.loft`), in a separate
+// file, NOT folded into MapFile.  Reasons:
+//   1. Avoids re-tripping the loft JSON-cast 8-field threshold
+//      (see QUESTIONS_FOR_LOFT.md § "text as Struct" HANGS — the
+//      MapFile cap is 6 fields today).
+//   2. Decouples bulk runtime data (markers will grow) from the
+//      painted-layer save — independent file lifecycles, simpler
+//      schema evolution per layer.
+//   3. Mirrors how plan 04 § L1 will eventually structure the
+//      multi-layer save (one sidecar per data layer).
+//
+// Three top-level fields here — safely below any known cast
+// threshold.
+//
+// Plan 03 phase M1.
+
+use markers;
+
+// The marker sidecar record.  `markers` MUST be non-empty when
+// this file exists on disk (see `save_markers` in save.loft —
+// it skips the write when the world has no markers, so an empty
+// vector never round-trips through `:j` / `text as MarkerFile`
+// and the known empty-vector cast bugs can't bite).
+pub struct MarkerFile {
+    version: integer        not null,
+    name:    text           not null,
+    markers: vector<MarkerEntry>,
+}

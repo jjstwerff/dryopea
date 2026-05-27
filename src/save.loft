@@ -11,6 +11,8 @@
 // Plan 01 phase E4.
 
 use map_file;
+use marker_file;
+use markers;
 use palette;
 use painted;
 use camera;
@@ -117,5 +119,90 @@ pub fn load_map_or_empty(
         (lme_pw, lme_cam)
     } else {
         (painted_empty(), camera_default())
+    }
+}
+
+// ─── Marker sidecar ────────────────────────────────────────────
+//
+// Plan 03 M1.  Stored at <main-save>_markers.json — adjacent to
+// the painted-layer save but a separate file.  Independent
+// lifecycle: an empty marker world writes NOTHING (avoids the
+// loft empty-vector cast bug); on load, sidecar absence = empty
+// world (the load-or-empty pattern from above, reused).
+
+// Snapshot the current marker world into a MarkerFile.
+pub fn marker_world_to_file(mw: MarkerWorld, name: text) -> MarkerFile {
+    mwtf_out: vector<MarkerEntry> = [];
+    for mwtf_e in mw.markers {
+        mwtf_out += [MarkerEntry {
+            q:         mwtf_e.q,
+            r:         mwtf_e.r,
+            kind:      mwtf_e.kind,
+            direction: mwtf_e.direction,
+        }];
+    }
+    MarkerFile {
+        version: 1,
+        name:    name,
+        markers: mwtf_out,
+    }
+}
+
+// Write a MarkerFile to `path` as compact JSON.  Same `:j`
+// formatter caveat as MapFile (omits empty defaults), so the
+// caller (`save_markers`) only invokes this when the markers
+// vector is non-empty.
+pub fn save_marker_file(mf: MarkerFile, path: text) {
+    smf_out = file(path);
+    smf_out.write("{mf:j}");
+}
+
+// Read a MarkerFile back from `path`.
+pub fn load_marker_file(path: text) -> MarkerFile {
+    file(path).content() as MarkerFile
+}
+
+// Materialise a MarkerWorld from a loaded MarkerFile.  Unknown
+// `kind` values (future variants we don't recognise yet) are
+// skipped — forward-compat with the same lenient policy as
+// mapfile_to_painted.
+pub fn markerfile_to_world(mf: MarkerFile) -> MarkerWorld {
+    mftw_out = marker_empty();
+    for mftw_e in mf.markers {
+        if mftw_e.kind == MARKER_KIND_SPAWN as u8 {
+            place_spawn(mftw_out, mftw_e.q, mftw_e.r, mftw_e.direction);
+        }
+    }
+    mftw_out
+}
+
+// Save the marker world to `path`, IF the world has any
+// markers.  An empty marker world writes NOTHING — callers
+// rely on file-absent = empty-world (avoiding the cast bug on
+// reload of an empty `markers: []`).
+//
+// Edge case: a world that previously had markers, then had
+// them all removed, then saved, will leave a stale sidecar.
+// M3 (the editor UI) handles the explicit delete then; M1
+// callers should manually remove the sidecar if they need a
+// clean slate.
+pub fn save_markers(mw: MarkerWorld, name: text, path: text) {
+    if marker_count(mw) == 0 {
+        return;
+    }
+    sm_mf = marker_world_to_file(mw, name);
+    save_marker_file(sm_mf, path);
+}
+
+// Load markers from `path`.  Sidecar absent (or save_markers
+// having skipped a no-markers write) returns an empty
+// MarkerWorld — the editor's cold-start entry point for the
+// marker layer.
+pub fn load_markers_or_empty(path: text) -> MarkerWorld {
+    if file(path).exists() {
+        lmoe_mf = load_marker_file(path);
+        markerfile_to_world(lmoe_mf)
+    } else {
+        marker_empty()
     }
 }

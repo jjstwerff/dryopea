@@ -15,4 +15,6 @@ use golden;
 use palette;
 use picker;
 use map_file;
+use markers;
+use marker_file;
 use save;
