@@ -34,6 +34,7 @@ do next?" question in 30 seconds.
 | [`future/03-marker-layer-and-spawns/`](future/03-marker-layer-and-spawns/README.md) | M | plan 01 | Second sparse layer; multi-direction spawn points |
 | [`future/04-map-library/`](future/04-map-library/README.md) | M | plan 01 + plan 03 | MapFile schema + map index + browser + content |
 | [`future/05-validation-scenario/`](future/05-validation-scenario/README.md) | M | plans 01-04 | Minimum playable thing; integration spec |
+| [`future/06-editor-stencil-pipeline/`](future/06-editor-stencil-pipeline/README.md) | MH | plan 01 + loft `lib/graphics` mesh API | Editor-as-content-pipeline; multi-layer + bridges + stencil mode + mesh baker + composition.  Brings the suite into rapid prototyping; two shipping paths (polish or strike).  Indie unlock: ship full games on stencil output alone — viable engine offering for devs without an art team |
 
 Several Tier-B / Tier-C / Tier-D features in
 [`ROADMAP.md`](ROADMAP.md) don't have plan slots yet

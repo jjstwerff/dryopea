@@ -45,11 +45,16 @@ deep yet; just real.
 
 ---
 
-## Tier B — Combat depth
+## Tier B — Combat depth + content pipeline
 
-Skilled play hooks.  Each row is opt-in; an entry-level player
-can ignore the lot and still complete missions.  Documented at
-[DESIGN.md § 7 Combat dynamics](../docs/DESIGN.md#7-combat-dynamics).
+Skilled play hooks **and** the editor-to-entity content
+pipeline.  Two parallel arcs that don't strictly depend on
+each other but both gate the depth tiers above them.
+
+### Combat depth (DESIGN § 7)
+
+Skilled-play opt-in mechanics; an entry-level player can
+ignore the lot and still complete missions.
 
 | Feature | Status | Slot | Brief |
 |---|---|---|---|
@@ -66,10 +71,55 @@ can ignore the lot and still complete missions.  Documented at
 | Tactical type-swap mid-combat | drafted | DESIGN § 7 | Different-type spare in swap pit |
 | New tower order via beacon ferry | drafted | DESIGN § 7 | Carry beacon from core to build site |
 
-Likely candidate for a single dedicated plan slot
-(`plan 06 — Tower mechanics depth`?) covering the strain /
-boost / overload / hot-swap arc together — they share
-mechanics and graphics.
+Plan-shaped candidate: `plan-future-XX — Tower mechanics
+depth` covering the strain / boost / overload / hot-swap
+arc together — they share mechanics and graphics.  Slot
+number TBD when the trigger fires.
+
+### Editor-to-entity content pipeline
+
+The whole stencil-from-editor arc — multi-layer painting,
+bridges, stencil authoring mode, mesh baker, mesh
+composition, entity runtime.  Brings the suite into
+**rapid prototyping** posture: think → paint → bake → drop
+into a map → run.
+
+Strategic positioning — **two shipping paths from one
+pipeline**:
+
+- **Polish path** (big-studio): the developer never waits
+  on art to reach a solid playable state; the final art
+  push lands at the end of development on shape-correct
+  stencils that are already in every position.  The polish
+  artist refines what's there.
+- **Strike path** (indie / starting devs): the stencil
+  output IS the shipped aesthetic.  No polish layer.
+  Clean geometric / art-deco / low-poly / block-layout
+  art-direction works as a final shipped style, exactly
+  as it does for many indie successes.  This expands the
+  suite's addressable audience to indies who don't have
+  or need an art team — they ship full games on stencils
+  alone.
+
+See [`plan 06`](future/06-editor-stencil-pipeline/README.md)
+§ Who this serves for the three-audience breakdown
+(dryopea team + studios + indies).
+
+| Feature | Status | Slot | Brief |
+|---|---|---|---|
+| Multi-layer painting (moros-house style) | drafted | [plan 06 S1](future/06-editor-stencil-pipeline/README.md) | Stacked layers per hex; vertical structure |
+| Bridges as a primitive | drafted | [plan 06 S1](future/06-editor-stencil-pipeline/README.md) | Multi-layer connecting spans |
+| Stencil authoring mode | drafted | [plan 06 S2](future/06-editor-stencil-pipeline/README.md) | Same editor, bounded region, separate save format |
+| Mesh baker (stencil → static mesh) | drafted | [plan 06 S2](future/06-editor-stencil-pipeline/README.md) | Scales down to entity size; per-stencil colour |
+| Mesh composition (mount + pivot) | drafted | [plan 06 S3](future/06-editor-stencil-pipeline/README.md) | Tower-base + rotating-top; swivel turrets |
+| Entity runtime (baked meshes as units) | drafted | [plan 06 S3](future/06-editor-stencil-pipeline/README.md) | Spawn, tick, render baked entities |
+| World-dressing prefabs (place a stencil into a map) | drafted | [plan 06 § 1](future/06-editor-stencil-pipeline/README.md) | Old habitats / huge trees / bridges / factories / ruins |
+| Jointed / leg movement extensions | sketch | plan 06 S4 (deferred) | Walking robots, insect locomotion — triggers with tier-2 plan |
+
+Plan slot: [`plan 06 — Editor-to-stencil pipeline`](future/06-editor-stencil-pipeline/README.md)
+covers all of the above as a single coherent initiative,
+with phases S1-S4.  S4 (joints / legs) explicitly deferred
+until tier-2 insects trigger it.
 
 ---
 
