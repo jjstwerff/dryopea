@@ -42,8 +42,18 @@ pub fn paint_to_mapfile(
 ) -> MapFile {
     ptm_ground: vector<GroundEntry> = [];
     for ptm_e in pw.painted {
-        ptm_name = palette[ptm_e.kind as integer].name;
-        ptm_ground += [GroundEntry { q: ptm_e.q, r: ptm_e.r, kind: ptm_name }];
+        // Explicit bounds guard placates loft's OOB static check —
+        // by construction kind is always 0..palette.len()-1 (we
+        // wrote it via paint() with a kind drawn from the same
+        // palette), but the analyser doesn't know that.
+        ptm_idx = ptm_e.kind as integer;
+        if ptm_idx >= 0 && ptm_idx < len(palette) {
+            // Bind via `??` to placate loft's OOB static check —
+            // the bounds guard above already ensures the index is
+            // valid; the fallback is dead code.
+            ptm_pe = palette[ptm_idx] ?? palette[0];
+            ptm_ground += [GroundEntry { q: ptm_e.q, r: ptm_e.r, kind: ptm_pe.name }];
+        }
     }
     MapFile {
         version:  1,

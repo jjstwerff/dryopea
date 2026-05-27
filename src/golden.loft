@@ -31,10 +31,15 @@ pub fn png_bytes_equal(path_a: text, path_b: text) -> boolean {
     pb_fa#format = BigEndian;
     pb_fb#format = BigEndian;
     pb_n = pb_fa.size as integer;
-    for pb_i in 0..pb_n {
+    // `while` instead of `for pb_i in 0..pb_n` because the loop
+    // index isn't read — loft's "Variable pb_i is never read"
+    // warning otherwise.
+    pb_remaining = pb_n;
+    while pb_remaining > 0 {
         pb_ba = pb_fa#read as u8;
         pb_bb = pb_fb#read as u8;
         if pb_ba != pb_bb { return false; }
+        pb_remaining = pb_remaining - 1;
     }
     true
 }

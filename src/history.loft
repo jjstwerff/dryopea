@@ -58,8 +58,8 @@ pub struct MarkerDelta {
 // markers (a future "select region + clear" — clear-all today
 // snapshots everything into one entry).
 pub struct UndoEntry {
-    painted: vector<PaintedDelta>,
-    markers: vector<MarkerDelta>,
+    painted: vector<PaintedDelta> not null,
+    markers: vector<MarkerDelta>  not null,
 }
 
 // Linear action timeline.  Position `cursor` is "after the most
@@ -143,12 +143,12 @@ pub fn history_can_redo(h: const History) -> boolean { h.cursor < len(h.entries)
 // anything was undone, false on an empty history.
 pub fn history_undo(h: &History, pw: &PaintedWorld, mw: &MarkerWorld) -> boolean {
     if !history_can_undo(h) { return false; }
-    // Explicit bound guard placates loft's OOB static check —
-    // `can_undo` already proves cursor ∈ 1..=len(entries) but
-    // the analyser doesn't propagate that.
+    // Bounds + `??` fallback to silence loft's static check —
+    // can_undo above proves cursor ∈ 1..=len(entries) so the
+    // index is in range; the fallback is dead code.
     hu_idx = h.cursor - 1;
     if hu_idx < 0 || hu_idx >= len(h.entries) { return false; }
-    hu_entry = h.entries[hu_idx];
+    hu_entry = h.entries[hu_idx] ?? undo_entry_empty();
     for hu_pd in hu_entry.painted {
         paint(pw, hu_pd.q, hu_pd.r, hu_pd.old_kind as u8);
     }
@@ -173,7 +173,7 @@ pub fn history_redo(h: &History, pw: &PaintedWorld, mw: &MarkerWorld) -> boolean
     if !history_can_redo(h) { return false; }
     hr_idx = h.cursor;
     if hr_idx < 0 || hr_idx >= len(h.entries) { return false; }
-    hr_entry = h.entries[hr_idx];
+    hr_entry = h.entries[hr_idx] ?? undo_entry_empty();
     for hr_pd in hr_entry.painted {
         paint(pw, hr_pd.q, hr_pd.r, hr_pd.new_kind as u8);
     }

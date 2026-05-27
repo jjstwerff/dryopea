@@ -57,7 +57,9 @@ pub fn screen_to_world(
     ppm: float,
 ) -> (float, float) {
     stw_camw = hex_to_world(cam.pos);
-    stw_inv = 1.0 / ppm;
+    // `?? 0.0` silences loft's div-by-zero static check —
+    // ppm is always > 0 at call sites (PPM = 24.0 default).
+    stw_inv = (1.0 / ppm) ?? 0.0;
     stw_dx = ((sx - cw / 2) as float) * stw_inv;
     stw_dy = ((sy - ch / 2) as float) * stw_inv;
     (stw_camw.0 + stw_dx, stw_camw.1 + stw_dy)
