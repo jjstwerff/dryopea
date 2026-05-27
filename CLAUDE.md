@@ -11,81 +11,261 @@ SPDX-License-Identifier: LGPL-3.0-or-later
 [loft](https://github.com/jjstwerff/loft).  The defining mechanic
 is **scramble-and-salvage**: when a base is about to be overrun,
 the player fires a rocket out of the core building and evacuates
-key components — each carried-out component disables the tower it
-came from, so grabbing salvage *hastens* the overrun.  Evacuated
-components give an advantage at the next base.  A run is a
-sequence of bases, chained by what you carry out.
+key components — each carried-out component disables the tower
+it came from, so grabbing salvage *hastens* the overrun.
+Evacuated components give an advantage at the next base.  A run
+is a sequence of bases, chained by what you carry out.
 
-Status: **pre-alpha, design only**.  No playable code yet; only
-design documents, plans, and salvaged 2023-prototype artefacts.
-The full design lives in [`docs/DESIGN.md`](docs/DESIGN.md).
+**Status: active implementation.**  Plan 01 (in-game ground-type
+editor) has shipped E1–E4 + an integration smoke test + the
+runnable E1-live editor (`src/main.loft`).  72/72 tests green
+under `scripts/test.sh`.  Plan 06 (editor-to-stencil pipeline)
+is drafted and waits on loft `lib_plan 24` for the shared
+substrate.  The full design lives in [`docs/DESIGN.md`](docs/DESIGN.md);
+the fiction in [`docs/SETTING.md`](docs/SETTING.md); the full
+feature roadmap in [`plans/ROADMAP.md`](plans/ROADMAP.md).
 
 ## Relationship to loft
 
 loft is the language + runtime; dryopea is a consumer project.
-The design originated as `@PLAN46` in the loft tracker but the
-canonical version now lives here (loft will soon drop
-outside-project references and keep only language / runtime bug
-fixes).  Any link to
-`github.com/jjstwerff/loft/blob/main/doc/claude/…` in this repo
-is a **temporary placeholder** that will need updating once the
-upstream library plans (gridmesh, terrain-heightmap) migrate to
-their own repos.
+Dryopea is also the **second partner** for loft's universal
+hex-world editor (loft `lib_plan 24`) — moros is the first;
+dryopea drives the bug-hunt phase that hardens the shared
+libraries.
 
 When dryopea surfaces a need from loft — a language feature, a
 stdlib gap, a runtime bug — file it in
 [`QUESTIONS_FOR_LOFT.md`](QUESTIONS_FOR_LOFT.md).  Do **not** fix
-it locally by patching loft from this repo; the loft project has
-its own contribution flow.
+it locally by patching loft from this repo; loft has its own
+contribution flow.  Internal-to-dryopea bugs go in
+[`PROBLEMS.md`](PROBLEMS.md) with `@D<NNN>` IDs.
 
-## Repo layout
+## Key commands
+
+```bash
+# Build the loft binary (needed by scripts/test.sh; ~20s release build)
+cd ~/Documents/loft && cargo build --release
+
+# Run dryopea's test suite (canonical entry — DO NOT run `loft test` directly)
+scripts/test.sh
+
+# Run the interactive editor (E1-live; opens a 960x720 GL window)
+~/Documents/loft/target/release/loft --lib ~/Documents/loft/lib src/main.loft
+
+# Parse-check a single .loft file without running it
+~/Documents/loft/target/release/loft --native-emit /tmp/check.rs \
+    --lib ~/Documents/loft/lib src/<file>.loft
+```
+
+`scripts/test.sh` is the canonical test runner.  It:
+- Pre-cleans `tests/actual/*.png` and `tests/actual/*.json`
+  between runs so stale artefacts can't masquerade as current.
+- Invokes `loft test --lib ~/Documents/loft/lib --no-warnings`
+  against the dryopea `tests/` directory.
+- Exit code 0 = all green; non-zero = failures (the loft test
+  runner surfaces assertion failures as FAIL since `@P367`
+  shipped on the loft side).
+
+## Architecture — src/ layout
 
 ```
-README.md                      — public-facing project intro
-LICENSE                        — LGPL-3.0-or-later
-CLAUDE.md                      — this file
-QUESTIONS_FOR_LOFT.md          — outbound queue to the loft project
-loft.toml                      — package manifest (deps empty until plan 01 starts)
+src/
+  dryopea.loft     library aggregator — `use dryopea;` brings every
+                   submodule into scope (tests use this entry)
+  main.loft        interactive editor entry point — `fn main()`,
+                   NOT in the aggregator (runs via `loft src/main.loft`)
+  world.loft       hex math (axial flat-top); HEX_DIAMETER = 1.5m;
+                   cube_round_axial, world_to_hex, visible_hexes
+  camera.loft      EditorCamera { pos: Hex, zoom: integer }
+                   + InputState (moros-style: factories + pure tick
+                   + struct of booleans)
+                   + camera_update(c: &EditorCamera, input: InputState)
+  painted.loft     PaintedHex { q, r, kind: u8 }
+                   + PaintedWorld { painted: hash<PaintedHex[q, r]> }
+                   + paint(), lookup_painted(), paint_line()
+                   (sea-default sparse storage — un-painted hex is sea)
+  palette.loft     GroundType { name, color, sub_palette, slope, drop,
+                   drainage, walk_*, buildable }
+                   + load_palette(path) via `text as vector<GroundType>`
+                   + parse_hex_color()
+  picker.loft      Picker { palette, active }
+                   + picker_default(), picker_set_active(),
+                   render_picker(cv, p, x0, y0) — Canvas-painted UI
+  render.loft      software rasterizer using graphics::Canvas
+                   + render_to_canvas, render_with_hover, palette_color,
+                   draw_hex, draw_hex_outline,
+                   world_to_canvas, screen_to_world, screen_to_hex
+  golden.loft      assert_golden(cv, name) — writes tests/actual/<n>.png,
+                   asserts byte-equality against tests/golden/<n>.png;
+                   FAILs via loft's now-working assert (@P367 fixed)
+  map_file.loft    MapFile { version, name, cam_q, cam_r, cam_zoom,
+                   ground: vector<GroundEntry> }
+                   — 6 fields, flat, vector LAST — see § Known constraints
+  save.loft        paint_to_mapfile, save_map_file, load_map_file,
+                   mapfile_to_painted, palette_index_of,
+                   save_world, load_map_or_empty (returns tuple)
+```
+
+Tests live in `tests/01_*.loft` (one file per phase).  Goldens
+live in `tests/golden/` (committed); actuals in `tests/actual/`
+(gitignored).
+
+## Key data structures
+
+| Type | File | Purpose |
+|---|---|---|
+| `Hex` | `world.loft` | `{ q, r }` axial flat-top coord |
+| `EditorCamera` | `camera.loft` | `{ pos: Hex, zoom: integer }` |
+| `InputState` | `camera.loft` | per-frame action flags (in_pan_*, in_zoom_*) |
+| `PaintedHex` | `painted.loft` | `{ q, r, kind: u8 }` — one painted cell |
+| `PaintedWorld` | `painted.loft` | wrapper holding `hash<PaintedHex[q, r]>` |
+| `GroundType` | `palette.loft` | one row from `examples/palette.json` |
+| `Picker` | `picker.loft` | palette UI state |
+| `MapFile` | `map_file.loft` | save record (6 fields; see Known constraints) |
+| `GroundEntry` | `map_file.loft` | one persisted hex with kind as text name |
+
+## Important conventions
+
+### Hex convention
+
+Axial flat-top hex grid throughout — matches moros and loft
+`lib_plan 24`.  HEX_DIAMETER = 1.5m vertex-to-vertex.  World
++y grows **south** (same direction as canvas +y); there is no
+y-flip in the render path.
+
+### Naming
+
+- Functions, variables: `lower_case`
+- Types, structs, enums: `CamelCase`
+- Constants (file-scope): `UPPER_CASE`
+- Loop variables prefixed per function (`tslr_w`, `tpi_pal`)
+  to dodge the flat-namespace gotcha
+- `dryopea_*` save path is local-cwd-relative + gitignored
+
+### Test discipline (moros-style)
+
+- Factories for state construction (`camera_default()`,
+  `painted_empty()`, `picker_default(path)`).
+- Pure tick functions: `camera_update(c: &EditorCamera, input: InputState)`.
+- `InputState` is a struct of named boolean fields, not a flag
+  bitmask.  Tests construct it directly + assert on field changes.
+- Golden-image tests via `assert_golden(cv, name)` — render to
+  Canvas, write to `tests/actual/<n>.png`, compare bytes to
+  `tests/golden/<n>.png`.  Bootstrapping a new golden: run, FAIL,
+  review `tests/actual/<n>.png`, copy to `tests/golden/<n>.png`.
+
+### Loft language gotchas we hit
+
+The following are dryopea-side workarounds for known loft
+behaviour.  Full reproducers + loft-side issue refs live in
+[`QUESTIONS_FOR_LOFT.md`](QUESTIONS_FOR_LOFT.md):
+
+- **`now` is a builtin** (`default/02_images.loft`).  Don't
+  use as a local variable name — shadowing confuses type
+  inference and your `now = ticks()` ends up holding a `fn() ->
+  integer` reference rather than its result.  We renamed to
+  `tnow` in `src/main.loft`.
+- **`graphics::KEY_*` need explicit qualification.** Bare-name
+  UPPER_CASE constants without `pub` don't re-export across
+  `use` chains.  `gl_key_pressed(graphics::KEY_W)` works;
+  `gl_key_pressed(KEY_W)` doesn't.
+- **JSON cast HANGS on ≥8 declared fields with a
+  `vector<Struct>`.**  `text as MapFile` with 10 fields hangs
+  forever; 7 fields work.  MapFile is constrained to 6 fields
+  until the loft fix ships.
+- **`:j` formatter omits empty fields** (empty strings, empty
+  vectors, zero ints under some conditions).  Round-trip
+  `save → load` of a struct with empty fields can produce JSON
+  the cast can't reload.  We avoid empty fields in MapFile.
+- **Empty `[]` after a text field in JSON corrupts the prior
+  field on cast.**  `{"name":"b","items":[]}` reads back as
+  `name=""`.  We keep vectors non-empty (or put them first).
+- **Early `return (a, b)` of a tuple of two struct types fails
+  type-check**, despite the if-else *expression* form of the
+  same tuple working.  In `load_map_or_empty` we use the
+  if-else expression form, not early return.
+- **`text as Struct` cast IGNORES unknown JSON fields**
+  (lenient — @P366 fixed).  We rely on this for forward-compat
+  saves.
+- **Loop variable name reuse must keep consistent type per
+  function-scope** — different types in different loops fails
+  ("loop variable 'i' has type text but was previously used as
+  integer").  Prefix loop vars per function.
+
+### Save path
+
+The interactive editor saves to `dryopea_save.json` in the
+cwd.  Tests write to `tests/actual/*.json` (also gitignored).
+Both paths are blown away between runs by `scripts/test.sh`.
+
+### Plan numbering
+
+**Never renumber existing plans.**  New plans get the next
+unused integer.  Plan 01 = ground editor (active); plans 02-06
+= drafted in `plans/future/`.  Numbering is independent of
+priority — `plans/ROADMAP.md` carries the logical ordering.
+
+## Plans, ROADMAP, docs
+
+```
+plans/
+  README.md       — plan tracker admin
+  ROADMAP.md      — comprehensive feature roadmap (5 tiers,
+                    A validation → E narrative arcs)
+  DEFERRED.md     — parked plans (none yet)
+  future/01-ground-editor/         — Active (E1-E4 + smoke + E1-live shipped)
+  future/02-solver-validation-viewer/
+  future/03-marker-layer-and-spawns/
+  future/04-map-library/
+  future/05-validation-scenario/
+  future/06-editor-stencil-pipeline/ — depends on loft lib_plan 24
 
 docs/
-  DESIGN.md                    — canonical master design (current truth)
-  DESIGN_HISTORY.md            — design seeds salvaged from the 2023 prototype
+  DESIGN.md             — master design (mechanics, towers, walls,
+                          combat dynamics, scramble loop, run shape)
+  SETTING.md            — fiction (AI-driven robots, faction lore,
+                          surface-vs-underground, future contact gates)
+  DESIGN_HISTORY.md     — 2023 prototype design seeds
+  GROUND_TYPES.md       — 11-type palette (water + land + structure)
+  NUMBERS.md            — tunable values
+  PROXY_ART.md          — placeholder shapes for entities
 
-plans/                         — loft-style plan tracker
-  README.md                    — index + workflow (current at top level,
-                                 future/, finished/, deferred/)
-  DEFERRED.md                  — parked-plan index
-  future/01-ground-editor/     — first plan: in-game ground-type editor
-
-examples/                      — sample input data
-  terrain.txt                  — 2023 ground-type palette
-  map.png + map.xcf            — 2023 map art + GIMP source
-
-archive/                       — preserved 2023 prototype artefacts
-  README.md                    — explainer for what's here vs not
-  world.gcp, main.gcp          — proto-loft game schema + CLI
-  gameplay.data, terrain.data  — 2023 filled-in game data
-  world-prototype.loft         — partial loft port of world model
-
-src/                           — game source (empty until D0 / plan 01 ships)
+PROBLEMS.md             — dryopea-internal bugs (@D-prefixed; none yet)
+QUESTIONS_FOR_LOFT.md   — outbound queue to loft (Open / Submitted / Resolved)
+README.md               — public project intro
+loft.toml               — package manifest (depends on graphics)
 ```
+
+## Loft consumer relationship + library dependency
+
+- **Today:** dryopea consumes `lib/graphics` from
+  `~/Documents/loft/lib/graphics` via path-dep in `loft.toml`.
+- **Soon (when loft lib_plan 24 ships):** dryopea consumes
+  `hex_grid`, `hex_map`, `hex_render`, `hex_stencil`,
+  `hex_editor`, `hex_entity` — the universal hex-world editor
+  substrate extracted from moros.  See
+  [loft lib_plans/24-universal-editor/REFERENCE.md](https://github.com/jjstwerff/loft/tree/main/doc/claude/lib_plans/future/24-universal-editor)
+  for the extraction architecture.
+- **Plan 06 explicitly depends on lib_plan 24.**  Without the
+  extraction, plan 06 either reimplements or copy-pastes moros
+  code into dryopea — neither acceptable.
 
 ## Documentation index
 
 | File | Topic |
 |---|---|
-| [README.md](README.md) | Public-facing project intro — what dryopea is, status, repo layout |
-| [docs/DESIGN.md](docs/DESIGN.md) | Master design — scramble phase, bounded sessions, editor/game split, the validation-tier mechanics, dependencies, planet-scale future expansion; long Updates 2026-05-26 list records every refinement decision |
-| [docs/SETTING.md](docs/SETTING.md) | Setting / lore — haywire colonization robots, military cordon, permit-bound sorties; insects + sap economy; how the fiction frames every mechanic |
-| [docs/GROUND_TYPES.md](docs/GROUND_TYPES.md) | 11-type ground palette (water + land + structure) — colours, slope / drop / height-override, wall topology + entrance rule |
-| [docs/PROXY_ART.md](docs/PROXY_ART.md) | Placeholder geometry for testing gameplay before final art lands — enemy, boss (phase 3), player vehicle, NPC helper (with retrieval + skills), loot, tower beacon, tower (state machine + salvage), core building (6 sides + top status + bottom pulse), wall outline, construction state |
-| [docs/DESIGN_HISTORY.md](docs/DESIGN_HISTORY.md) | Design seeds salvaged from the 2023 prototype — original README paragraphs, hex/terrain notes, game-data schema, with mapping into the current design |
-| [plans/README.md](plans/README.md) | Plan tracker index + workflow |
-| [plans/future/01-ground-editor/README.md](plans/future/01-ground-editor/README.md) | Plan 01 — in-game ground-type editor (sea-default infinite world, sparse storage) |
-| [plans/future/02-solver-validation-viewer/README.md](plans/future/02-solver-validation-viewer/README.md) | Plan 02 — dual-layer 3D viewer for height-solver validation |
-| [plans/future/03-marker-layer-and-spawns/README.md](plans/future/03-marker-layer-and-spawns/README.md) | Plan 03 — marker layer + multi-direction spawn points |
-| [plans/future/04-map-library/README.md](plans/future/04-map-library/README.md) | Plan 04 — hand-authored map library + per-map objectives + event variance |
-| [archive/README.md](archive/README.md) | What's preserved from the 2023 repo and what was deliberately dropped |
+| [README.md](README.md) | Public-facing project intro |
+| [docs/DESIGN.md](docs/DESIGN.md) | Master design — towers / walls / waves / scramble / camera / HUD / economy / run shape |
+| [docs/SETTING.md](docs/SETTING.md) | Fiction — autonomous AIs (girl-hacker imprint), faction wars dormant, surface-vs-underground, future contact gates, crew-doesn't-walk justification, combat-bot escalation |
+| [docs/DESIGN_HISTORY.md](docs/DESIGN_HISTORY.md) | 2023 prototype seeds |
+| [docs/GROUND_TYPES.md](docs/GROUND_TYPES.md) | Palette spec |
+| [docs/NUMBERS.md](docs/NUMBERS.md) | Tunable values |
+| [docs/PROXY_ART.md](docs/PROXY_ART.md) | Placeholder shapes |
+| [plans/README.md](plans/README.md) | Plan tracker admin |
+| [plans/ROADMAP.md](plans/ROADMAP.md) | Comprehensive feature roadmap (5 tiers) |
+| [plans/future/01-ground-editor/README.md](plans/future/01-ground-editor/README.md) | Plan 01 — Active. E1-E4 + smoke + E1-live shipped |
+| [plans/future/06-editor-stencil-pipeline/README.md](plans/future/06-editor-stencil-pipeline/README.md) | Plan 06 — editor-to-stencil pipeline (two purposes, three audiences) |
+| [PROBLEMS.md](PROBLEMS.md) | Dryopea-internal bugs (`@D<NNN>`) |
 | [QUESTIONS_FOR_LOFT.md](QUESTIONS_FOR_LOFT.md) | Outbound queue to loft |
 
 ## Reading by goal
@@ -93,42 +273,15 @@ src/                           — game source (empty until D0 / plan 01 ships)
 | Goal | Start here |
 |---|---|
 | Understand the game | [README.md](README.md) → [docs/DESIGN.md](docs/DESIGN.md) |
-| Understand WHY a design choice is what it is | [docs/DESIGN.md](docs/DESIGN.md) § Updates since 2026-05-21 → [docs/DESIGN_HISTORY.md](docs/DESIGN_HISTORY.md) |
-| Pick the next thing to work on | [plans/README.md](plans/README.md) (current table → future table) |
-| Start implementing | [plans/future/01-ground-editor/README.md](plans/future/01-ground-editor/README.md) (the first plan) |
-| Mine 2023 game data | [archive/README.md](archive/README.md) → `archive/world.gcp` + `archive/gameplay.data` |
-| Send loft a request | [QUESTIONS_FOR_LOFT.md](QUESTIONS_FOR_LOFT.md) |
-
-## Conventions
-
-### Plans — loft-style
-
-| Location | Status |
-|---|---|
-| `plans/<NN>-<slug>/` (top level) | **Current** — actively worked |
-| `plans/future/<NN>-<slug>/` | **Future** — drafted, not started |
-| `plans/finished/<NN>-<slug>/` | **Finished** — closed |
-| `plans/deferred/<NN>-<slug>/` | **Deferred** — parked behind a trigger |
-
-A plan is promoted from `future/` to top-level when work starts
-(move the directory + update [`plans/README.md`](plans/README.md)).
-When the plan's last phase ships, move it to `finished/`.
-Effort tags: XS / S / M / MH / H / VH / L.
-
-### Design changes
-
-Update [`docs/DESIGN.md`](docs/DESIGN.md) directly — that file is
-canonical.  Significant supersedes go under § "Updates since
-2026-05-21" with a date, so the change history stays visible
-without rewriting the body.
-
-### Salvaged prototype material
-
-[`archive/`](archive/) is **historical reference only**.  Files
-there do not build and are not maintained.  When a design element
-in DESIGN.md derives from archive material, link to it from
-[`docs/DESIGN_HISTORY.md`](docs/DESIGN_HISTORY.md) — that
-document is the bridge between past and present.
+| Understand the fiction | [docs/SETTING.md](docs/SETTING.md) |
+| Pick next work to do | [plans/ROADMAP.md](plans/ROADMAP.md) — 5-tier feature list |
+| Continue plan 01 work | [plans/future/01-ground-editor/README.md](plans/future/01-ground-editor/README.md) § Implementation status |
+| Add a regression test | `tests/01_*.loft` for patterns; `golden.loft::assert_golden` for image tests |
+| Write/edit a `.loft` file | Loft language conventions: see § Important conventions above + loft's own `loft-write` skill |
+| Run the editor | `~/Documents/loft/target/release/loft --lib ~/Documents/loft/lib src/main.loft` |
+| File an outbound loft request | [QUESTIONS_FOR_LOFT.md](QUESTIONS_FOR_LOFT.md) |
+| File a dryopea-internal bug | [PROBLEMS.md](PROBLEMS.md) (`@D<NNN>` convention) |
+| Understand library extraction | loft `lib_plans/24-universal-editor/REFERENCE.md` |
 
 ## Branch policy
 
@@ -138,14 +291,12 @@ document is the bridge between past and present.
 are the normal flow.**  The repo is small, single-author, and
 the cost of branching ceremony outweighs its benefit while the
 foundation is being laid.  Commit locally, push when the user
-asks (`feedback_one_branch_per_cycle` still applies — no
-automatic pushes).
+asks — no automatic pushes.
 
 **Trigger for switching to the formal flow below:** the moment
 there's a runnable game — even a minimum-playable validation —
 this section is retired and the **MANDATORY** rules below
-become the policy.  Until then, the design corpus + plan
-implementation work commits straight to main.
+become the policy.
 
 ### Future phase — once a runnable game exists — MANDATORY
 
@@ -153,9 +304,7 @@ implementation work commits straight to main.
 
 All changes — features, design updates, plan edits — must land
 on a feature branch and reach `main` only through a pull
-request.  CI gates each PR.  `main` becomes the release branch,
-every commit on it expected to be shippable, PRs the review
-gate.
+request.  CI gates each PR.  `main` becomes the release branch.
 
 #### Rules (active once the policy switches)
 
@@ -165,22 +314,16 @@ gate.
 2. **Pushing commits is OK by default — unless there's an open PR
    on the branch that the push would disturb.**  For a long-lived
    working branch with no open PR, push freely after each green
-   commit so the remote stays in sync.  When the branch has an
-   open PR, do NOT push without an explicit user instruction —
-   force-pushes, rebases, or unexpected commits disrupt
-   review-in-progress.
+   commit.  When the branch has an open PR, do NOT push without
+   an explicit user instruction.
 3. **Never create a branch or open a PR unless the user
-   explicitly asks.**  Default mode is: work on the current
-   branch, commit locally (or push per Rule 2), report what
-   changed, and wait.  "Implement plan 01 phase E1" is *not* a PR
-   instruction.  Only run `gh pr create` or `git checkout -b`
+   explicitly asks.**  "Implement plan 01 phase E1" is *not* a
+   PR instruction.  Only run `gh pr create` or `git checkout -b`
    after the user explicitly says "create PR", "open a PR",
    "merge", or "switch to a new branch".
 4. Default branch name for general work: a GENERAL slug
-   (`work`, `cleanup`, `housekeeping`) so the branch can host
-   cross-theme commits.  ONLY a substantial plan (well-defined
-   arc with its own design doc — e.g. `01-ground-editor`,
-   `terrain-solver`) earns a specific branch name.
+   (`work`, `cleanup`, `housekeeping`).  ONLY a substantial plan
+   earns a specific branch name.
 5. Merging to `main` is via a GitHub pull request — not a local
    `git merge`.
 
@@ -190,8 +333,8 @@ gate.
 
 Both can produce unrecoverable working-directory states.  Always
 commit before any operation that changes the working tree.  To
-compare with main, use `git diff main -- <file>` or
-`git show origin/main:<file>` — no branch switch needed.
+compare with main, use `git diff main -- <file>` or `git show
+origin/main:<file>` — no branch switch needed.
 
 ### Never use `git bisect` or `git checkout HEAD -- <files>`
 
@@ -199,18 +342,19 @@ Both routinely destroy multi-session work-in-progress.  To
 investigate a regression, read the relevant code paths directly
 or use `git show <commit>` / `git diff <commit>^ <commit>`.
 
-## When this CLAUDE.md needs to grow
+## Documentation validation
 
-This file is intentionally light because dryopea has no code yet.
-When the first plan (`01-ground-editor`) starts producing source,
-add sections analogous to loft's CLAUDE.md:
+We **don't** have a loft-style `@P` tracker + `./scripts/idx`
+indexer yet.  Triggers for adding one:
 
-- **Key commands** — how to run / test the game.
-- **Architecture** — execution path through the source tree.
-- **Key data structures** — the central types (`GroundType`,
-  `WorldGrid`, etc.).
-- **Important conventions** — naming, ordering, anything
-  surprising.
+- First dryopea-side P-issue gets numerous enough that prose
+  references stop being practical (PROBLEMS.md currently has
+  zero `@D` rows; trigger fires somewhere around ~20).
+- Documentation count crosses ~25 (currently ~12).
+- A specific drift incident makes the manual scan painful.
 
-Until then, the design + plans + archive layout above is the
-whole working context.
+Until then: keep cross-references prose-form (§ section names)
++ explicit relative-path markdown links.  Run `scripts/test.sh`
+before committing — it's the only doc-adjacent automation we
+have today (validates tests via assert_golden + the loft test
+runner).
