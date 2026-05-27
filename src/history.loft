@@ -35,16 +35,21 @@ pub struct PaintedDelta {
     new_kind: integer not null,
 }
 
-// One marker change: (q, r) went from `(old_present, old_dir)`
-// to `(new_present, new_dir)`.  `*_present == false` means the
-// hex had no marker before / after; the *_direction value is
-// ignored in that case (kept as 0 for cleanliness).
+// One marker change: (q, r) went from `(old_present, old_kind,
+// old_dir)` to `(new_present, new_kind, new_dir)`.  `*_present
+// == false` means the hex had no marker before / after; the
+// *_kind and *_direction values are ignored in that case (kept
+// as 0 for cleanliness).  `*_kind` is the marker kind
+// discriminant (MARKER_KIND_SPAWN, MARKER_KIND_TARGET, …) —
+// needed so undo restores the right kind, not just direction.
 pub struct MarkerDelta {
     q:             integer not null,
     r:             integer not null,
     old_present:   boolean not null,
+    old_kind:      integer not null,
     old_direction: integer not null,
     new_present:   boolean not null,
+    new_kind:      integer not null,
     new_direction: integer not null,
 }
 
@@ -149,7 +154,11 @@ pub fn history_undo(h: &History, pw: &PaintedWorld, mw: &MarkerWorld) -> boolean
     }
     for hu_md in hu_entry.markers {
         if hu_md.old_present {
-            place_spawn(mw, hu_md.q, hu_md.r, hu_md.old_direction as u8);
+            if hu_md.old_kind == MARKER_KIND_TARGET {
+                place_target(mw, hu_md.q, hu_md.r);
+            } else {
+                place_spawn(mw, hu_md.q, hu_md.r, hu_md.old_direction as u8);
+            }
         } else {
             remove_marker(mw, hu_md.q, hu_md.r);
         }
@@ -170,7 +179,11 @@ pub fn history_redo(h: &History, pw: &PaintedWorld, mw: &MarkerWorld) -> boolean
     }
     for hr_md in hr_entry.markers {
         if hr_md.new_present {
-            place_spawn(mw, hr_md.q, hr_md.r, hr_md.new_direction as u8);
+            if hr_md.new_kind == MARKER_KIND_TARGET {
+                place_target(mw, hr_md.q, hr_md.r);
+            } else {
+                place_spawn(mw, hr_md.q, hr_md.r, hr_md.new_direction as u8);
+            }
         } else {
             remove_marker(mw, hr_md.q, hr_md.r);
         }
@@ -248,9 +261,11 @@ pub fn place_spawn_and_record(
     history:       &History,
 ) {
     pssr_was = has_marker(mw, q, r);
-    pssr_old_dir: u8 = 0 as u8;
+    pssr_old_dir:  u8      = 0 as u8;
+    pssr_old_kind: integer = 0;
     if pssr_was {
-        pssr_old_dir = marker_direction(mw, q, r);
+        pssr_old_dir  = marker_direction(mw, q, r);
+        pssr_old_kind = marker_kind(mw, q, r);
     }
     place_spawn(mw, q, r, new_direction);
     pssr_entry = undo_entry_empty();
@@ -258,15 +273,50 @@ pub fn place_spawn_and_record(
         q:             q,
         r:             r,
         old_present:   pssr_was,
+        old_kind:      pssr_old_kind,
         old_direction: pssr_old_dir as integer,
         new_present:   true,
+        new_kind:      MARKER_KIND_SPAWN,
         new_direction: new_direction as integer,
     }];
     history_push(history, pssr_entry);
 }
 
+// Place a target marker AND push a one-marker UndoEntry.
+// Targets are spherical — no direction field; stored as 0,
+// ignored on undo/redo apply.  Matches place_spawn_and_record's
+// shape so the editor's marker-mode hotpath dispatches cleanly.
+pub fn place_target_and_record(
+    mw:      &MarkerWorld,
+    q:       integer,
+    r:       integer,
+    history: &History,
+) {
+    ptar_was = has_marker(mw, q, r);
+    ptar_old_dir:  u8      = 0 as u8;
+    ptar_old_kind: integer = 0;
+    if ptar_was {
+        ptar_old_dir  = marker_direction(mw, q, r);
+        ptar_old_kind = marker_kind(mw, q, r);
+    }
+    place_target(mw, q, r);
+    ptar_entry = undo_entry_empty();
+    ptar_entry.markers += [MarkerDelta {
+        q:             q,
+        r:             r,
+        old_present:   ptar_was,
+        old_kind:      ptar_old_kind,
+        old_direction: ptar_old_dir as integer,
+        new_present:   true,
+        new_kind:      MARKER_KIND_TARGET,
+        new_direction: 0,
+    }];
+    history_push(history, ptar_entry);
+}
+
 // Remove the marker at (q, r) AND push a one-marker UndoEntry.
-// No-op if there's no marker to remove.
+// No-op if there's no marker to remove.  Captures the prior
+// kind so undo restores the right marker type (spawn vs target).
 pub fn remove_marker_and_record(
     mw:      &MarkerWorld,
     q:       integer,
@@ -274,15 +324,18 @@ pub fn remove_marker_and_record(
     history: &History,
 ) {
     if !has_marker(mw, q, r) { return; }
-    rmar_old_dir = marker_direction(mw, q, r);
+    rmar_old_dir  = marker_direction(mw, q, r);
+    rmar_old_kind = marker_kind(mw, q, r);
     remove_marker(mw, q, r);
     rmar_entry = undo_entry_empty();
     rmar_entry.markers += [MarkerDelta {
         q:             q,
         r:             r,
         old_present:   true,
+        old_kind:      rmar_old_kind,
         old_direction: rmar_old_dir as integer,
         new_present:   false,
+        new_kind:      0,
         new_direction: 0,
     }];
     history_push(history, rmar_entry);
@@ -337,19 +390,26 @@ pub fn reload_and_record(
         }
     }
 
-    // Markers: current → loaded.  Same 3-case shape.
+    // Markers: current → loaded.  Same 3-case shape.  Kind
+    // change (e.g. a hex was a spawn in memory, became a target
+    // on disk) is treated as direction-change semantics — the
+    // delta carries both old + new kind/direction.
     for rar_cm in mw_current.markers {
         rar_loaded_present = has_marker(mw_loaded, rar_cm.q, rar_cm.r);
         if rar_loaded_present {
-            rar_loaded_dir = marker_direction(mw_loaded, rar_cm.q, rar_cm.r);
-            if rar_loaded_dir != rar_cm.direction {
-                // Direction changed
+            rar_loaded_kind = marker_kind(mw_loaded, rar_cm.q, rar_cm.r);
+            rar_loaded_dir  = marker_direction(mw_loaded, rar_cm.q, rar_cm.r);
+            if rar_loaded_kind != (rar_cm.kind as integer)
+            || rar_loaded_dir  != rar_cm.direction {
+                // Kind or direction differs.
                 rar_entry.markers += [MarkerDelta {
                     q:             rar_cm.q,
                     r:             rar_cm.r,
                     old_present:   true,
+                    old_kind:      rar_cm.kind as integer,
                     old_direction: rar_cm.direction as integer,
                     new_present:   true,
+                    new_kind:      rar_loaded_kind,
                     new_direction: rar_loaded_dir as integer,
                 }];
             }
@@ -360,8 +420,10 @@ pub fn reload_and_record(
                 q:             rar_cm.q,
                 r:             rar_cm.r,
                 old_present:   true,
+                old_kind:      rar_cm.kind as integer,
                 old_direction: rar_cm.direction as integer,
                 new_present:   false,
+                new_kind:      0,
                 new_direction: 0,
             }];
         }
@@ -373,8 +435,10 @@ pub fn reload_and_record(
                 q:             rar_lm.q,
                 r:             rar_lm.r,
                 old_present:   false,
+                old_kind:      0,
                 old_direction: 0,
                 new_present:   true,
+                new_kind:      rar_lm.kind as integer,
                 new_direction: rar_lm.direction as integer,
             }];
         }
@@ -407,8 +471,10 @@ pub fn clear_and_record(
             q:             car_me.q,
             r:             car_me.r,
             old_present:   true,
+            old_kind:      car_me.kind as integer,
             old_direction: car_me.direction as integer,
             new_present:   false,
+            new_kind:      0,
             new_direction: 0,
         }];
     }

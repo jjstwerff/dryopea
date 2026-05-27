@@ -28,6 +28,16 @@ pub const ARROW_LEN_M:  float = 0.55;   // tip distance from hex centre
 pub const ARROW_BASE_M: float = 0.18;   // back-of-arrow offset from centre
 pub const ARROW_HALF_W: float = 0.25;   // half-width of the triangle base
 
+// Target marker — classical red/white bullseye sphere per
+// @PLAN50 § Scoring.  Editor renders the same as two filled
+// concentric circles (the 3D-extruded sphere is the renderer's
+// job in @PLAN50; the editor only marks the hex coordinate).
+pub const TARGET_OUTER_COLOR: integer = 0xc02020;   // red ring
+pub const TARGET_INNER_COLOR: integer = 0xffffff;   // white centre
+pub const TARGET_GHOST_COLOR: integer = 0x801818;   // dimmer red for hover
+pub const TARGET_OUTER_R_M:   float = 0.40;          // outer radius in hex-relative units
+pub const TARGET_INNER_R_M:   float = 0.18;          // inner radius
+
 // Unit forward vector in canvas coords for a hex direction
 // d ∈ 0..5.  d=0 → +y (south, matching +r axial); each step is
 // 60° clockwise from south.  Result is (sin θ, cos θ) where
@@ -99,8 +109,48 @@ pub fn draw_marker_arrow(
     }
 }
 
-// Iterate the marker world and draw every spawn marker as a
-// filled hot-pink triangle.  Sparse — most hexes have nothing.
+// Draw a target bullseye at the (q, r) hex centre.  Filled =
+// two concentric filled circles (red ring + white centre);
+// outline = two ring outlines (for hover-ghost previews).
+pub fn draw_target_marker(
+    cv:     Canvas,
+    cam:    EditorCamera,
+    q:      integer,
+    r:      integer,
+    cw:     integer,
+    ch:     integer,
+    ppm:    float,
+    filled: boolean,
+) {
+    // Same inline world→canvas math as draw_marker_arrow —
+    // keeps floats end-to-end so the (tuple.N as float) parser
+    // bug doesn't bite.
+    dtm_camw  = hex_to_world(cam.pos);
+    dtm_world = hex_to_world(Hex { q: q, r: r });
+    dtm_dx_m  = dtm_world.0 - dtm_camw.0;
+    dtm_dy_m  = dtm_world.1 - dtm_camw.1;
+    dtm_cx_f  = (cw as float) * 0.5 + dtm_dx_m * ppm + 0.5;
+    dtm_cy_f  = (ch as float) * 0.5 + dtm_dy_m * ppm + 0.5;
+    dtm_cx    = dtm_cx_f as integer;
+    dtm_cy    = dtm_cy_f as integer;
+
+    dtm_outer = (TARGET_OUTER_R_M * ppm) as integer;
+    dtm_inner = (TARGET_INNER_R_M * ppm) as integer;
+    if dtm_outer < 3 { dtm_outer = 3; }
+    if dtm_inner < 1 { dtm_inner = 1; }
+
+    if filled {
+        cv.fill_circle(dtm_cx, dtm_cy, dtm_outer, TARGET_OUTER_COLOR);
+        cv.fill_circle(dtm_cx, dtm_cy, dtm_inner, TARGET_INNER_COLOR);
+    } else {
+        cv.draw_circle(dtm_cx, dtm_cy, dtm_outer, TARGET_GHOST_COLOR);
+        cv.draw_circle(dtm_cx, dtm_cy, dtm_inner, TARGET_GHOST_COLOR);
+    }
+}
+
+// Iterate the marker world and draw each placed marker per its
+// kind: spawn → hot-pink arrow oriented per direction, target →
+// red/white bullseye.  Sparse — most hexes have nothing.
 pub fn render_markers(
     cv:  Canvas,
     cam: EditorCamera,
@@ -115,6 +165,10 @@ pub fn render_markers(
                               rm_e.q, rm_e.r, rm_e.direction,
                               ARROW_COLOR,
                               cw, ch, ppm, true);
+        } else if rm_e.kind == MARKER_KIND_TARGET as u8 {
+            draw_target_marker(cv, cam,
+                               rm_e.q, rm_e.r,
+                               cw, ch, ppm, true);
         }
     }
 }
@@ -135,4 +189,18 @@ pub fn render_ghost_arrow(
 ) {
     draw_marker_arrow(cv, cam, q, r, direction,
                       ARROW_GHOST_COLOR, cw, ch, ppm, false);
+}
+
+// Hover preview — outline-only bullseye at the hovered hex.
+// Used when the editor's place-kind is TARGET.
+pub fn render_ghost_target(
+    cv:  Canvas,
+    cam: EditorCamera,
+    q:   integer,
+    r:   integer,
+    cw:  integer,
+    ch:  integer,
+    ppm: float,
+) {
+    draw_target_marker(cv, cam, q, r, cw, ch, ppm, false);
 }

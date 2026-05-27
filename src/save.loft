@@ -169,12 +169,15 @@ pub fn load_marker_file(path: text) -> MarkerFile {
 // the on-disk integer fields back to u8 in the in-memory shape.
 // Unknown `kind` values (future variants we don't recognise yet)
 // are skipped — forward-compat with the same lenient policy as
-// mapfile_to_painted.
+// mapfile_to_painted.  Targets ignore the on-disk `direction`
+// field (it's stored as 0 by place_target).
 pub fn markerfile_to_world(mf: MarkerFile) -> MarkerWorld {
     mftw_out = marker_empty();
     for mftw_e in mf.markers {
         if mftw_e.kind == MARKER_KIND_SPAWN {
             place_spawn(mftw_out, mftw_e.q, mftw_e.r, mftw_e.direction as u8);
+        } else if mftw_e.kind == MARKER_KIND_TARGET {
+            place_target(mftw_out, mftw_e.q, mftw_e.r);
         }
     }
     mftw_out

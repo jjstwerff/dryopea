@@ -26,7 +26,15 @@ use world;
 // Marker kind discriminants.  Add a new constant per kind as it
 // lands; the on-disk format carries the integer, so renumbering
 // is a breaking change — always APPEND, never reorder.
-pub const MARKER_KIND_SPAWN: integer = 0;
+pub const MARKER_KIND_SPAWN:  integer = 0;
+// Targets sit ON surfaces — @PLAN50 bumper-airplanes consumes
+// the same marker layer and snaps targets to the top of the
+// extruded hex (pillar / cliff / ramp / flat); the editor only
+// stores the hex coordinate, the renderer reads palette
+// extrusion to compute the 3D anchor point.  Spherical →
+// `direction` field is meaningless; stored as 0, ignored on
+// load.
+pub const MARKER_KIND_TARGET: integer = 1;
 
 // One placed marker.  `direction` is meaningful only for spawn
 // markers (0..5 hex cardinal directions); future kinds may
@@ -60,6 +68,18 @@ pub fn place_spawn(w: &MarkerWorld, q: integer, r: integer, direction: u8) {
         r:         r,
         kind:      MARKER_KIND_SPAWN as u8,
         direction: direction,
+    };
+}
+
+// Place a target marker.  Targets are spherical (no direction);
+// the direction field is stored as 0 and ignored on load.
+// Overwrites any existing marker at the same hex.
+pub fn place_target(w: &MarkerWorld, q: integer, r: integer) {
+    w.markers[q, r] = MarkerEntry {
+        q:         q,
+        r:         r,
+        kind:      MARKER_KIND_TARGET as u8,
+        direction: 0 as u8,
     };
 }
 

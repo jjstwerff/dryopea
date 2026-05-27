@@ -1,0 +1,215 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Target as a second marker kind — substrate-level coverage.
+//
+// @PLAN50 (bumper-airplanes audience demo) consumes the same
+// marker layer this file tests, snapping targets to the
+// extruded top of each hex's palette type.  The dryopea editor
+// authors them; the runtime renders them in 3D.
+//
+// Covers: place_target inserts a target kind, mixed-kind
+// world save/load round-trip, target render paints pixels
+// distinct from spawn render, history undo/redo preserves
+// kind, sidecar JSON's forward-compat on unknown kinds still
+// works.
+
+use dryopea;
+use graphics;
+
+// ─── place_target inserts a TARGET kind ─────────────────────────
+
+fn test_place_target_inserts_target_kind() {
+    tpt_w = marker_empty();
+    place_target(tpt_w, 3, -1);
+    assert(marker_count(tpt_w) == 1,            "1 target placed");
+    assert(has_marker(tpt_w, 3, -1),             "has_marker at placed hex");
+    assert(marker_kind(tpt_w, 3, -1) == MARKER_KIND_TARGET,
+           "kind is TARGET");
+}
+
+fn test_place_target_overwrites_existing_spawn() {
+    tpto_w = marker_empty();
+    place_spawn(tpto_w, 5, 5, 3 as u8);
+    place_target(tpto_w, 5, 5);
+    // Last-write-wins: target replaces the spawn at the same hex.
+    assert(marker_count(tpto_w) == 1, "still 1 marker (overwrite)");
+    assert(marker_kind(tpto_w, 5, 5) == MARKER_KIND_TARGET,
+           "kind switched to TARGET");
+}
+
+fn test_remove_target_clears() {
+    trt_w = marker_empty();
+    place_target(trt_w, 2, 2);
+    remove_marker(trt_w, 2, 2);
+    assert(!has_marker(trt_w, 2, 2), "target removed");
+}
+
+// ─── Mixed-kind world round-trip ────────────────────────────────
+
+fn test_mixed_kind_world_round_trip() {
+    tmk_path = "tests/actual/03_qol_target_mixed.json";
+    tmk_w = marker_empty();
+    place_spawn(tmk_w, 10, 0, 2 as u8);
+    place_target(tmk_w, 0, 10);
+    place_spawn(tmk_w, -10, -10, 4 as u8);
+    place_target(tmk_w, 5, 5);
+
+    save_markers(tmk_w, "mixed", tmk_path);
+
+    tmk_w2 = load_markers_or_empty(tmk_path);
+    assert(marker_count(tmk_w2) == 4, "all 4 markers round-trip");
+    assert(marker_kind(tmk_w2, 10, 0)    == MARKER_KIND_SPAWN,  "spawn at (10,0)");
+    assert(marker_kind(tmk_w2, 0, 10)    == MARKER_KIND_TARGET, "target at (0,10)");
+    assert(marker_kind(tmk_w2, -10, -10) == MARKER_KIND_SPAWN,  "spawn at (-10,-10)");
+    assert(marker_kind(tmk_w2, 5, 5)     == MARKER_KIND_TARGET, "target at (5,5)");
+    assert(marker_direction(tmk_w2, 10, 0)    == 2 as u8, "spawn direction preserved");
+    assert(marker_direction(tmk_w2, -10, -10) == 4 as u8, "spawn direction preserved");
+}
+
+// ─── Render — target paints distinct pixels from spawn ──────────
+
+fn test_target_render_paints_pixels() {
+    trp_cv  = canvas(128, 128, 0x000000);
+    trp_cam = camera_default();
+    draw_target_marker(trp_cv, trp_cam, 0, 0,
+                       128, 128, 24.0, true);
+    // Centre of canvas is the origin hex; the bullseye's centre
+    // pixel should be the inner (white) colour.
+    trp_centre = trp_cv.get_pixel(64, 64);
+    assert(trp_centre == TARGET_INNER_COLOR,
+           "target centre paints inner-colour pixel");
+}
+
+fn test_target_render_has_outer_ring() {
+    tro_cv  = canvas(128, 128, 0x000000);
+    tro_cam = camera_default();
+    draw_target_marker(tro_cv, tro_cam, 0, 0,
+                       128, 128, 24.0, true);
+    // Sample a pixel at a radius BETWEEN outer and inner — should
+    // be the outer (red) colour.  TARGET_OUTER_R_M * 24 ≈ 9.6 px,
+    // TARGET_INNER_R_M * 24 ≈ 4.3 px, so radius 7 sits in the ring.
+    tro_outer = tro_cv.get_pixel(64 + 7, 64);
+    assert(tro_outer == TARGET_OUTER_COLOR,
+           "target ring paints outer-colour pixel");
+}
+
+fn test_target_render_differs_from_spawn() {
+    // Same hex, different kind, different canvases — confirms
+    // render_markers's per-kind dispatch picks distinct visuals.
+    trd_cv_s = canvas(128, 128, 0x000000);
+    trd_cv_t = canvas(128, 128, 0x000000);
+    trd_cam  = camera_default();
+    trd_mw_s = marker_empty();
+    place_spawn(trd_mw_s, 0, 0, 0 as u8);
+    trd_mw_t = marker_empty();
+    place_target(trd_mw_t, 0, 0);
+    render_markers(trd_cv_s, trd_cam, trd_mw_s, 128, 128, 24.0);
+    render_markers(trd_cv_t, trd_cam, trd_mw_t, 128, 128, 24.0);
+    // The centre pixel differs: target has white inner, spawn arrow
+    // tip is south of centre so centre is sea-default background.
+    assert(trd_cv_s.get_pixel(64, 64) != trd_cv_t.get_pixel(64, 64),
+           "spawn vs target paint different centre pixels");
+}
+
+fn test_target_ghost_outline_only() {
+    tgo_cv  = canvas(128, 128, 0x000000);
+    tgo_cam = camera_default();
+    render_ghost_target(tgo_cv, tgo_cam, 0, 0,
+                        128, 128, 24.0);
+    // Centre should be UNFILLED (still background) — outline-only.
+    tgo_centre = tgo_cv.get_pixel(64, 64);
+    assert(tgo_centre == 0x000000,
+           "ghost target leaves centre unfilled (outline only)");
+}
+
+// ─── History — undo / redo preserves kind ───────────────────────
+
+fn test_place_target_and_record_inserts_entry() {
+    tptr_h  = history_empty();
+    tptr_mw = marker_empty();
+    place_target_and_record(tptr_mw, 5, 5, tptr_h);
+    assert(marker_count(tptr_mw) == 1, "target placed");
+    assert(history_can_undo(tptr_h),    "history entry recorded");
+}
+
+fn test_undo_place_target_removes_marker() {
+    tupt_h  = history_empty();
+    tupt_pw = painted_empty();
+    tupt_mw = marker_empty();
+    place_target_and_record(tupt_mw, 5, 5, tupt_h);
+    history_undo(tupt_h, tupt_pw, tupt_mw);
+    assert(marker_count(tupt_mw) == 0,
+           "undo of place_target leaves an empty world");
+}
+
+fn test_redo_place_target_restores_target() {
+    trpt_h  = history_empty();
+    trpt_pw = painted_empty();
+    trpt_mw = marker_empty();
+    place_target_and_record(trpt_mw, 5, 5, trpt_h);
+    history_undo(trpt_h, trpt_pw, trpt_mw);
+    history_redo(trpt_h, trpt_pw, trpt_mw);
+    assert(marker_count(trpt_mw) == 1, "redo restored the target");
+    assert(marker_kind(trpt_mw, 5, 5) == MARKER_KIND_TARGET,
+           "redo restored TARGET kind specifically");
+}
+
+fn test_undo_remove_restores_target_kind() {
+    // Place target, remove it, undo — the undo MUST restore a
+    // TARGET (not a default spawn).  Validates old_kind tracking
+    // through remove_marker_and_record.
+    turt_h  = history_empty();
+    turt_pw = painted_empty();
+    turt_mw = marker_empty();
+    place_target(turt_mw, 7, 7);
+    remove_marker_and_record(turt_mw, 7, 7, turt_h);
+    history_undo(turt_h, turt_pw, turt_mw);
+    assert(marker_count(turt_mw) == 1, "undo restored a marker");
+    assert(marker_kind(turt_mw, 7, 7) == MARKER_KIND_TARGET,
+           "undo restored TARGET kind (not the default spawn)");
+}
+
+fn test_clear_records_kind_per_marker() {
+    // Mixed-kind world cleared and recorded → undo should
+    // restore each marker with its original kind.
+    tcr_h  = history_empty();
+    tcr_pw = painted_empty();
+    tcr_mw = marker_empty();
+    place_spawn(tcr_mw, 1, 0, 3 as u8);
+    place_target(tcr_mw, 0, 1);
+    clear_and_record(tcr_pw, tcr_mw, tcr_h);
+    // Simulate the main.loft rebind.
+    tcr_mw = marker_empty();
+    history_undo(tcr_h, tcr_pw, tcr_mw);
+    assert(marker_kind(tcr_mw, 1, 0) == MARKER_KIND_SPAWN,
+           "undo restored the spawn at (1,0)");
+    assert(marker_kind(tcr_mw, 0, 1) == MARKER_KIND_TARGET,
+           "undo restored the TARGET at (0,1)");
+    assert(marker_direction(tcr_mw, 1, 0) == 3 as u8,
+           "spawn direction also restored");
+}
+
+// ─── Forward-compat: unknown kinds skip on load ─────────────────
+
+fn test_unknown_kind_still_skipped_on_load() {
+    // Regression for the @P366 lenient-cast forward-compat: a
+    // sidecar with a future kind (99) still loads spawns + targets
+    // and skips the unknown one.  This existed pre-target; verify
+    // the dispatch in markerfile_to_world hasn't broken it.
+    tuks_mf = MarkerFile {
+        version: 1,
+        name:    "future",
+        markers: [
+            MarkerSaveEntry { q: 0, r: 0, kind: MARKER_KIND_SPAWN,  direction: 0 },
+            MarkerSaveEntry { q: 1, r: 0, kind: 99,                 direction: 0 },
+            MarkerSaveEntry { q: 2, r: 0, kind: MARKER_KIND_TARGET, direction: 0 },
+        ],
+    };
+    tuks_w = markerfile_to_world(tuks_mf);
+    assert(marker_count(tuks_w) == 2,
+           "spawn + target loaded, kind=99 skipped");
+    assert(marker_kind(tuks_w, 0, 0) == MARKER_KIND_SPAWN,  "spawn at (0,0)");
+    assert(!has_marker(tuks_w, 1, 0),                       "kind=99 skipped");
+    assert(marker_kind(tuks_w, 2, 0) == MARKER_KIND_TARGET, "target at (2,0)");
+}
