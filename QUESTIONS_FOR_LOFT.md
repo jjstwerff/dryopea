@@ -31,218 +31,6 @@ fix / feature, move it to **Resolved**.
 
 ## Open
 
-### `vector<Struct>` with trailing `u8 not null` fields corrupts on `:j` save
-
-- **Found while:** Plan 03 M3 — saving the marker sidecar.
-  MarkerEntry has shape `{ q: integer, r: integer, kind: u8,
-  direction: u8 }` (two trailing u8 fields).  Iterating
-  `hash<MarkerEntry[q, r]>` and appending into a
-  `vector<MarkerEntry>`, then serialising with `:j`, produces
-  JSON where the u8 field values are **garbage memory** and the
-  preceding integer fields are zeroed for the second-and-later
-  entries.
-- **Kind:** bug (`:j` formatter or vector iteration —
-  mixed-width struct layout)
-- **What dryopea sees:**
-  ```loft
-  pub struct MarkerEntry {
-      q:         integer not null,
-      r:         integer not null,
-      kind:      u8      not null,
-      direction: u8      not null,
-  }
-
-  fn test() {
-      mw: hash<MarkerEntry[q, r]> = [];
-      mw[1, 1] = MarkerEntry { q: 1, r: 1, kind: 0 as u8, direction: 0 as u8 };
-      mw[2, 2] = MarkerEntry { q: 2, r: 2, kind: 0 as u8, direction: 3 as u8 };
-
-      out: vector<MarkerEntry> = [];
-      for e in mw {
-          out += [MarkerEntry {
-              q:         e.q,
-              r:         e.r,
-              kind:      e.kind,
-              direction: e.direction,
-          }];
-      }
-      println("{out:j}");
-      // expected: [{"q":1,"r":1,"kind":0,"direction":0},
-      //            {"q":2,"r":2,"kind":0,"direction":3}]
-      // observed: [{"q":0,"r":0,"kind":3,"direction":0},
-      //            {"q":6859879637655319924,"r":12653,
-      //             "kind":183,"direction":255}]
-  }
-  ```
-  Visible pattern: the first entry's `kind` slot received the
-  *second* placement's `direction` value (3) — i.e. fields look
-  shifted by one slot.  The second entry is full memory garbage.
-- **Workaround in dryopea:** `marker_file.loft` now declares a
-  wider on-disk shape `MarkerSaveEntry { q, r, kind: integer,
-  direction: integer }` and `save.loft`'s
-  `marker_world_to_file` widens `MarkerEntry.kind/direction` to
-  integer when building the save vector.  Same idiom as
-  `PaintedHex` (u8 in memory) ↔ `GroundEntry` (text on disk).
-- **Loft pointer:** `:j` formatter for `vector<Struct>` where the
-  struct has trailing `u8 not null` fields, OR loft's
-  vector-of-struct iteration / copy with mixed-width fields.
-  Bug surfaced AFTER M2 commit `d87d202`; the same code path
-  passed 11/11 in M1 commit `d8f311c`.  Trigger may be related
-  to adding sibling code in `markers.loft` (new functions, no
-  struct changes) — possibly codegen-order-sensitive.
-
-### Loft parser rejects `(tuple_local.N as float)`
-
-- **Found while:** Plan 03 M3 — converting the integer return
-  of `world_to_canvas` (a `(integer, integer)` tuple) into
-  floats for sub-pixel arrow geometry math.
-- **Kind:** bug (parser — cast-paren handling on tuple field
-  access)
-- **What dryopea sees:** All four forms below fail with the
-  same `Expect token ;` / `Syntax error: unexpected ')'`
-  error pointing at the cast:
-  ```loft
-  // From world.loft: hex_to_world returns (float, float).
-  // From render.loft: world_to_canvas returns (integer, integer).
-
-  pix = world_to_canvas(cam, wx, wy, w, h, ppm);
-
-  // (1) Parenthesised cast on tuple component — FAILS:
-  cx_f = (pix.0 as float);
-  //                     ^ Syntax error: unexpected ')'
-
-  // (2) Unparenthesised cast on tuple component — FAILS too:
-  cx_f = pix.0 as float;
-  //              ^ Expect token ;
-
-  // (3) Bind first, then cast the local — ALSO FAILS:
-  cx_i = pix.0;
-  cx_f = cx_i as float;
-  //          ^ Expect token ;
-
-  // (4) Works only via dual indirection: turn the integer
-  //     pixel into a separate float-typed local via a
-  //     no-op multiply, or inline the world→canvas math
-  //     so floats never become integers in the first place.
-  ```
-- **Reproducer (minimal):**
-  ```loft
-  fn pixel() -> (integer, integer) { (10, 20) }
-
-  fn test() {
-      p = pixel();
-      x = p.0 as float;   // PARSE ERROR
-      println("{x}");
-  }
-  ```
-- **Workaround in dryopea:** `marker_render.loft`'s
-  `draw_marker_arrow` inlines render.loft's `world_to_canvas`
-  math but keeps the intermediates as `float` end-to-end, so no
-  integer→float cast is needed on a tuple component.  This
-  duplicates ~6 lines of camera projection math; cleanup once
-  the parser fix ships.
-- **Loft pointer:** probably the same parser site that handles
-  the existing `(struct_field as T)` cast — that form works in
-  `painted.loft` (`pl_aq = (h.q as float);` and `(a.q as float)`
-  inline), so the tuple-field-access path appears to need its
-  own arm.
-
-### `const` parameter locks the store across unrelated writes
-
-- **Found while:** Plan 03 follow-up history work — implementing
-  `clear_and_record(pw: const PaintedWorld, mw: const MarkerWorld,
-  history: &History)`.  The function reads pw + mw to snapshot
-  every painted hex / marker into a fresh `UndoEntry`, then pushes
-  the entry to `history`.  Tests reliably failed with
-  `Claim on read-only store (size=2) (locked by:
-  lock_store(store_nr=3, rec=1))`.
-- **Kind:** bug or feature gap — `const` parameter's lock
-  scope is wider than the declared parameter; blocks unrelated
-  allocations.
-- **What dryopea sees:** marking a function parameter `const`
-  should mean "this function won't mutate this argument."  In
-  practice it appears to lock the entire Store that holds the
-  argument, so subsequent `+= [...]` allocations *anywhere* in
-  the function (even on a fresh local variable, even into a
-  different struct hierarchy) hit the lock and fail.  The two
-  `const` params live in the test's main store; the
-  `car_entry.painted += [PaintedDelta { ... }]` claim that
-  failed is on a LOCAL `UndoEntry`'s vector field — semantically
-  unrelated.
-- **Reproducer (sketch):**
-  ```loft
-  pub fn clear_and_record(
-      pw:      const PaintedWorld,
-      mw:      const MarkerWorld,
-      history: &History,
-  ) {
-      car_entry = undo_entry_empty();
-      for car_pe in pw.painted {
-          car_entry.painted += [PaintedDelta { ... }];   // FAILS here
-      }
-      // ...
-  }
-  ```
-- **Workaround in dryopea:** dropped the `const` qualifier on
-  `clear_and_record`'s pw + mw params (history.loft).  The
-  function still doesn't mutate them — just relies on convention.
-  The signature reads less safely now, but the test suite passes.
-- **Loft pointer:** the lock granularity for `const` parameter
-  arrives at Store level when it should be at value / sub-record
-  level.  Could be parser-side (don't emit the lock for `const`
-  on Store-holding types) or runtime-side (narrow the lock to
-  the specific record(s) named, not the whole Store).
-
-### Cannot pass a literal or expression to a `&` parameter — even when the param isn't `&`
-
-- **Found while:** Plan 03 follow-up M3 — tests for
-  `reload_and_record(pw_current: PaintedWorld, mw_current:
-  MarkerWorld, pw_loaded: PaintedWorld, mw_loaded: MarkerWorld,
-  history: &History)`.  The signature has NO `&` params on the
-  PaintedWorld / MarkerWorld slots — only the History at the end
-  is `&`.  Yet tests passing `marker_empty()` directly as one of
-  the world arguments failed to compile:
-  ```
-  error: Cannot pass a literal or expression to a '&' parameter
-         — assign to a variable first
-  ```
-- **Kind:** bug (error message or analysis — the diagnostic
-  blames `&` when none of the four world params are `&`)
-- **Reproducer:**
-  ```loft
-  pub fn takes_four_worlds(
-      a: PaintedWorld, b: MarkerWorld,
-      c: PaintedWorld, d: MarkerWorld,
-      history: &History,
-  ) { ... }
-
-  fn test() {
-      h = history_empty();
-      cur_pw = painted_empty();
-      cur_mw = marker_empty();
-      ld_pw  = painted_empty();
-      takes_four_worlds(cur_pw, cur_mw, ld_pw, marker_empty(), h);
-      // ─────────────────────────────────────^^^^^^^^^^^^^^^
-      // FAILS — "Cannot pass a literal or expression to a '&' parameter"
-      // (despite param d being plain MarkerWorld, not &MarkerWorld)
-  }
-  ```
-- **Workaround in dryopea:** bind every struct-valued call
-  expression to a local before passing.  Mechanical for callers;
-  awkward in test code.  See `tests/03_qol_history.loft` ~lines
-  300-360 — every reload-record test has 4 extra local bindings
-  just to dodge this.
-- **Theories:**
-  1. Loft auto-promotes struct-by-value args to `&` internally
-     for performance (avoid copy), and that promotion makes
-     them require named storage; the diagnostic is honest
-     about the internal `&` but misleading about the user's
-     declared signature.
-  2. There's a different parser path the error message
-     misclassifies.
-- **Loft pointer:** error message site + the value-arg
-  resolution logic for struct types.
-
 ### Div-by-zero warning still fires on `float / int_literal`
 
 - **Found while:** Re-verifying the @P368 fix on 2026-05-27.
@@ -334,6 +122,84 @@ against a 0-length palette.  Both fixed in loft commit `42f8228`.
 > resolved set per the cross-project coordination note.  Dryopea-
 > side workarounds retire as the relevant code touches them; not
 > all retirement happens in one sweep.
+
+### Tuple-component cast `local.N as Type` — parse path
+
+- **Verified fixed:** 2026-05-27 via three-form probe
+  (`/tmp/tuple_cast_probe.loft`): unparen `p.0 as float`,
+  parenthesised `(p.0 as float)`, and bind-then-cast all
+  parse-check cleanly (`exit 0`).  No specific `@P` number
+  in loft's recent log — fix may have been absorbed into the
+  broader parser-fix batch (84b6592 et al.) rather than
+  filed on its own.
+- **Workaround retirement (pending):** `marker_render.loft`
+  inlines world→canvas projection math to keep floats end-
+  to-end and dodge the bug.  Can revert to a
+  `world_to_canvas(...)` call + `(tuple.N as float)` cast,
+  saving ~12 duplicated lines across `draw_marker_arrow` and
+  `draw_target_marker`.
+
+### `vector<Struct>` with trailing `u8` fields — `:j` serialisation
+
+- **Original observation:** during plan 03 M3 (between M1
+  commit `d8f311c` green and M2 commit `d87d202` ),
+  `vector<MarkerEntry>` (with two trailing `u8 not null`
+  fields) serialised via `:j` produced garbage memory values
+  — first entry's `kind` slot received the second placement's
+  `direction`; the second entry was fully corrupted memory.
+  Workaround was to widen u8 → integer on disk via
+  `MarkerSaveEntry`.
+- **Verified fixed:** 2026-05-27 via `/tmp/probe_u8_vector.loft`
+  — two-element `vector<Pair{q, r, kind: u8, direction: u8}>`
+  serialised to `[{"q":1,"r":1,"kind":0,"direction":0},
+  {"q":2,"r":2,"kind":0,"direction":3}]` byte-perfect.  Likely
+  resolved as part of the broader 56-byte cast / vector
+  layout fixes shipped together with @P372–@P375; not
+  separately commit-tagged.
+- **Workaround retirement (pending):** `src/marker_file.loft`
+  can drop the on-disk `MarkerSaveEntry` widened-shape;
+  `src/save.loft`'s `marker_world_to_file` and
+  `markerfile_to_world` can use `MarkerEntry` directly.
+  Net: one struct + ~20 lines of widen / narrow code go away.
+
+### `const` parameter store-lock blocking unrelated writes
+
+- **Original observation:** during plan 03 follow-up history
+  work, `clear_and_record(pw: const PaintedWorld, mw: const
+  MarkerWorld, history: &History)` reliably failed with
+  `Claim on read-only store (size=2) (locked by:
+  lock_store(store_nr=3, rec=1))` — the `+= [PaintedDelta]`
+  claim into a SEPARATE local `UndoEntry`'s vector hit a lock
+  scoped to the `const`-marked args' store.  Workaround was
+  to drop the `const` qualifier (convention-only read-only).
+- **Verified fixed:** 2026-05-27 via `/tmp/probe_const_lock.loft`
+  — function `pcl_walk(b: const Bag, o: Out)` that reads `b`
+  and writes to `o.results` ran cleanly, output `got 20`
+  followed by `got 40`.  The `const` lock no longer extends
+  across unrelated allocations.
+- **Workaround retirement (pending):** restore the `const`
+  qualifier on `clear_and_record`'s pw + mw params in
+  `src/history.loft`.  Function is unchanged otherwise;
+  pure declarative tightening.
+
+### Cannot pass a literal/expression to a non-`&` parameter
+
+- **Original observation:** during plan 03 follow-up M3 tests,
+  `takes_four_worlds(cur_pw, cur_mw, ld_pw, marker_empty(), h)`
+  failed with `Cannot pass a literal or expression to a '&'
+  parameter — assign to a variable first` despite NONE of the
+  world params being declared `&`.  Workaround was to bind
+  every struct-valued call expression to a local first;
+  ~4 extra `let` per reload-record test.
+- **Verified fixed:** 2026-05-27 via
+  `/tmp/probe_literal_to_param.loft` — `pl_takes_four(x1, x2,
+  x3, w_empty())` ran cleanly, printed `sum = 0`.  Function-
+  call expressions pass directly to value-typed parameters
+  now without the intermediate-binding ceremony.
+- **Workaround retirement (pending):** test bindings in
+  `tests/03_qol_history.loft`'s reload-record tests
+  (~lines 300-360) can simplify — inline the `_pw` / `_mw`
+  args directly.  Cosmetic test cleanup; ~16 lines removed.
 
 ### @P375 — `{x:j}` / `to_json()` omitted present-but-empty fields
 
