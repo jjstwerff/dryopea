@@ -3,16 +3,23 @@
 //
 // Plan 01 E1-live — the interactive editor entry point.
 //
-// Launch:
-//   loft --native --lib ../loft/lib src/main.loft
+// Launch (per CLAUDE.md § Key commands):
+//   ~/Documents/loft/target/release/loft --lib ~/Documents/loft/lib src/main.loft
 //
 // Controls:
 //   WASD              pan camera (held → debounced ~8 hexes/sec)
 //   scroll wheel      zoom in/out
-//   1..9, 0           select palette type (1=sea, 5=grass, 9=wall, …)
+//   1..9, 0, -, =     select palette type (1=sea, 5=grass, 9=wall,
+//                     0=wall_high; - and = reserved for indices 10
+//                     and 11 as the palette grows past 9 types)
 //   Left-click/drag   paint hovered hex with active type
 //   Ctrl+S            save to dryopea_save.json
 //   Esc               save + exit
+//
+// Hotkey strategy: 12 base slots (1234567890-=) cover the near-term
+// palette growth.  Future expansion uses modifier engagers (Shift,
+// Ctrl, Shift+Ctrl) × the 12 base keys = 48 slots, plenty of room
+// without abandoning row-1 muscle memory.
 //
 // On startup, loads dryopea_save.json if it exists; otherwise
 // starts on an empty (all-sea) world.  Saves on exit so paint
@@ -32,6 +39,13 @@ const PAN_DEBOUNCE_US:   integer = 120000;   // ~8 hexes/sec
 const PAINT_DEBOUNCE_US: integer = 50000;    // ~20 hexes/sec
 const SAVE_DEBOUNCE_US:  integer = 500000;   // 2 saves/sec max
 
+// ASCII key codes that loft's graphics:: lib doesn't expose as
+// symbolic KEY_* constants yet — graphics.loft has 0-9 but not
+// `-` / `=`.  loft's key constants ARE the lowercase ASCII codes
+// (`KEY_W = 119`, etc.); follow the same convention here.
+const KEY_MINUS: integer = 45;   // ASCII '-'
+const KEY_EQUAL: integer = 61;   // ASCII '='
+
 fn main() {
     if !gl_create_window(WINDOW_W, WINDOW_H, "dryopea editor") {
         println("dryopea: failed to open window");
@@ -50,6 +64,15 @@ fn main() {
     last_pan_us:   integer = 0;
     last_paint_us: integer = 0;
     last_save_us:  integer = 0;
+
+    // Drag-paint state.  At PAINT_DEBOUNCE_US = 50ms (20Hz),
+    // the mouse can move several hexes between paint events
+    // during a fast drag.  Connecting consecutive paint events
+    // with paint_line fills the gaps; `painting` distinguishes
+    // a continuation from the start of a new stroke so a release-
+    // then-quick-repress doesn't bridge two separate strokes.
+    painting:       boolean = false;
+    last_paint_hex: Hex     = Hex { q: 0, r: 0 };
 
     for _ in 0..1000000 {
         if !gl_poll_events() { break; }
@@ -102,6 +125,8 @@ fn main() {
         if gl_key_pressed(graphics::KEY_8) { picker_set_active(picker, 7); }
         if gl_key_pressed(graphics::KEY_9) { picker_set_active(picker, 8); }
         if gl_key_pressed(graphics::KEY_0) { picker_set_active(picker, 9); }
+        if gl_key_pressed(KEY_MINUS)       { picker_set_active(picker, 10); }
+        if gl_key_pressed(KEY_EQUAL)       { picker_set_active(picker, 11); }
 
         // Mouse — hover + paint on left-button.
         mx = gl_mouse_x() as integer;
@@ -110,9 +135,24 @@ fn main() {
 
         if (gl_mouse_button() & 1) != 0 {
             if tnow - last_paint_us > PAINT_DEBOUNCE_US {
-                paint(pw, hovered.q, hovered.r, picker.active as u8);
-                last_paint_us = tnow;
+                if painting {
+                    // Continuation of a drag — fill the gap from
+                    // the previous paint hex to the current hovered
+                    // hex (paint_line handles same-hex as a no-op
+                    // single paint, so this is safe even when the
+                    // mouse barely moved).
+                    paint_line(pw, last_paint_hex, hovered, picker.active as u8);
+                } else {
+                    // Start of a new stroke — single hex.
+                    paint(pw, hovered.q, hovered.r, picker.active as u8);
+                }
+                last_paint_hex = hovered;
+                painting       = true;
+                last_paint_us  = tnow;
             }
+        } else {
+            // Button released — next press starts a fresh stroke.
+            painting = false;
         }
 
         // ── Render ──────────────────────────────────────────────
