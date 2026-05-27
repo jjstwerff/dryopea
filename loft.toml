@@ -23,3 +23,22 @@ entry = "src/dryopea.loft"
 # canvas.loft for the pattern).  GL window functions also live in
 # this lib for when the live renderer lands.
 graphics = { path = "../loft/lib/graphics" }
+
+# Plan 07 — shared world substrate.  `gridmesh` is the standalone,
+# zero-dependency chunk + dirty + mesh-pipeline toolkit (axial).
+# dryopea adopts its ChunkField/dirty engine so edits rebuild only
+# changed chunks instead of the whole world per frame.
+gridmesh = { path = "../loft/lib/gridmesh" }
+
+# `moros_map` is the shared world data model — Map / Chunk / Hex with
+# {q,r,cy} multi-floor, height, material, walls, items.  Plan 07 W1
+# will adopt it so world-building routines interchange with moros.
+#
+# BLOCKED / not yet consumed by any src/ module: it defines `struct
+# Hex`, which collides with dryopea's `world::Hex` in loft's flat
+# global type registry — loading both panics ("Double structure
+# type …").  That's a loft namespacing bug (filed in
+# QUESTIONS_FOR_LOFT.md); W1 resumes once `use` namespaces struct
+# types per library.  Declared here (harmless while unused) so
+# loft_repros/dup_struct_type_across_libs.loft can demonstrate it.
+moros_map = { path = "../loft/lib/moros_map" }

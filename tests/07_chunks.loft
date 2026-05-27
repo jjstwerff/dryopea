@@ -1,0 +1,99 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 07 W0/W2 — chunk + dirty tracking over the gridmesh engine.
+//
+// Proves dryopea's axial (q, r) coords drive gridmesh's ChunkField
+// correctly: building from a painted world seeds the right dirty
+// chunks, edits mark exactly their chunk dirty, clear resets, and a
+// chunk's owned cells map back to the coords that were painted.
+
+use dryopea;
+use gridmesh;
+
+// ─── chunks_from_painted ───────────────────────────────────────
+
+fn test_from_empty_world_no_dirty() {
+    tfe_f = chunks_from_painted(painted_empty());
+    assert(chunks_dirty_count(tfe_f) == 0, "empty world → no dirty chunks");
+}
+
+fn test_from_painted_builds_clean_one_chunk() {
+    tps_w = painted_empty();
+    paint(tps_w, 0, 0, 5 as u8);
+    paint(tps_w, 1, 0, 9 as u8);   // same 32×32 chunk as (0,0)
+    paint(tps_w, 2, 1, 9 as u8);   // still chunk (0,0)
+    tps_f = chunks_from_painted(tps_w);
+    assert(chunks_dirty_count(tps_f) == 0, "fresh field starts clean");
+    assert(len(chunks_all_inputs(tps_f)) == 1, "3 hexes in one chunk → 1 full-build input");
+}
+
+fn test_from_painted_builds_two_chunks() {
+    tpt_w = painted_empty();
+    paint(tpt_w, 0, 0, 5 as u8);    // chunk (0,0)
+    paint(tpt_w, 40, 3, 9 as u8);   // chunk (1,0) — 40 >> 5 == 1
+    tpt_f = chunks_from_painted(tpt_w);
+    assert(chunks_dirty_count(tpt_f) == 0, "fresh field starts clean");
+    assert(len(chunks_all_inputs(tpt_f)) == 2, "two chunks → 2 full-build inputs");
+}
+
+// ─── chunks_note_edit transitions ──────────────────────────────
+
+fn test_note_edit_add_marks_dirty() {
+    tea_f = chunks_from_painted(painted_empty());
+    chunks_note_edit(tea_f, 3, -2, true, false);   // sea → kind (add)
+    assert(chunks_dirty_count(tea_f) == 1, "add → 1 dirty chunk");
+    assert(chunks_is_dirty(tea_f, 3, -2), "the new cell's chunk is dirty");
+}
+
+fn test_note_edit_repaint_marks_dirty() {
+    ter_w = painted_empty();
+    paint(ter_w, 3, -2, 5 as u8);
+    ter_f = chunks_from_painted(ter_w);
+    chunks_clear(ter_f);
+    assert(chunks_dirty_count(ter_f) == 0, "cleared");
+    chunks_note_edit(ter_f, 3, -2, false, false);  // kind → kind (repaint)
+    assert(chunks_dirty_count(ter_f) == 1, "repaint marks chunk dirty");
+}
+
+fn test_note_edit_erase_marks_dirty() {
+    tee_w = painted_empty();
+    paint(tee_w, 3, -2, 5 as u8);
+    tee_f = chunks_from_painted(tee_w);
+    chunks_clear(tee_f);
+    chunks_note_edit(tee_f, 3, -2, false, true);   // kind → sea (remove)
+    assert(chunks_dirty_count(tee_f) == 1, "erase marks chunk dirty");
+}
+
+fn test_clear_resets_dirty() {
+    tcr_f = chunks_from_painted(painted_empty());
+    chunks_note_edit(tcr_f, 0, 0, true, false);    // add → dirty
+    assert(chunks_dirty_count(tcr_f) == 1, "edit marked dirty");
+    chunks_clear(tcr_f);
+    assert(chunks_dirty_count(tcr_f) == 0, "clear empties the dirty set");
+}
+
+// ─── dirty inputs + cell→coord round-trip ──────────────────────
+
+fn test_dirty_inputs_count_matches() {
+    tdi_f = chunks_from_painted(painted_empty());
+    assert(len(chunks_dirty_inputs(tdi_f)) == 0, "clean field → no dirty inputs");
+    chunks_note_edit(tdi_f, 0, 0, true, false);     // chunk (0,0)
+    chunks_note_edit(tdi_f, 40, 3, true, false);    // chunk (1,0)
+    tdi_in = chunks_dirty_inputs(tdi_f);
+    assert(len(tdi_in) == 2, "one ChunkInput per dirty chunk");
+}
+
+fn test_cell_hex_round_trips_coord() {
+    tch_f = chunks_from_painted(painted_empty());
+    chunks_note_edit(tch_f, 7, -4, true, false);   // add cell (7,-4)
+    tch_in = chunks_dirty_inputs(tch_f);
+    assert(len(tch_in) == 1, "one dirty chunk");
+    tch_first = tch_in[0] ?? null;
+    assert(tch_first != null, "have the input");
+    assert(len(tch_first.cell_ixs) == 1, "chunk owns the one cell");
+    tch_ix = tch_first.cell_ixs[0] ?? 0;
+    tch_h = chunk_cell_hex(tch_f, tch_ix);
+    assert(tch_h.q == 7, "cell maps back to q=7");
+    assert(tch_h.r == -4, "cell maps back to r=-4");
+}

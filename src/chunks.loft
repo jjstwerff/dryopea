@@ -1,0 +1,103 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 07 — chunk + dirty tracking via the shared `gridmesh` engine.
+//
+// dryopea feeds its axial (q, r) coords straight into a gridmesh
+// ChunkField as (x, y).  The field buckets cells into chunks and
+// tracks which chunks an edit dirtied, so the renderer can rebuild
+// ONLY changed chunks instead of the whole world every frame (the
+// editor-sluggishness fix).
+//
+// halo_k = 0: ground fill is per-cell-independent (no neighbour
+// reads), so NONE of gridmesh's layout-dependent neighbour stepping
+// (`step_x`/`step_y`) runs — the offset-vs-axial layout question
+// doesn't bite until neighbour-aware rules land in plan 07 W3
+// (walls / stairs / rounded-structure detection), which is when
+// gridmesh's axial layout adapter is needed.
+// See plans/future/07-shared-world-substrate/README.md +
+// QUESTIONS_FOR_LOFT.md § coordinate convergence.
+
+use gridmesh;
+use world;
+use painted;
+
+// 32×32 hexes per chunk — matches moros_map's chunk grid so the
+// shared substrate stays consistent across consumers.
+pub const CHUNK_SHIFT: integer = 5;
+// No halo while ground fill is per-cell-independent.
+pub const CHUNK_HALO_K: integer = 0;
+
+// Build a dirty-tracking ChunkField from the hexes currently painted
+// in `w`.  The field starts CLEAN (empty dirty set): the first render
+// does a full build over `chunks_all_inputs`, and only later edits go
+// through the dirty path.  Use at editor open / map load.
+pub fn chunks_from_painted(w: const PaintedWorld) -> ChunkField {
+    cfp_xs: vector<integer> = [];
+    cfp_ys: vector<integer> = [];
+    for cfp_e in w.painted {
+        cfp_xs += [cfp_e.q];
+        cfp_ys += [cfp_e.r];
+    }
+    // layout = 0 is irrelevant at halo_k = 0 (no neighbour stepping
+    // runs); it becomes the Axial layout tag once W3's gridmesh
+    // adapter lands.
+    field_new(0, cfp_xs, cfp_ys, CHUNK_SHIFT, CHUNK_HALO_K)
+}
+
+// Keep the field in sync with a paint edit at (q, r) and mark the
+// affected chunk dirty.  `was_sea` / `now_sea` describe the
+// transition (sea == absent in the sparse painted model):
+//   sea  -> kind : a new cell        (add)
+//   kind -> sea  : erased            (remove)
+//   kind -> kind : repaint, same cell (mark dirty only)
+pub fn chunks_note_edit(f: &ChunkField, q: integer, r: integer,
+                        was_sea: boolean, now_sea: boolean) {
+    if was_sea && !now_sea {
+        field_add_cell(f, q, r);
+    } else if !was_sea && now_sea {
+        field_remove_cell(f, q, r);
+    } else {
+        field_mark_dirty(f, q, r);
+    }
+}
+
+// The dirty chunks to rebuild this frame (empty when nothing changed).
+pub fn chunks_dirty_inputs(f: ChunkField) -> vector<ChunkInput> {
+    collect_dirty_inputs(f, CHUNK_HALO_K)
+}
+
+// All chunks holding cells (full rebuild — first frame / forced).
+pub fn chunks_all_inputs(f: ChunkField) -> vector<ChunkInput> {
+    all_inputs(f, CHUNK_HALO_K)
+}
+
+// Mark the chunk owning (q, r) dirty without touching the cell set.
+// For repaints (kind change, cell already tracked) and for marker
+// edits (which live at a hex but aren't part of the painted cell
+// set) — enough to drive a re-render.
+pub fn chunks_mark_dirty(f: &ChunkField, q: integer, r: integer) {
+    field_mark_dirty(f, q, r);
+}
+
+// Clear the dirty set after a rebuild pass.
+pub fn chunks_clear(f: &ChunkField) {
+    clear_dirty(f);
+}
+
+// ── thin wrappers so dryopea code needn't `use gridmesh` directly ──
+
+pub fn chunks_dirty_count(f: ChunkField) -> integer {
+    dirty_count(f)
+}
+
+pub fn chunks_is_dirty(f: ChunkField, q: integer, r: integer) -> boolean {
+    chunk_is_dirty(f, q, r)
+}
+
+// (q, r) of a tracked cell index — the render rule maps a chunk's
+// owned cell indices back to coords, then looks up the kind in the
+// PaintedWorld.
+pub fn chunk_cell_hex(f: ChunkField, ix: integer) -> Hex {
+    Hex { q: f.xs[ix] ?? 0, r: f.ys[ix] ?? 0 }
+}

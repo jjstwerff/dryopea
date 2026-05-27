@@ -35,6 +35,7 @@ do next?" question in 30 seconds.
 | [`future/04-map-library/`](future/04-map-library/README.md) | M | plan 01 + plan 03 | MapFile schema + map index + browser + content |
 | [`future/05-validation-scenario/`](future/05-validation-scenario/README.md) | M | plans 01-04 | Minimum playable thing; integration spec |
 | [`future/06-editor-stencil-pipeline/`](future/06-editor-stencil-pipeline/README.md) | MH | plan 01 + loft `lib/graphics` mesh API | Editor-as-content-pipeline; multi-layer + bridges + stencil mode + mesh baker + composition.  Brings the suite into rapid prototyping; two shipping paths (polish or strike).  Indie unlock: ship full games on stencil output alone — viable engine offering for devs without an art team |
+| [`future/07-shared-world-substrate/`](future/07-shared-world-substrate/README.md) | H–VH | loft `gridmesh` + `moros_map` + `moros_render` (path-dep, now); gridmesh axial-layout adapter gates W3 | **Active (W0 starting).** Go 3D: adopt the shared hex substrate so dryopea + moros interchange world-building routines (multi-floor, stairs, rounded-structure detection, walls).  Replaces dryopea's 2D `Canvas` painter with `moros_map::Map` + `moros_render` 3D meshes + `gridmesh` chunk/dirty.  Reframes the substrate dependency under plans 02 + 06 |
 
 Several Tier-B / Tier-C / Tier-D features in
 [`ROADMAP.md`](ROADMAP.md) don't have plan slots yet
