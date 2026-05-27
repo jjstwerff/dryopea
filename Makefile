@@ -10,6 +10,12 @@
 #                   present; auto-saves on exit.  WASD pan, scroll zoom,
 #                   1-9 0 - = palette select, Ctrl+S save, Esc exit.
 #
+#   make play MAP=starter_01
+#                   Same, but edits the named map at
+#                   maps/starter_01.json + maps/starter_01_markers.json
+#                   instead of the default single-slot save.  The maps/
+#                   directory is auto-created on first save.
+#
 #   make test       Run the dryopea test suite via scripts/test.sh.
 #                   Refreshes tests/actual/ first so stale artefacts
 #                   can't masquerade as current.  ~5 seconds.
@@ -58,14 +64,16 @@ help:
 # ── Common-use targets ───────────────────────────────────────────
 
 # Launch the interactive editor.  Fails fast with a clear message if
-# the loft binary is missing — `make loft` rebuilds it.
+# the loft binary is missing — `make loft` rebuilds it.  Pass
+# `MAP=<name>` to edit a named map under maps/ instead of the default
+# single-slot save.
 play:
 	@if [ ! -x "$(LOFT_BIN)" ]; then \
 	  echo "ERROR: loft binary not found at $(LOFT_BIN)"; \
 	  echo "Run 'make loft' to build it, or set LOFT_BIN."; \
 	  exit 2; \
 	fi
-	$(LOFT_BIN) --lib $(LOFT_LIB) src/main.loft
+	$(LOFT_BIN) --lib $(LOFT_LIB) src/main.loft $(MAP)
 
 # Full test suite.  Delegates to scripts/test.sh (single source of
 # truth for the invocation — that script also cleans tests/actual/

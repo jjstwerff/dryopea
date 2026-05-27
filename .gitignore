@@ -27,6 +27,10 @@ result.txt
 # only the goldens are checked in.
 tests/actual/
 
-# Interactive-editor save (E1-live writes to dryopea_save.json
-# in the cwd).
+# Interactive-editor default-slot save (E1-live writes
+# dryopea_save.json + the marker sidecar to the cwd when
+# launched without a MAP= argument).  Named maps under
+# maps/ are intentional repo content — authors commit
+# them as authored.
 dryopea_save.json
+dryopea_save_markers.json

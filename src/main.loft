@@ -5,6 +5,13 @@
 //
 // Launch (per CLAUDE.md § Key commands):
 //   ~/Documents/loft/target/release/loft --lib ~/Documents/loft/lib src/main.loft
+//   ↑ default — edits the single-slot save at ./dryopea_save.json
+//
+//   ~/Documents/loft/target/release/loft --lib ~/Documents/loft/lib src/main.loft starter_01
+//   ↑ named map — edits maps/starter_01.json + maps/starter_01_markers.json
+//
+// Same via `make play` / `make play MAP=starter_01`.  The `maps/`
+// directory is auto-created on first save.
 //
 // Controls:
 //   WASD              pan camera (held → debounced ~8 hexes/sec)
@@ -69,8 +76,12 @@ use graphics;
 const WINDOW_W: integer = 960;
 const WINDOW_H: integer = 720;
 const PPM: float = 24.0;
-const SAVE_PATH:        text = "dryopea_save.json";
-const MARKER_SAVE_PATH: text = "dryopea_save_markers.json";
+
+// Default-slot paths (no CLI arg).  Named maps live under
+// `maps/{name}.json` + `maps/{name}_markers.json` instead — see
+// the path resolution at the top of `main()`.
+const DEFAULT_SAVE_PATH:        text = "dryopea_save.json";
+const DEFAULT_MARKER_SAVE_PATH: text = "dryopea_save_markers.json";
 
 // Debounce thresholds in microseconds (`ticks()` is microsecond-
 // precision).  Held keys fire at the rates below, not 60Hz.
@@ -92,7 +103,23 @@ const KEY_H:     integer = 104;   // ASCII 'h' — recentre camera
 const KEY_K:     integer = 107;   // ASCII 'k' — cycle marker kind
 
 fn main() {
-    if !gl_create_window(WINDOW_W, WINDOW_H, "dryopea editor") {
+    // Resolve save paths from CLI args.  No args → default single-
+    // slot save at the cwd-relative path.  One arg (a map name) →
+    // `maps/{name}.json` + `maps/{name}_markers.json`; mkdir_all the
+    // directory so the first save works on a fresh checkout.
+    args = arguments();
+    save_path:        text = DEFAULT_SAVE_PATH;
+    marker_save_path: text = DEFAULT_MARKER_SAVE_PATH;
+    map_label:        text = "<default>";
+    if len(args) > 0 && args[0] != "" {
+        map_name = args[0];
+        save_path        = "maps/{map_name}.json";
+        marker_save_path = "maps/{map_name}_markers.json";
+        map_label        = map_name;
+        mkdir_all("maps");
+    }
+
+    if !gl_create_window(WINDOW_W, WINDOW_H, "dryopea editor — {map_label}") {
         println("dryopea: failed to open window");
         return;
     }
@@ -101,11 +128,12 @@ fn main() {
     palette = load_palette("examples/palette.json");
     picker = picker_default("examples/palette.json");
 
-    loaded = load_map_or_empty(SAVE_PATH, palette);
+    loaded = load_map_or_empty(save_path, palette);
     pw  = loaded.0;
     cam = loaded.1;
-    mw  = load_markers_or_empty(MARKER_SAVE_PATH);
-    println("dryopea: editor open ({painted_count(pw)} hexes, {marker_count(mw)} markers loaded)");
+    mw  = load_markers_or_empty(marker_save_path);
+    println("dryopea: editor open map=[{map_label}] ({painted_count(pw)} hexes, {marker_count(mw)} markers loaded)");
+    println("         paths: {save_path} + {marker_save_path}");
 
     last_pan_us:   integer = 0;
     last_paint_us: integer = 0;
@@ -222,8 +250,8 @@ fn main() {
         // Ctrl+S → save (debounced to avoid Ctrl+S held-down spam).
         if ctrl_held && gl_key_pressed(graphics::KEY_S) {
             if tnow - last_save_us > SAVE_DEBOUNCE_US {
-                save_world(pw, cam, palette, "interactive", SAVE_PATH);
-                save_markers(mw, "interactive", MARKER_SAVE_PATH);
+                save_world(pw, cam, palette, "interactive", save_path);
+                save_markers(mw, "interactive", marker_save_path);
                 last_save_us = tnow;
                 dirty = false;
                 println("dryopea: saved ({painted_count(pw)} hexes, {marker_count(mw)} markers)");
@@ -294,10 +322,10 @@ fn main() {
                 history_push(history, stroke_in_flight);
                 stroke_in_flight = undo_entry_empty();
             }
-            reload_loaded = load_map_or_empty(SAVE_PATH, palette);
+            reload_loaded = load_map_or_empty(save_path, palette);
             reload_pw_new = reload_loaded.0;
             reload_cam_new = reload_loaded.1;
-            reload_mw_new = load_markers_or_empty(MARKER_SAVE_PATH);
+            reload_mw_new = load_markers_or_empty(marker_save_path);
             reload_and_record(pw, mw, reload_pw_new, reload_mw_new, history);
             pw    = reload_pw_new;
             mw    = reload_mw_new;
@@ -460,9 +488,9 @@ fn main() {
     }
 
     // Save on exit so progress isn't lost when the window closes.
-    save_world(pw, cam, palette, "exit", SAVE_PATH);
-    save_markers(mw, "exit", MARKER_SAVE_PATH);
+    save_world(pw, cam, palette, "exit", save_path);
+    save_markers(mw, "exit", marker_save_path);
     dirty = false;
-    println("dryopea: saved on exit ({painted_count(pw)} hexes, {marker_count(mw)} markers)");
+    println("dryopea: saved on exit map=[{map_label}] ({painted_count(pw)} hexes, {marker_count(mw)} markers)");
     gl_destroy_window();
 }
