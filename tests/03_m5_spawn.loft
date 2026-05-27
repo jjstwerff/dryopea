@@ -1,0 +1,251 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 03 phase M5 — runtime spawn execution.
+//
+// Covers the wave-engine substrate: hex_offset's 6-direction
+// table, active-marker filtering (close-spawn-disable radius),
+// spawn_wave's count + round-robin + heading-from-marker, and
+// the approach-mode enemy_tick that walks one hex per tick.
+
+use dryopea;
+
+// ─── hex_offset (6 cardinal directions) ─────────────────────────
+
+fn test_hex_offset_d0_south() {
+    o = hex_offset(0 as u8);
+    assert(o.0 ==  0, "d=0 dq=0");
+    assert(o.1 ==  1, "d=0 dr=+1 (south)");
+}
+
+fn test_hex_offset_d3_north() {
+    o = hex_offset(3 as u8);
+    assert(o.0 ==  0, "d=3 dq=0");
+    assert(o.1 == -1, "d=3 dr=-1 (north)");
+}
+
+fn test_hex_offset_six_directions_distinct() {
+    // Six distinct (dq, dr) pairs; pack each as a small int
+    // to compare cheaply.
+    seen: vector<integer> = [];
+    for tho_d in 0..6 {
+        tho_o = hex_offset(tho_d as u8);
+        seen += [tho_o.0 * 10 + tho_o.1];
+    }
+    // Spot-check that all six values appear AND none repeat.
+    // (Loft hash gives O(1) duplicate detection without much
+    // boilerplate — but a vector scan suffices at len=6.)
+    for tho_i in 0..6 {
+        for tho_j in 0..6 {
+            if tho_i != tho_j {
+                assert(seen[tho_i] != seen[tho_j],
+                       "directions {tho_i} and {tho_j} produce distinct offsets");
+            }
+        }
+    }
+}
+
+// ─── active_spawn_markers (close-disable filter) ────────────────
+
+fn test_active_filters_close_markers() {
+    tafc_mw = marker_empty();
+    place_spawn(tafc_mw, 12, 0, 0 as u8);    // far
+    place_spawn(tafc_mw, 0, 12, 0 as u8);    // far
+    place_spawn(tafc_mw, 2, 0, 0 as u8);     // close (distance 2)
+    tafc_active = active_spawn_markers(tafc_mw, 0, 0, 10);
+    assert(len(tafc_active) == 2, "2 far markers active, 1 close filtered");
+}
+
+fn test_active_radius_inclusive_at_boundary() {
+    // distance == radius: ACTIVE (>=, not >).
+    tarb_mw = marker_empty();
+    place_spawn(tarb_mw, 10, 0, 0 as u8);   // distance 10 exactly
+    tarb_active = active_spawn_markers(tarb_mw, 0, 0, 10);
+    assert(len(tarb_active) == 1, "boundary marker is active (>= radius)");
+}
+
+fn test_active_empty_world() {
+    tae_active = active_spawn_markers(marker_empty(), 0, 0, 5);
+    assert(len(tae_active) == 0, "empty marker world → no active markers");
+}
+
+fn test_active_all_close_returns_empty() {
+    tacre_mw = marker_empty();
+    place_spawn(tacre_mw, 1, 0, 0 as u8);
+    place_spawn(tacre_mw, 0, 1, 0 as u8);
+    tacre_active = active_spawn_markers(tacre_mw, 0, 0, 10);
+    assert(len(tacre_active) == 0, "all markers inside radius → empty active set");
+}
+
+// ─── spawn_wave (count + heading + round-robin) ─────────────────
+
+fn test_spawn_wave_emits_count_enemies() {
+    tswe_state = wave_state_empty();
+    tswe_mw = marker_empty();
+    place_spawn(tswe_mw, 10,   0,  0 as u8);
+    place_spawn(tswe_mw,  0,  10,  1 as u8);
+    place_spawn(tswe_mw, -10,  0,  3 as u8);
+    spawn_wave(tswe_state, 5, tswe_mw, 0, 0, 5);
+    assert(len(tswe_state.enemies) == 5, "5 enemies emitted");
+}
+
+fn test_spawn_wave_enemy_at_active_marker_hex() {
+    tsea_state = wave_state_empty();
+    tsea_mw = marker_empty();
+    place_spawn(tsea_mw, 10, 0,  0 as u8);
+    place_spawn(tsea_mw, 0, 10,  1 as u8);
+    spawn_wave(tsea_state, 4, tsea_mw, 0, 0, 5);
+    // Every spawned enemy is at one of the two marker positions.
+    for tsea_e in tsea_state.enemies {
+        tsea_at_a = tsea_e.q == 10 && tsea_e.r == 0;
+        tsea_at_b = tsea_e.q == 0  && tsea_e.r == 10;
+        assert(tsea_at_a || tsea_at_b, "enemy is at an active marker hex");
+    }
+}
+
+fn test_spawn_wave_heading_from_marker() {
+    tswh_state = wave_state_empty();
+    tswh_mw = marker_empty();
+    place_spawn(tswh_mw, 10, 0, 2 as u8);   // direction = 2
+    spawn_wave(tswh_state, 1, tswh_mw, 0, 0, 5);
+    assert(tswh_state.enemies[0].heading == 2 as u8,
+           "first enemy inherits marker's direction (2)");
+}
+
+fn test_spawn_wave_round_robin_distributes() {
+    // 3 active markers + 6 enemies = exactly 2 per marker via
+    // round-robin (cursor 0..5 mod 3).
+    tsrr_state = wave_state_empty();
+    tsrr_mw = marker_empty();
+    place_spawn(tsrr_mw, 10,   0,  0 as u8);
+    place_spawn(tsrr_mw,  0,  10,  1 as u8);
+    place_spawn(tsrr_mw, -10,  0,  3 as u8);
+    spawn_wave(tsrr_state, 6, tsrr_mw, 0, 0, 5);
+    // Cursor must have advanced 6 steps.
+    assert(tsrr_state.pick_cursor == 6, "cursor advanced by spawn count");
+    // Active-marker iteration order is whatever the underlying
+    // hash gives us; assert that each placed marker hex received
+    // EXACTLY 2 enemies (round-robin even split).
+    tsrr_at_a = 0;
+    tsrr_at_b = 0;
+    tsrr_at_c = 0;
+    for tsrr_e in tsrr_state.enemies {
+        if tsrr_e.q == 10  && tsrr_e.r ==  0 { tsrr_at_a = tsrr_at_a + 1; }
+        if tsrr_e.q ==  0  && tsrr_e.r == 10 { tsrr_at_b = tsrr_at_b + 1; }
+        if tsrr_e.q == -10 && tsrr_e.r ==  0 { tsrr_at_c = tsrr_at_c + 1; }
+    }
+    assert(tsrr_at_a == 2, "marker A got 2 enemies");
+    assert(tsrr_at_b == 2, "marker B got 2 enemies");
+    assert(tsrr_at_c == 2, "marker C got 2 enemies");
+}
+
+fn test_spawn_wave_no_active_emits_nothing() {
+    tsna_state = wave_state_empty();
+    tsna_mw = marker_empty();
+    place_spawn(tsna_mw, 2, 0, 0 as u8);    // close, filtered
+    spawn_wave(tsna_state, 5, tsna_mw, 0, 0, 10);
+    assert(len(tsna_state.enemies) == 0,
+           "all markers disabled → no spawns");
+    assert(tsna_state.pick_cursor == 0,
+           "cursor unchanged when no active markers");
+}
+
+fn test_spawn_wave_appends_to_existing() {
+    // A second spawn_wave call on the same state should APPEND,
+    // not replace.  Cursor continues from where it left off.
+    tswa_state = wave_state_empty();
+    tswa_mw = marker_empty();
+    place_spawn(tswa_mw, 10, 0, 0 as u8);
+    place_spawn(tswa_mw, 0, 10, 1 as u8);
+    spawn_wave(tswa_state, 3, tswa_mw, 0, 0, 5);
+    spawn_wave(tswa_state, 2, tswa_mw, 0, 0, 5);
+    assert(len(tswa_state.enemies) == 5, "3 + 2 = 5 enemies total");
+    assert(tswa_state.pick_cursor == 5, "cursor advanced over both calls");
+}
+
+// ─── enemy_tick (approach-mode walk) ────────────────────────────
+
+fn test_enemy_tick_walks_one_hex_south() {
+    tet_e = Enemy { q: 5, r: 5,
+                    kind: ENEMY_KIND_REGULAR as u8,
+                    heading: 0 as u8, alive: true };
+    enemy_tick(tet_e);
+    assert(tet_e.q == 5, "south: q unchanged");
+    assert(tet_e.r == 6, "south: r increased by 1");
+}
+
+fn test_enemy_tick_walks_one_hex_north() {
+    teh_e = Enemy { q: 5, r: 5,
+                    kind: ENEMY_KIND_REGULAR as u8,
+                    heading: 3 as u8, alive: true };
+    enemy_tick(teh_e);
+    assert(teh_e.q == 5, "north: q unchanged");
+    assert(teh_e.r == 4, "north: r decreased by 1");
+}
+
+fn test_enemy_tick_dead_doesnt_move() {
+    tedd_e = Enemy { q: 5, r: 5,
+                     kind: ENEMY_KIND_REGULAR as u8,
+                     heading: 0 as u8, alive: false };
+    enemy_tick(tedd_e);
+    assert(tedd_e.q == 5, "dead: q frozen");
+    assert(tedd_e.r == 5, "dead: r frozen");
+}
+
+fn test_wave_tick_advances_every_enemy() {
+    twt_state = wave_state_empty();
+    twt_state.enemies += [Enemy { q: 0, r: 0,
+                                   kind: ENEMY_KIND_REGULAR as u8,
+                                   heading: 0 as u8, alive: true }];
+    twt_state.enemies += [Enemy { q: 10, r: 0,
+                                   kind: ENEMY_KIND_REGULAR as u8,
+                                   heading: 3 as u8, alive: true }];
+    wave_tick(twt_state);
+    assert(twt_state.enemies[0].r == 1, "first enemy walked south by 1");
+    assert(twt_state.enemies[1].r == -1, "second enemy walked north by 1");
+}
+
+// ─── alive_count (wave-clear sentinel) ──────────────────────────
+
+fn test_alive_count_all_alive() {
+    tac_state = wave_state_empty();
+    for tac_i in 0..3 {
+        tac_state.enemies += [Enemy { q: 0, r: 0,
+                                       kind: ENEMY_KIND_REGULAR as u8,
+                                       heading: 0 as u8, alive: true }];
+    }
+    assert(alive_count(tac_state) == 3, "3 of 3 alive");
+}
+
+fn test_alive_count_mixed() {
+    tacm_state = wave_state_empty();
+    tacm_state.enemies += [Enemy { q: 0, r: 0,
+                                    kind: ENEMY_KIND_REGULAR as u8,
+                                    heading: 0 as u8, alive: true }];
+    tacm_state.enemies += [Enemy { q: 0, r: 0,
+                                    kind: ENEMY_KIND_REGULAR as u8,
+                                    heading: 0 as u8, alive: false }];
+    tacm_state.enemies += [Enemy { q: 0, r: 0,
+                                    kind: ENEMY_KIND_REGULAR as u8,
+                                    heading: 0 as u8, alive: true }];
+    assert(alive_count(tacm_state) == 2, "2 alive of 3");
+}
+
+fn test_alive_count_empty_state() {
+    assert(alive_count(wave_state_empty()) == 0,
+           "fresh state has 0 alive");
+}
+
+// ─── Integration — full spawn → tick → arrival sketch ───────────
+
+fn test_integration_spawn_and_walk_one_tick() {
+    // One marker far north of (0,0), heading SOUTH (towards core).
+    // After one tick the enemy should have moved one hex south.
+    tisw_state = wave_state_empty();
+    tisw_mw = marker_empty();
+    place_spawn(tisw_mw, 0, -15, 0 as u8);   // north of core, heading south
+    spawn_wave(tisw_state, 1, tisw_mw, 0, 0, 10);
+    assert(tisw_state.enemies[0].r == -15, "spawned at marker hex");
+    wave_tick(tisw_state);
+    assert(tisw_state.enemies[0].r == -14, "walked one hex toward core");
+}
