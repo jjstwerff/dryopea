@@ -27,6 +27,12 @@ result.txt
 # only the goldens are checked in.
 tests/actual/
 
+# Loft's native-compile + interpret cache directories — generated
+# binaries / bytecode, regenerated per build.  Both root-level and
+# src-level locations.
+.loft/
+src/.loft/
+
 # Interactive-editor default-slot save (E1-live writes
 # dryopea_save.json + the marker sidecar to the cwd when
 # launched without a MAP= argument).  Named maps under
