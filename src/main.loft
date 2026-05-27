@@ -25,6 +25,14 @@
 //                     A faint outline ghost arrow at the hovered
 //                     hex previews where the next click will land.
 //   Ctrl+S            save to dryopea_save.json
+//   Ctrl+N            clear all — empty painted layer, empty
+//                     marker layer, reset camera to origin.
+//                     Does NOT auto-save; the next Ctrl+S
+//                     commits the cleared state.
+//   H                 recentre camera at origin (without clearing
+//                     painted or marker layers).  Letter rather
+//                     than `Home` because graphics.loft doesn't
+//                     ship a KEY_HOME constant yet.
 //   Esc               save + exit
 //
 // Hotkey strategy: 12 base slots (1234567890-=) cover the near-term
@@ -52,11 +60,16 @@ const PAINT_DEBOUNCE_US: integer = 50000;    // ~20 hexes/sec
 const SAVE_DEBOUNCE_US:  integer = 500000;   // 2 saves/sec max
 
 // ASCII key codes that loft's graphics:: lib doesn't expose as
-// symbolic KEY_* constants yet — graphics.loft has 0-9 but not
-// `-` / `=`.  loft's key constants ARE the lowercase ASCII codes
-// (`KEY_W = 119`, etc.); follow the same convention here.
-const KEY_MINUS: integer = 45;   // ASCII '-'
-const KEY_EQUAL: integer = 61;   // ASCII '='
+// symbolic KEY_* constants yet — graphics.loft has 0-9 + a
+// handful of named letters (W A S D Q E O R F Z Y) but not all
+// row-letters and no `-` / `=`.  Loft's key constants ARE the
+// lowercase ASCII codes (`KEY_W = 119`, etc.); follow the same
+// convention.  The dedicated `Home` key isn't in graphics.loft
+// today either — using letter `H` instead for camera recentre.
+const KEY_MINUS: integer = 45;    // ASCII '-' — palette index 10
+const KEY_EQUAL: integer = 61;    // ASCII '=' — palette index 11
+const KEY_N:     integer = 110;   // ASCII 'n' — Ctrl+N clears all
+const KEY_H:     integer = 104;   // ASCII 'h' — recentre camera
 
 fn main() {
     if !gl_create_window(WINDOW_W, WINDOW_H, "dryopea editor") {
@@ -102,6 +115,14 @@ fn main() {
     r_held_prev:     boolean = false;
     mb_held_prev:    boolean = false;
 
+    // Save-state tracking.  `dirty` flips to true on every paint /
+    // place / remove / clear and back to false on a successful
+    // save.  The HUD save indicator reads this directly.  Other
+    // edge-detected modifier keys (Ctrl+N, H) also live here.
+    dirty:        boolean = false;
+    n_held_prev:  boolean = false;
+    h_held_prev:  boolean = false;
+
     for _ in 0..1000000 {
         if !gl_poll_events() { break; }
         if gl_key_pressed(graphics::KEY_ESCAPE) { break; }
@@ -145,9 +166,37 @@ fn main() {
                 save_world(pw, cam, palette, "interactive", SAVE_PATH);
                 save_markers(mw, "interactive", MARKER_SAVE_PATH);
                 last_save_us = tnow;
+                dirty = false;
                 println("dryopea: saved ({painted_count(pw)} hexes, {marker_count(mw)} markers)");
             }
         }
+
+        // Ctrl+N → clear all.  Resets the editor's in-memory
+        // state to a fresh world.  Does NOT auto-save; the next
+        // Ctrl+S commits the cleared state.  Edge-detected so a
+        // held Ctrl+N doesn't re-clear every frame.
+        n_now = gl_key_pressed(KEY_N);
+        if ctrl_held && n_now && !n_held_prev {
+            pw    = painted_empty();
+            mw    = marker_empty();
+            cam   = camera_default();
+            dirty = true;
+            painting     = false;
+            mb_held_prev = false;
+            println("dryopea: cleared all (Ctrl+N)");
+        }
+        n_held_prev = n_now;
+
+        // H → recentre camera (without disturbing painted or
+        // marker layers).  Edge-detected so a held H doesn't
+        // fire every frame.  Skip if Ctrl is held — that's the
+        // Ctrl+H combination, not single-H.
+        h_now = gl_key_pressed(KEY_H);
+        if h_now && !h_held_prev && !ctrl_held {
+            cam = camera_default();
+            println("dryopea: camera recentred (H)");
+        }
+        h_held_prev = h_now;
 
         // Camera pan + zoom.  Pan-south is suppressed when Ctrl is
         // held so Ctrl+S doesn't also pan.
@@ -207,6 +256,7 @@ fn main() {
                 last_paint_hex = hovered;
                 painting       = true;
                 last_paint_us  = tnow;
+                dirty          = true;
             }
         } else {
             // Ground-mode stroke ended (button released, hover left,
@@ -227,12 +277,25 @@ fn main() {
                 place_spawn(mw, hovered.q, hovered.r, place_direction);
                 println("dryopea: placed spawn at ({hovered.q}, {hovered.r}) dir={place_direction as integer}");
             }
+            dirty = true;
         }
         mb_held_prev = mb_now;
 
         // ── Render ──────────────────────────────────────────────
 
-        cv = render_with_hover(cam, pw, hovered, WINDOW_W, WINDOW_H, PPM);
+        // Ground mode: hover shows a PREVIEW of the next paint
+        // (hex filled with active palette colour + outline).
+        // Marker mode: just the plain hover outline + the ghost
+        // arrow (markers don't replace ground colour, so the
+        // paint-preview would be misleading).
+        if mode == MODE_GROUND {
+            cv = render_with_hover_preview(cam, pw, hovered,
+                                            picker.active as u8,
+                                            WINDOW_W, WINDOW_H, PPM);
+        } else {
+            cv = render_with_hover(cam, pw, hovered,
+                                    WINDOW_W, WINDOW_H, PPM);
+        }
         render_markers(cv, cam, mw, WINDOW_W, WINDOW_H, PPM);
         // Marker-mode ghost preview at the hovered hex — only when
         // the hex is empty (placing on an occupied hex removes, so
@@ -242,6 +305,11 @@ fn main() {
                                place_direction, WINDOW_W, WINDOW_H, PPM);
         }
         render_picker(cv, picker, 12, 12);
+        // Save indicator sits to the right of the picker, vertically
+        // aligned with the top swatch.
+        render_save_indicator(cv, dirty,
+                              12 + PICKER_SWATCH_PX + 2 + SAVE_INDICATOR_RADIUS,
+                              12 + SAVE_INDICATOR_RADIUS);
         render_mode_indicator(cv, mode, WINDOW_W - MODE_BADGE_PX - 12, 12);
 
         tex = gl_upload_canvas(cv.data, cv.width, cv.height);
@@ -255,6 +323,7 @@ fn main() {
     // Save on exit so progress isn't lost when the window closes.
     save_world(pw, cam, palette, "exit", SAVE_PATH);
     save_markers(mw, "exit", MARKER_SAVE_PATH);
+    dirty = false;
     println("dryopea: saved on exit ({painted_count(pw)} hexes, {marker_count(mw)} markers)");
     gl_destroy_window();
 }

@@ -248,3 +248,28 @@ pub fn render_with_hover(
     draw_hex_outline(rwh_cv, cam, hovered, 0xffffff, w, h, ppm);
     rwh_cv
 }
+
+// Render the world + a PREVIEW of the next paint on the hovered
+// hex.  Fills the hex with the active palette colour so the
+// player sees what the next click will look like before it
+// commits.  A white outline still sits on top, so a preview that
+// happens to match the current hex colour (e.g. hovering over
+// already-grass while grass is selected) stays unmistakable.
+//
+// If `active == 0` (sea), the preview paints with sea — which
+// IS what painting sea looks like (erases any prior paint), so
+// the preview stays honest.
+pub fn render_with_hover_preview(
+    cam:     EditorCamera,
+    pw:      PaintedWorld,
+    hovered: Hex,
+    active:  u8,
+    w:       integer,
+    h:       integer,
+    ppm:     float,
+) -> Canvas {
+    rwhp_cv = render_to_canvas(cam, pw, w, h, ppm);
+    draw_hex(rwhp_cv, cam, hovered, palette_color(active), w, h, ppm);
+    draw_hex_outline(rwhp_cv, cam, hovered, 0xffffff, w, h, ppm);
+    rwhp_cv
+}

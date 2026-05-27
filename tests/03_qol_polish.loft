@@ -1,0 +1,185 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// QoL polish — tests for the post-plan-03 editor additions:
+// the save-state indicator dot, the hover-preview render that
+// fills the hovered hex with the active palette colour, and the
+// data primitives behind Ctrl+N (clear all) + H (recentre).
+//
+// The hotkey wiring itself lives in src/main.loft's GL loop and
+// isn't directly unit-testable; the pure-data layer those
+// hotkeys call into IS, and the factory functions (painted_empty,
+// marker_empty, camera_default) already have unit tests in plan
+// 01 + plan 03 M1.  The tests here cover the new render functions
+// and confirm via canvas-pixel assertions that they paint distinct
+// pixels per mode / per active palette.
+
+use dryopea;
+use graphics;
+
+// ─── Save indicator ─────────────────────────────────────────────
+
+fn test_save_indicator_clean_paints_green() {
+    tsic_cv = canvas(32, 32, 0x000000);
+    render_save_indicator(tsic_cv, false, 16, 16);
+    tsic_centre = tsic_cv.get_pixel(16, 16);
+    assert(tsic_centre == SAVE_INDICATOR_CLEAN_BG,
+           "clean indicator paints green at the centre");
+}
+
+fn test_save_indicator_dirty_paints_amber() {
+    tsid_cv = canvas(32, 32, 0x000000);
+    render_save_indicator(tsid_cv, true, 16, 16);
+    tsid_centre = tsid_cv.get_pixel(16, 16);
+    assert(tsid_centre == SAVE_INDICATOR_DIRTY_BG,
+           "dirty indicator paints amber at the centre");
+}
+
+fn test_save_indicator_dirty_and_clean_differ() {
+    tsidc_cv_a = canvas(32, 32, 0x000000);
+    tsidc_cv_b = canvas(32, 32, 0x000000);
+    render_save_indicator(tsidc_cv_a, false, 16, 16);
+    render_save_indicator(tsidc_cv_b, true,  16, 16);
+    assert(tsidc_cv_a.get_pixel(16, 16) != tsidc_cv_b.get_pixel(16, 16),
+           "clean and dirty indicators paint distinct centre colours");
+}
+
+fn test_save_indicator_has_border() {
+    // The white outline should appear on the perimeter — sample
+    // a pixel just outside the fill to confirm it's not still
+    // the background.  4-radius circle centred at (16, 16);
+    // pixel (16, 20) is on the perimeter.
+    tsih_cv = canvas(32, 32, 0x000000);
+    render_save_indicator(tsih_cv, false, 16, 16);
+    tsih_edge = tsih_cv.get_pixel(16, 16 + SAVE_INDICATOR_RADIUS);
+    assert(tsih_edge != 0x000000,
+           "indicator paints a non-black pixel on its border");
+}
+
+fn test_save_indicator_does_not_paint_far_pixels() {
+    // The dot should be local — distant pixels stay at the
+    // canvas background colour.
+    tsidp_cv = canvas(64, 64, 0x000000);
+    render_save_indicator(tsidp_cv, true, 32, 32);
+    tsidp_far = tsidp_cv.get_pixel(60, 60);   // corner, far from dot
+    assert(tsidp_far == 0x000000,
+           "indicator leaves distant pixels untouched");
+}
+
+// ─── Hover preview render ───────────────────────────────────────
+
+fn test_hover_preview_paints_hovered_hex_as_active() {
+    // Hover at the origin hex of an empty world; preview with
+    // grass (kind 5).  The hex centre should now be grass-colour
+    // (palette_color(5)) instead of sea.
+    thp_cam = camera_default();
+    thp_pw  = painted_empty();
+    thp_cv  = render_with_hover_preview(thp_cam, thp_pw,
+                                         Hex { q: 0, r: 0 },
+                                         5 as u8,
+                                         128, 128, 24.0);
+    thp_centre = thp_cv.get_pixel(64, 64);
+    // Reference: palette_color(5) returns 0x4caf50 per render.loft.
+    assert(thp_centre == palette_color(5 as u8),
+           "preview paints hovered hex in the active palette colour");
+}
+
+fn test_hover_preview_differs_from_plain_render() {
+    thpd_cam = camera_default();
+    thpd_pw  = painted_empty();
+    thpd_plain   = render_to_canvas(thpd_cam, thpd_pw, 128, 128, 24.0);
+    thpd_preview = render_with_hover_preview(thpd_cam, thpd_pw,
+                                              Hex { q: 0, r: 0 },
+                                              5 as u8, 128, 128, 24.0);
+    assert(thpd_plain.get_pixel(64, 64) != thpd_preview.get_pixel(64, 64),
+           "preview changes the hovered hex colour vs the plain render");
+}
+
+fn test_hover_preview_local_to_hovered_hex() {
+    // A pixel FAR from the hovered hex should be unchanged.
+    thpl_cam = camera_default();
+    thpl_pw  = painted_empty();
+    thpl_plain   = render_to_canvas(thpl_cam, thpl_pw, 128, 128, 24.0);
+    thpl_preview = render_with_hover_preview(thpl_cam, thpl_pw,
+                                              Hex { q: 0, r: 0 },
+                                              5 as u8, 128, 128, 24.0);
+    // Far-corner pixel: sea on the plain render, sea on the
+    // preview (hover preview is local).
+    assert(thpl_plain.get_pixel(8, 8) == thpl_preview.get_pixel(8, 8),
+           "preview leaves distant pixels at the sea colour");
+}
+
+fn test_hover_preview_different_actives_paint_different_colours() {
+    // Same hover hex, different active palette → different
+    // centre pixel.  Confirms the active argument actually
+    // controls the fill (regression for "what if preview always
+    // used the same colour?").
+    thpda_cam = camera_default();
+    thpda_pw  = painted_empty();
+    thpda_sand  = render_with_hover_preview(thpda_cam, thpda_pw,
+                                             Hex { q: 0, r: 0 },
+                                             4 as u8, 128, 128, 24.0);
+    thpda_grass = render_with_hover_preview(thpda_cam, thpda_pw,
+                                             Hex { q: 0, r: 0 },
+                                             5 as u8, 128, 128, 24.0);
+    assert(thpda_sand.get_pixel(64, 64) != thpda_grass.get_pixel(64, 64),
+           "sand and grass previews paint different centre colours");
+}
+
+fn test_hover_preview_overlays_existing_paint() {
+    // Hover an already-painted hex (grass) while sea is active.
+    // The preview should now show sea on that hex, since
+    // painting sea = erase.  The plain-render shows grass.
+    thpo_cam = camera_default();
+    thpo_pw  = painted_empty();
+    paint(thpo_pw, 0, 0, 5 as u8);   // grass at origin
+    thpo_plain   = render_to_canvas(thpo_cam, thpo_pw, 128, 128, 24.0);
+    thpo_preview = render_with_hover_preview(thpo_cam, thpo_pw,
+                                              Hex { q: 0, r: 0 },
+                                              0 as u8,   // sea
+                                              128, 128, 24.0);
+    assert(thpo_plain.get_pixel(64, 64)   == palette_color(5 as u8),
+           "plain render shows grass at painted hex");
+    assert(thpo_preview.get_pixel(64, 64) == palette_color(0 as u8),
+           "preview overlays sea (active) on the grass hex");
+}
+
+// ─── Clear-all data sanity (the data primitives Ctrl+N calls) ───
+//
+// Ctrl+N in main.loft assigns `pw = painted_empty()`,
+// `mw = marker_empty()`, `cam = camera_default()`.  Each
+// factory is already unit-tested individually in plan 01 + M1;
+// here we just confirm the composition produces an entirely
+// empty editor world.
+
+fn test_clear_all_factories_produce_empty_state() {
+    tcaf_pw  = painted_empty();
+    tcaf_mw  = marker_empty();
+    tcaf_cam = camera_default();
+    assert(painted_count(tcaf_pw) == 0, "fresh painted world has 0 hexes");
+    assert(marker_count(tcaf_mw)  == 0, "fresh marker world has 0 markers");
+    assert(tcaf_cam.pos.q == 0,         "fresh camera at origin q=0");
+    assert(tcaf_cam.pos.r == 0,         "fresh camera at origin r=0");
+}
+
+fn test_clear_all_drops_existing_data() {
+    // Sanity check that re-binding the locals (the pattern Ctrl+N
+    // uses in main.loft) doesn't leak the old data into the new
+    // ones.  Builds non-trivial worlds, "clears" them by
+    // re-binding, asserts the new worlds are empty.
+    tcad_pw_old = painted_empty();
+    paint(tcad_pw_old, 5, 5, 5 as u8);
+    paint(tcad_pw_old, 6, 6, 9 as u8);
+    assert(painted_count(tcad_pw_old) == 2, "old has 2 painted hexes");
+
+    tcad_mw_old = marker_empty();
+    place_spawn(tcad_mw_old, 10, 0, 0 as u8);
+    place_spawn(tcad_mw_old, 0, 10, 2 as u8);
+    assert(marker_count(tcad_mw_old) == 2, "old has 2 markers");
+
+    // The Ctrl+N pattern: rebind the locals to fresh empties.
+    tcad_pw_new = painted_empty();
+    tcad_mw_new = marker_empty();
+    assert(painted_count(tcad_pw_new) == 0, "new painted is empty");
+    assert(marker_count(tcad_mw_new)  == 0, "new marker is empty");
+}

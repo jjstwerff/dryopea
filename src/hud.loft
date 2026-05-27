@@ -1,0 +1,36 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Editor HUD — extra-status indicators that sit alongside the
+// picker (palette swatches) and the mode badge.  Pure Canvas,
+// no font dependency.
+//
+// Today: a single save-state dot.  Future additions land here
+// as more status fits in the HUD's small corner real-estate
+// (count displays, save-pulse animation, mode-conditional
+// shortcuts, etc.).
+//
+// Plan 03 follow-up — QoL polish.
+
+use graphics;
+
+// ─── Save-state indicator ───────────────────────────────────────
+//
+// A small filled circle showing whether the editor's in-memory
+// state has been saved since the last edit.  Green = clean (the
+// disk reflects what's on screen); amber = dirty (unsaved
+// changes are pending).  Sits to the right of the picker.
+
+pub const SAVE_INDICATOR_RADIUS:   integer = 4;
+pub const SAVE_INDICATOR_CLEAN_BG: integer = 0x40c060;   // grass-green
+pub const SAVE_INDICATOR_DIRTY_BG: integer = 0xf0a020;   // amber
+pub const SAVE_INDICATOR_BORDER:   integer = 0xffffff;
+
+// Draw the save indicator at (cx, cy) (the dot's centre).
+// `dirty == true` means there are unsaved changes since the last
+// successful save_world / save_markers call.
+pub fn render_save_indicator(cv: Canvas, dirty: boolean, cx: integer, cy: integer) {
+    rsi_bg = if dirty { SAVE_INDICATOR_DIRTY_BG } else { SAVE_INDICATOR_CLEAN_BG };
+    cv.fill_circle(cx, cy, SAVE_INDICATOR_RADIUS, rsi_bg);
+    cv.draw_circle(cx, cy, SAVE_INDICATOR_RADIUS, SAVE_INDICATOR_BORDER);
+}
