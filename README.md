@@ -88,6 +88,69 @@ behaviours, not aspirational late-game features.  See
 [`docs/DESIGN.md`](docs/DESIGN.md) § "Moddability is a
 first-class principle" for the full design stance.
 
+## For library consumers (bumperplane et al.)
+
+Dryopea exposes a curated subset of its internals as a loft
+library for downstream consumers — primarily the
+[@PLAN50 bumper-airplanes audience demo](https://github.com/jjstwerff/loft/tree/main/doc/claude/plans/future/50-bumper-airplanes)
+which reads dryopea MapFile JSON + the palette and extrudes the
+painted world into a 3D scene.  Other consumers (map-loading
+tools, validation viewers, future audience demos) plug in the
+same way.
+
+**Entry point.**  `src/dryopea_core.loft` re-exports the
+data + persistence + content layers.  Consumers add dryopea as
+a path-dep in their `loft.toml` and write `use dryopea_core;`:
+
+```toml
+# Consumer's loft.toml
+[dependencies]
+dryopea = { path = "../dryopea" }
+```
+
+```loft
+use dryopea_core;
+
+// Loads ground hexes (the painted layer + camera state).
+loaded = load_map_or_empty("starter_01.json", load_palette("palette.json"));
+pw  = loaded.0;
+cam = loaded.1;
+// Loads spawn + target markers from the sidecar.
+mw  = load_markers_or_empty("starter_01_markers.json");
+```
+
+**What's excluded from `dryopea_core`** (and why):
+- `render`, `picker`, `marker_render`, `hud`, `editor_mode`,
+  `golden` — Canvas-based 2D editor visuals; 3D consumers
+  ship their own renderer.
+- `history` — editor undo/redo state machine, not a
+  runtime concern.
+- `spawn` — dryopea's wave engine + enemy approach-mode
+  tick; consumers with their own runtime (bumperplane's
+  plane physics) don't need it.  Available via
+  `use spawn;` directly if they do.
+- `main.loft` — the GL editor binary entry point.
+
+**Stability contract.**  The shapes below are the
+cross-consumer commitments; dryopea won't break these without
+a major-version bump:
+- `MapFile { version, name, cam_q, cam_r, cam_zoom, ground }`
+  + `GroundEntry { q, r, kind }` — the painted-layer save shape.
+- `MarkerFile { version, name, markers }` + `MarkerSaveEntry
+  { q, r, kind, direction }` — the marker sidecar save shape.
+- `MARKER_KIND_SPAWN = 0` / `MARKER_KIND_TARGET = 1` —
+  append-only, never reordered.
+- `GroundType.extrusion_kind: text` ∈ `{"flat", "ramp",
+  "pillar", "cliff"}` + `GroundType.height_override: float`
+  — the 3D-extrusion contract.  See
+  [docs/GROUND_TYPES.md](docs/GROUND_TYPES.md) § Extrusion
+  mapping.
+
+Loft-side outstanding bug workarounds dryopea carries (e.g.
+`MarkerSaveEntry` is integer-widened on disk vs. u8 in-memory)
+are listed in [`QUESTIONS_FOR_LOFT.md`](QUESTIONS_FOR_LOFT.md);
+they're invisible to consumers via the contract above.
+
 ## License
 
 LGPL-3.0-or-later — see [LICENSE](LICENSE).

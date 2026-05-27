@@ -428,16 +428,18 @@ The schema (full instance in
 ```json
 [
   {
-    "name":         "sea",
-    "color":        "#0a2c5e",
-    "sub_palette":  "water",
-    "slope":        null,
-    "drop":         0,
-    "drainage":     true,
-    "walk_ground":  false,
-    "walk_vehicle": true,
-    "buildable":    false,
-    "variant":      null
+    "name":            "sea",
+    "color":           "#0a2c5e",
+    "sub_palette":     "water",
+    "slope":           null,
+    "drop":            0,
+    "drainage":        true,
+    "walk_ground":     false,
+    "walk_vehicle":    true,
+    "buildable":       false,
+    "extrusion_kind":  "flat",
+    "height_override": null,
+    "variant":         null
   },
   …
 ]
@@ -446,6 +448,34 @@ The schema (full instance in
 `slope` is `null` for water types; `drop` is `null` for land
 types.  `variant` carries a future sub-material name (`"forest"`
 on `hill`, `"wall_face"` on `rock`) once those land.
+
+## Extrusion mapping — 3D consumer contract
+
+The `extrusion_kind` + `height_override` fields are the
+**cross-consumer contract** for 3D renderers (dryopea's own
+runtime once it lands, plus @PLAN50 bumper-airplanes today).
+The dryopea editor authors a 2D top-down map; downstream
+consumers read the painted layer + palette and extrude each
+hex per its palette type's mapping:
+
+| `extrusion_kind` | Geometry | `height_override` | Examples |
+|---|---|---|---|
+| `"flat"` | At sea level (y = 0); planes graze the surface | null | `sea`, `water`, `rapids`, `waterfall`, `sand` |
+| `"ramp"` | Solver-driven slope per `slope` field; height computed from neighbours by the terrain solver | null | `grass`, `hill`, `rock`, `steep_rock` |
+| `"pillar"` | Narrow vertical column; absolute height above local terrain | metres (e.g. `3.0`) | `wall` |
+| `"cliff"` | Wider vertical face / shoulder; absolute height above local terrain | metres (e.g. `5.0`) | `wall_high` |
+
+`height_override` is only read when `extrusion_kind` is
+`"pillar"` or `"cliff"` — for `"flat"` and `"ramp"` types,
+the height comes from the terrain solver (lib-plan 20).  See
+`src/palette.loft::GroundType` for the in-memory struct that
+matches this on-disk shape.
+
+Forward-compat policy: `extrusion_kind` is the discriminant;
+new geometry types (e.g. `"bridge"`, `"arch"`, `"tent"`) get
+new string values without changing the field shape.  Existing
+strings are append-only — never reuse a string with new
+semantics.
 
 ## Future evolution paths
 

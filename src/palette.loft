@@ -13,6 +13,16 @@ use graphics;     // rgb() for parse_hex_color output
 // Matches the JSON shape directly.  Field names = JSON keys.
 //   color stays as "#rrggbb" text; callers parse on demand via
 //   parse_hex_color so palette.json stays human-editable.
+//
+// `extrusion_kind` + `height_override` are the 3D-extrusion
+// contract dryopea exports to runtime consumers (the dryopea
+// game itself, plus @PLAN50 bumper-airplanes which reads
+// MapFile + palette to extrude the painted world into 3D).
+// extrusion_kind ∈ {"flat", "ramp", "pillar", "cliff"}; see
+// docs/GROUND_TYPES.md § Extrusion mapping.  height_override
+// is the absolute height in metres for structure types
+// (pillar / cliff); nullable for terrain types whose height
+// comes from the slope-solver instead.
 pub struct GroundType {
     name:            text not null,
     color:           text not null,
@@ -23,6 +33,8 @@ pub struct GroundType {
     walk_ground:     boolean,
     walk_vehicle:    boolean,
     buildable:       boolean,
+    extrusion_kind:  text not null,
+    height_override: float,
 }
 
 pub fn load_palette(path: text) -> vector<GroundType> {

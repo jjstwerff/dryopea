@@ -1,0 +1,63 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// dryopea_core — bumperplane-facing library entry point.
+//
+// Aggregates only the data, persistence, and runtime-content
+// modules that downstream consumers (@PLAN50 bumper-airplanes,
+// future map-loading tools, etc.) want.  Excludes the editor
+// presentation layer (render, picker, marker_render, hud,
+// editor_mode, golden, history) and the editor binary
+// (main.loft) — consumers ship their own renderer + UX.
+//
+// Bumperplane usage:
+//   loft.toml: dryopea = { path = "../dryopea" }
+//   .loft:     use dryopea_core;
+//
+// Stability contract: the structs + verbs re-exported here are
+// the cross-consumer surface dryopea commits to keeping stable.
+// MapFile shape, MarkerFile shape, MARKER_KIND_* discriminants,
+// and GroundType's extrusion_kind/height_override fields are
+// the load-bearing pieces.  See README.md § For library
+// consumers.
+
+// ── Hex math ────────────────────────────────────────────────────
+use world;       // Hex { q, r }, hex_distance, hex_to_world,
+                 // world_to_hex, cube_round_axial, HEX_DIAMETER,
+                 // HEX_FLAT_TO_FLAT, visible_hexes
+
+// ── Camera (data shape only — bumperplane has its own 3D cam) ──
+use camera;      // EditorCamera, InputState, camera_default /
+                 // _at / _update — useful as a starting-point
+                 // data type even if 3D consumers replace the
+                 // tick logic
+
+// ── Palette (3D-extrusion contract) ─────────────────────────────
+use palette;     // GroundType (with extrusion_kind +
+                 // height_override per docs/GROUND_TYPES.md),
+                 // load_palette, parse_hex_color, hex_digit_value
+
+// ── Painted ground layer ────────────────────────────────────────
+use painted;     // PaintedWorld { painted: hash<PaintedHex[q, r]> },
+                 // PaintedHex { q, r, kind: u8 }, paint, paint_line,
+                 // lookup_painted, painted_count, painted_empty
+
+// ── Marker layer (spawns + targets) ─────────────────────────────
+use markers;     // MarkerWorld, MarkerEntry, MARKER_KIND_SPAWN,
+                 // MARKER_KIND_TARGET, place_spawn, place_target,
+                 // remove_marker, has_marker, marker_kind,
+                 // marker_direction, marker_count, marker_empty,
+                 // rotate_direction, rotate_marker_at
+
+// ── On-disk formats ─────────────────────────────────────────────
+use map_file;    // MapFile, GroundEntry
+use marker_file; // MarkerFile, MarkerSaveEntry
+
+// ── Save / load ─────────────────────────────────────────────────
+use save;        // save_world, load_map_or_empty,
+                 // save_map_file, load_map_file,
+                 // paint_to_mapfile, mapfile_to_painted,
+                 // palette_index_of,
+                 // save_markers, load_markers_or_empty,
+                 // save_marker_file, load_marker_file,
+                 // marker_world_to_file, markerfile_to_world

@@ -121,6 +121,41 @@ fn test_load_palette_flags() {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// 3D extrusion contract — what bumperplane (@PLAN50) consumes
+// ─────────────────────────────────────────────────────────────────
+
+fn test_load_palette_extrusion_kind() {
+    tlpek_p = load_palette("examples/palette.json");
+    // Water sub-palette → flat
+    assert(tlpek_p[0].extrusion_kind == "flat", "sea is flat");
+    assert(tlpek_p[1].extrusion_kind == "flat", "water is flat");
+    assert(tlpek_p[3].extrusion_kind == "flat", "waterfall is flat");
+    // Sand → flat (per @PLAN50 mapping)
+    assert(tlpek_p[4].extrusion_kind == "flat", "sand is flat");
+    // Land sub-palette → ramp
+    assert(tlpek_p[5].extrusion_kind == "ramp", "grass is ramp");
+    assert(tlpek_p[6].extrusion_kind == "ramp", "hill is ramp");
+    assert(tlpek_p[7].extrusion_kind == "ramp", "rock is ramp");
+    assert(tlpek_p[8].extrusion_kind == "ramp", "steep_rock is ramp");
+    // Structure sub-palette → pillar / cliff
+    assert(tlpek_p[9].extrusion_kind  == "pillar", "wall is pillar");
+    assert(tlpek_p[10].extrusion_kind == "cliff",  "wall_high is cliff");
+}
+
+fn test_load_palette_height_override() {
+    tlpho_p = load_palette("examples/palette.json");
+    // Structure types carry an explicit absolute height in metres.
+    // Consumers (@PLAN50 bumperplane, dryopea runtime) read this
+    // when extrusion_kind is "pillar" or "cliff".
+    assert(tlpho_p[9].height_override  == 3.0, "wall height_override 3.0m");
+    assert(tlpho_p[10].height_override == 5.0, "wall_high height_override 5.0m");
+    // Water + land types: consumers should NOT read height_override
+    // for "flat" / "ramp" entries (height comes from the terrain
+    // solver instead).  The exact value when JSON had `null` is
+    // loft-cast-defined; tests don't assert it.
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Picker state
 // ─────────────────────────────────────────────────────────────────
 
