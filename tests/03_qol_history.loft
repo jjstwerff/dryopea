@@ -213,6 +213,100 @@ fn test_clear_empty_world_records_noop() {
 
 // ─── New action while undone discards the future ────────────────
 
+// ─── reload_and_record (3-way diff) ─────────────────────────────
+
+fn test_reload_records_disappeared_hex() {
+    trrh_h  = history_empty();
+    trrh_cur_pw = painted_empty();
+    paint(trrh_cur_pw, 0, 0, 5 as u8);
+    trrh_cur_mw    = marker_empty();
+    trrh_loaded_pw = painted_empty();   // disk has nothing
+    trrh_loaded_mw = marker_empty();
+    reload_and_record(trrh_cur_pw, trrh_cur_mw,
+                      trrh_loaded_pw, trrh_loaded_mw, trrh_h);
+    assert(history_can_undo(trrh_h), "reload pushed an entry");
+    // After the caller would have rebound, Ctrl+Z restores (0,0)=grass.
+    trrh_pw_after = painted_empty();
+    trrh_mw_after = marker_empty();
+    history_undo(trrh_h, trrh_pw_after, trrh_mw_after);
+    assert(lookup_painted(trrh_pw_after, 0, 0) == 5 as u8,
+           "undo of reload restored the disappeared hex");
+}
+
+fn test_reload_records_appeared_hex() {
+    trah_h  = history_empty();
+    trah_cur_pw = painted_empty();
+    trah_cur_mw = marker_empty();
+    trah_loaded_pw = painted_empty();
+    paint(trah_loaded_pw, 7, 7, 9 as u8);   // disk has wall at (7,7)
+    trah_loaded_mw = marker_empty();
+    reload_and_record(trah_cur_pw, trah_cur_mw,
+                      trah_loaded_pw, trah_loaded_mw, trah_h);
+    // After caller rebinds pw to the loaded one, undo should
+    // REMOVE the (7,7) hex (restore pre-reload absence).
+    trah_pw_after = painted_empty();
+    paint(trah_pw_after, 7, 7, 9 as u8);   // simulate the rebind
+    trah_mw_after = marker_empty();
+    history_undo(trah_h, trah_pw_after, trah_mw_after);
+    assert(lookup_painted(trah_pw_after, 7, 7) == 0 as u8,
+           "undo of reload removed the appeared hex");
+}
+
+fn test_reload_records_kind_change() {
+    trkc_h  = history_empty();
+    trkc_cur_pw = painted_empty();
+    paint(trkc_cur_pw, 0, 0, 5 as u8);    // grass in memory
+    trkc_cur_mw = marker_empty();
+    trkc_loaded_pw = painted_empty();
+    paint(trkc_loaded_pw, 0, 0, 9 as u8); // wall on disk
+    trkc_loaded_mw = marker_empty();
+    reload_and_record(trkc_cur_pw, trkc_cur_mw,
+                      trkc_loaded_pw, trkc_loaded_mw, trkc_h);
+    trkc_pw_after = painted_empty();
+    paint(trkc_pw_after, 0, 0, 9 as u8);
+    trkc_mw_after = marker_empty();
+    history_undo(trkc_h, trkc_pw_after, trkc_mw_after);
+    assert(lookup_painted(trkc_pw_after, 0, 0) == 5 as u8,
+           "undo of reload restored the prior kind");
+}
+
+fn test_reload_records_marker_diff() {
+    trmd_h  = history_empty();
+    trmd_cur_pw = painted_empty();
+    trmd_cur_mw = marker_empty();
+    place_spawn(trmd_cur_mw, 1, 1, 0 as u8);   // (1,1) dir=0 in memory
+    trmd_loaded_pw = painted_empty();
+    trmd_loaded_mw = marker_empty();
+    place_spawn(trmd_loaded_mw, 2, 2, 3 as u8); // (2,2) dir=3 on disk
+    reload_and_record(trmd_cur_pw, trmd_cur_mw,
+                      trmd_loaded_pw, trmd_loaded_mw, trmd_h);
+
+    // After caller rebinds mw to the loaded state, undo should
+    // restore (1,1) AND remove (2,2).
+    trmd_pw_after = painted_empty();
+    trmd_mw_after = marker_empty();
+    place_spawn(trmd_mw_after, 2, 2, 3 as u8);
+    history_undo(trmd_h, trmd_pw_after, trmd_mw_after);
+    assert(has_marker(trmd_mw_after, 1, 1),  "undo restored (1,1)");
+    assert(!has_marker(trmd_mw_after, 2, 2), "undo removed (2,2)");
+}
+
+fn test_reload_identical_state_no_entry() {
+    // If current and loaded are byte-for-byte identical, reload
+    // is a no-op — no undo entry pushed.
+    tris_h  = history_empty();
+    tris_pw_a = painted_empty();
+    paint(tris_pw_a, 0, 0, 5 as u8);
+    tris_pw_b = painted_empty();
+    paint(tris_pw_b, 0, 0, 5 as u8);
+    tris_mw_a = marker_empty();
+    tris_mw_b = marker_empty();
+    reload_and_record(tris_pw_a, tris_mw_a,
+                      tris_pw_b, tris_mw_b, tris_h);
+    assert(!history_can_undo(tris_h),
+           "reload onto identical state records no-op");
+}
+
 fn test_new_action_after_undo_discards_redo() {
     tnau_h  = history_empty();
     tnau_pw = painted_empty();

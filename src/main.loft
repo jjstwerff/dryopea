@@ -31,6 +31,10 @@
 //   Ctrl+Y            redo (re-apply the most recently undone).
 //                     Any non-undo action discards the redo
 //                     branch.
+//   Ctrl+R            reload painted + marker layers from disk,
+//                     discarding any in-memory changes.  Ctrl+Z
+//                     restores the pre-reload state (one entry
+//                     captures the whole diff).
 //   Ctrl+N            clear all — empty painted layer, empty
 //                     marker layer, reset camera to origin.
 //                     Recorded as one undoable action.  Does
@@ -127,11 +131,12 @@ fn main() {
     // save.  The HUD save indicator reads this directly.  Other
     // edge-detected modifier keys (Ctrl+N, H, Ctrl+Z, Ctrl+Y) live
     // here too.
-    dirty:        boolean = false;
-    n_held_prev:  boolean = false;
-    h_held_prev:  boolean = false;
-    z_held_prev:  boolean = false;
-    y_held_prev:  boolean = false;
+    dirty:                 boolean = false;
+    n_held_prev:           boolean = false;
+    h_held_prev:           boolean = false;
+    z_held_prev:           boolean = false;
+    y_held_prev:           boolean = false;
+    reload_r_held_prev:    boolean = false;
 
     // Undo / redo history.  Per-stroke deltas are accumulated in
     // `stroke_in_flight` while the mouse button is held; on
@@ -246,6 +251,33 @@ fn main() {
             }
         }
         y_held_prev = y_now;
+
+        // Ctrl+R → reload from disk.  Re-reads dryopea_save.json
+        // and the marker sidecar; pushes a single UndoEntry that
+        // captures the current→loaded diff so Ctrl+Z restores the
+        // pre-reload state.  Marker mode's plain R is the rotation
+        // hotkey (no Ctrl); the modifier disambiguates.
+        reload_r_now = ctrl_held && gl_key_pressed(graphics::KEY_R);
+        if reload_r_now && !reload_r_held_prev {
+            // Flush any in-flight stroke first.
+            if !undo_entry_is_noop(stroke_in_flight) {
+                history_push(history, stroke_in_flight);
+                stroke_in_flight = undo_entry_empty();
+            }
+            reload_loaded = load_map_or_empty(SAVE_PATH, palette);
+            reload_pw_new = reload_loaded.0;
+            reload_cam_new = reload_loaded.1;
+            reload_mw_new = load_markers_or_empty(MARKER_SAVE_PATH);
+            reload_and_record(pw, mw, reload_pw_new, reload_mw_new, history);
+            pw    = reload_pw_new;
+            mw    = reload_mw_new;
+            cam   = reload_cam_new;
+            dirty = false;   // disk and memory now match
+            painting     = false;
+            mb_held_prev = false;
+            println("dryopea: reloaded from disk ({painted_count(pw)} hexes, {marker_count(mw)} markers)");
+        }
+        reload_r_held_prev = reload_r_now;
 
         // H → recentre camera (without disturbing painted or
         // marker layers).  Edge-detected so a held H doesn't

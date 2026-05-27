@@ -288,6 +288,101 @@ pub fn remove_marker_and_record(
     history_push(history, rmar_entry);
 }
 
+// Build an UndoEntry capturing the diff between the current
+// editor state and a freshly-loaded state.  Used by Ctrl+R
+// (reload from disk) so that a subsequent Ctrl+Z restores the
+// pre-reload state.  Three cases per hex:
+//   - in current AND loaded with different kind → one delta
+//   - in current, NOT in loaded → delta old=current, new=0
+//   - in loaded, NOT in current → delta old=0, new=loaded
+// Same shape for markers (present/absent + direction).
+// Caller is responsible for rebinding `pw`/`mw` to the loaded
+// worlds AFTER this returns; this function ONLY records.
+pub fn reload_and_record(
+    pw_current: PaintedWorld,
+    mw_current: MarkerWorld,
+    pw_loaded:  PaintedWorld,
+    mw_loaded:  MarkerWorld,
+    history:    &History,
+) {
+    rar_entry = undo_entry_empty();
+
+    // Painted: current → loaded.  Iterate current (everything
+    // that's about to change or disappear) and loaded (everything
+    // that's about to appear); the kind comparison skips no-op
+    // hexes.
+    for rar_cp in pw_current.painted {
+        rar_loaded_k = lookup_painted(pw_loaded, rar_cp.q, rar_cp.r);
+        if rar_loaded_k != rar_cp.kind {
+            rar_entry.painted += [PaintedDelta {
+                q:        rar_cp.q,
+                r:        rar_cp.r,
+                old_kind: rar_cp.kind as integer,
+                new_kind: rar_loaded_k as integer,
+            }];
+        }
+    }
+    for rar_lp in pw_loaded.painted {
+        rar_cur_k = lookup_painted(pw_current, rar_lp.q, rar_lp.r);
+        if rar_cur_k == 0 as u8 {
+            // Hex existed in loaded but NOT in current (sea is
+            // the absent default).  The current-iteration loop
+            // above missed it; add the appear-delta here.
+            rar_entry.painted += [PaintedDelta {
+                q:        rar_lp.q,
+                r:        rar_lp.r,
+                old_kind: 0,
+                new_kind: rar_lp.kind as integer,
+            }];
+        }
+    }
+
+    // Markers: current → loaded.  Same 3-case shape.
+    for rar_cm in mw_current.markers {
+        rar_loaded_present = has_marker(mw_loaded, rar_cm.q, rar_cm.r);
+        if rar_loaded_present {
+            rar_loaded_dir = marker_direction(mw_loaded, rar_cm.q, rar_cm.r);
+            if rar_loaded_dir != rar_cm.direction {
+                // Direction changed
+                rar_entry.markers += [MarkerDelta {
+                    q:             rar_cm.q,
+                    r:             rar_cm.r,
+                    old_present:   true,
+                    old_direction: rar_cm.direction as integer,
+                    new_present:   true,
+                    new_direction: rar_loaded_dir as integer,
+                }];
+            }
+            // else: no change, skip
+        } else {
+            // Marker disappeared on reload
+            rar_entry.markers += [MarkerDelta {
+                q:             rar_cm.q,
+                r:             rar_cm.r,
+                old_present:   true,
+                old_direction: rar_cm.direction as integer,
+                new_present:   false,
+                new_direction: 0,
+            }];
+        }
+    }
+    for rar_lm in mw_loaded.markers {
+        if !has_marker(mw_current, rar_lm.q, rar_lm.r) {
+            // Marker appeared on reload (wasn't in current).
+            rar_entry.markers += [MarkerDelta {
+                q:             rar_lm.q,
+                r:             rar_lm.r,
+                old_present:   false,
+                old_direction: 0,
+                new_present:   true,
+                new_direction: rar_lm.direction as integer,
+            }];
+        }
+    }
+
+    history_push(history, rar_entry);
+}
+
 // Snapshot the entire editor state into a single UndoEntry and
 // push it.  Caller is responsible for actually clearing the
 // state afterward (rebinding `pw = painted_empty()` etc.) —
