@@ -31,6 +31,104 @@ fix / feature, move it to **Resolved**.
 
 ## Open
 
+### `vector<Struct>` with trailing `u8` fields — corrupts when wrapped in a parent struct and serialised via `:j`
+
+- **Found while:** Plan 03 M3 — saving the marker sidecar
+  (`marker_world_to_file` in `src/save.loft`).  Earlier
+  verification (2026-05-27) marked this Resolved based on a
+  partial probe; refined probe shows the bug is **still
+  present** for a specific path.
+- **Trigger (specific):** the bug only fires on the path
+  `hash<Struct[k]>` → `for`-iterate-and-append into a fresh
+  `vector<Struct>` → embed in a wrapper struct → `:j` the
+  wrapper.  Pulling any one of those steps apart makes the
+  output correct.  Concretely:
+  - Standalone `{vec:j}` — WORKS (the vec serialises right).
+  - Building the vector directly (no hash, no for-loop) and
+    wrapping → `{wrapper:j}` — WORKS.
+  - Building via hash-iteration → wrapping → `{wrapper:j}` —
+    **CORRUPTS**: every u8 field zeroes, AND the leading
+    integer fields zero too.
+- **Minimal reproducer:** [`loft_repros/u8_vector_in_wrapper.loft`](loft_repros/u8_vector_in_wrapper.loft),
+  runs via `loft --interpret`.  Code inline below for context:
+  ```loft
+  struct Pair {
+      q:         integer not null,
+      r:         integer not null,
+      kind:      u8      not null,
+      direction: u8      not null,
+  }
+  struct Bag { items: hash<Pair[q, r]> }
+  struct Wrapper {
+      version: integer not null,
+      name:    text    not null,
+      items:   vector<Pair>,
+  }
+
+  fn main() {
+      bag = Bag { items: [] };
+      bag.items[1, 1] = Pair { q: 1, r: 1, kind: 0 as u8, direction: 0 as u8 };
+      bag.items[2, 2] = Pair { q: 2, r: 2, kind: 0 as u8, direction: 3 as u8 };
+
+      out: vector<Pair> = [];
+      for e in bag.items {
+          out += [Pair { q: e.q, r: e.r, kind: e.kind, direction: e.direction }];
+      }
+      println("standalone: {out:j}");           // CORRECT
+      w = Wrapper { version: 1, name: "test", items: out };
+      println("wrapped:    {w:j}");              // ALL ZEROS
+  }
+  ```
+  Observed output:
+  ```
+  standalone: [{"q":1,"r":1,"kind":0,"direction":0},{"q":2,"r":2,"kind":0,"direction":3}]
+  wrapped:    {"version":1,"name":"test","items":[{"q":0,"r":0,"kind":0,"direction":0},
+                                                   {"q":0,"r":0,"kind":0,"direction":0}]}
+  ```
+- **Kind:** bug (`:j` formatter or vector-of-struct copy
+  semantics — context-sensitive: the wrapping struct's `:j`
+  walk reads vector members from a different / stale location
+  than the standalone walk does).
+- **Workaround in dryopea:** `marker_file.loft` declares a
+  wider on-disk shape `MarkerSaveEntry { q, r, kind: integer,
+  direction: integer }`; `save.loft`'s `marker_world_to_file`
+  widens u8 → integer when building the save vector.  Same
+  idiom as painted.loft / map_file.loft (PaintedHex.kind: u8
+  in memory ↔ GroundEntry.kind: text on disk).  Retirable
+  once the wrapper-struct path serialises correctly.
+- **Loft pointer:** `:j` formatter's nested-struct vector
+  walk vs. standalone vector walk — different code paths
+  diverge for u8 fields.
+
+### `const` parameter store-lock blocking unrelated writes — multi-const + write-through-other-param shape
+
+- **Found while:** Plan 03 follow-up history work
+  (`src/history.loft::clear_and_record`).  Initial verification
+  (2026-05-27) of an earlier filing marked this Resolved based
+  on a partial probe (single `const Bag` + write to a separate
+  `Out` param worked).  Refined probe shows the bug is **still
+  present** for the dryopea-faithful shape.
+- **Trigger (specific):** function with TWO `const` struct
+  parameters, each holding a hash, AND writing through a
+  third (non-const) parameter whose path includes a nested
+  vector field.  Single-const probes don't trigger; only the
+  multi-const + nested-vector-write combination does.
+- **Reproducer:** [`loft_repros/const_param_store_lock.loft`](loft_repros/const_param_store_lock.loft)
+  — runs `loft --interpret`, reliably panics with `Claim on
+  read-only store (size=2) (locked by: lock_store(store_nr=5,
+  rec=1))`.
+- **Kind:** bug (lock granularity for `const` parameter is
+  Store-wide rather than parameter-scoped, and only the
+  multi-const path widens the lock far enough to bite an
+  unrelated write).
+- **Workaround in dryopea:** dropped the `const` qualifier on
+  `clear_and_record`'s pw + mw params (history.loft).
+  Function still doesn't mutate them — convention enforces
+  the intent.  Signature is documentation-weaker; retire when
+  the bug ships fixed.
+- **Loft pointer:** narrow the `const`-param lock to the
+  specific record(s) named, not the whole Store.
+
 ### Div-by-zero warning still fires on `float / int_literal`
 
 - **Found while:** Re-verifying the @P368 fix on 2026-05-27.
@@ -138,49 +236,6 @@ against a 0-length palette.  Both fixed in loft commit `42f8228`.
   `world_to_canvas(...)` call + `(tuple.N as float)` cast,
   saving ~12 duplicated lines across `draw_marker_arrow` and
   `draw_target_marker`.
-
-### `vector<Struct>` with trailing `u8` fields — `:j` serialisation
-
-- **Original observation:** during plan 03 M3 (between M1
-  commit `d8f311c` green and M2 commit `d87d202` ),
-  `vector<MarkerEntry>` (with two trailing `u8 not null`
-  fields) serialised via `:j` produced garbage memory values
-  — first entry's `kind` slot received the second placement's
-  `direction`; the second entry was fully corrupted memory.
-  Workaround was to widen u8 → integer on disk via
-  `MarkerSaveEntry`.
-- **Verified fixed:** 2026-05-27 via `/tmp/probe_u8_vector.loft`
-  — two-element `vector<Pair{q, r, kind: u8, direction: u8}>`
-  serialised to `[{"q":1,"r":1,"kind":0,"direction":0},
-  {"q":2,"r":2,"kind":0,"direction":3}]` byte-perfect.  Likely
-  resolved as part of the broader 56-byte cast / vector
-  layout fixes shipped together with @P372–@P375; not
-  separately commit-tagged.
-- **Workaround retirement (pending):** `src/marker_file.loft`
-  can drop the on-disk `MarkerSaveEntry` widened-shape;
-  `src/save.loft`'s `marker_world_to_file` and
-  `markerfile_to_world` can use `MarkerEntry` directly.
-  Net: one struct + ~20 lines of widen / narrow code go away.
-
-### `const` parameter store-lock blocking unrelated writes
-
-- **Original observation:** during plan 03 follow-up history
-  work, `clear_and_record(pw: const PaintedWorld, mw: const
-  MarkerWorld, history: &History)` reliably failed with
-  `Claim on read-only store (size=2) (locked by:
-  lock_store(store_nr=3, rec=1))` — the `+= [PaintedDelta]`
-  claim into a SEPARATE local `UndoEntry`'s vector hit a lock
-  scoped to the `const`-marked args' store.  Workaround was
-  to drop the `const` qualifier (convention-only read-only).
-- **Verified fixed:** 2026-05-27 via `/tmp/probe_const_lock.loft`
-  — function `pcl_walk(b: const Bag, o: Out)` that reads `b`
-  and writes to `o.results` ran cleanly, output `got 20`
-  followed by `got 40`.  The `const` lock no longer extends
-  across unrelated allocations.
-- **Workaround retirement (pending):** restore the `const`
-  qualifier on `clear_and_record`'s pw + mw params in
-  `src/history.loft`.  Function is unchanged otherwise;
-  pure declarative tightening.
 
 ### Cannot pass a literal/expression to a non-`&` parameter
 

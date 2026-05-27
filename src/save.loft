@@ -132,7 +132,7 @@ pub fn load_map_or_empty(
 
 // Snapshot the current marker world into a MarkerFile.
 // Widens u8 → integer per MarkerEntry → MarkerSaveEntry to dodge
-// the vector<Struct-with-u8> save-corruption bug filed in
+// the wrapping-struct u8-vector save-corruption bug filed in
 // QUESTIONS_FOR_LOFT.md.
 pub fn marker_world_to_file(mw: MarkerWorld, name: text) -> MarkerFile {
     mwtf_out: vector<MarkerSaveEntry> = [];
