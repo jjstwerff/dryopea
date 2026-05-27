@@ -198,6 +198,85 @@ fix / feature, move it to **Resolved**.
   hand-author placeholder content for the rest.  Constrains
   the editor's save schema until this ships.
 
+### Path-backed user-data Store binding — `hash<X[k]>` mmap'd to a file
+
+- **Found while:** Designing the persistence destination for
+  dryopea's painted world + marker layer + stencil instance
+  lists (chat 2026-05-27).  The world will grow substantially
+  with stencils; serialising on every save is wasted IO when
+  the runtime already keeps the data in a `Store::new(N)` buffer
+  that could just as easily have been `Store::open(path)`.
+- **Kind:** feature (language / runtime — user-data Store
+  allocation from a path)
+- **What loft needs:** A `.loft`-level way to declare *"the
+  user-data `Store` for these records lives at this file path,
+  mmap'd."*  A `hash<PaintedHex[q,r]>` lookup then becomes a
+  direct read into the mmap'd buffer; mutations are durable on
+  the next OS msync — no `f += val; f.sync()` save loop, no
+  `text as Struct` parse on load.  The hash IS the file.
+- **What's already shipped on the Rust side:**
+  - `Store::open(path)` — `src/store.rs:307` (mmap-storage
+    crate, default feature).
+  - `Store::open_durable(path, DurabilityMode)` —
+    `src/store.rs:2250` — phase 01 of @PLAN38.
+  - Loft-callable integrity bracket — `store_durable_check(p)`
+    / `store_durable_seal(p)` — phase 01b, commit `8bc4b08`,
+    `default/02_images.loft:330-341`.
+- **What's NOT yet exposed to `.loft`:** binding a user-data
+  `Store` to a path.  Today every `hash<X[k]>` / `vector<T>`
+  lives in a Store allocated via `Store::new(N)`
+  (`src/database/allocation.rs:71, 85, 592`;
+  `src/database/mod.rs:547, 639, 778-786`).  The runtime never
+  calls `Store::open(path)` for user-data containers.  The
+  phase 01b commit (`8bc4b08`) explicitly cited re-entrant
+  borrows on `State` as the reason it chose path-metadata over
+  Store-handle-wrapper for the on-corruption callback —
+  startup-time path-binding sidesteps that issue entirely.
+- **Shape sketch (illustrative — loft's call on syntax):**
+  ```loft
+  // Top-level directive — runtime opens this Store at startup
+  // BEFORE user code runs, so no re-entrancy on State.
+  #persist "dryopea_world.store";
+  struct PaintedWorld { painted: hash<PaintedHex[q, r]> }
+
+  fn main() {
+      pw = PaintedWorld { painted: hash<PaintedHex[q, r]>::new() };
+      pw.painted += PaintedHex { q: 0, r: 0, kind: 5 };
+      // no save call; OS msyncs on idle / clean exit
+  }
+  ```
+  or per-instantiation (`pw: PaintedWorld @ "dryopea_world.store"
+  = ...;`).  Or program-flag (`loft --persist=dryopea_world.store
+  src/main.loft`).  Whichever shape: binding must occur at
+  startup, not from a native call.
+- **Why now is not the deadline:** dryopea is *already* on the
+  right substrate — `PaintedWorld` lives in a runtime-allocated
+  Store today; the only pending step is "have the runtime call
+  `Store::open(path)` for that Store instead of `Store::new(N)`."
+  The rest of dryopea's code (paint, lookup, marker layer,
+  stencil instances) is unchanged.  When the surface lands,
+  migration is a one-line annotation.
+- **Workaround in dryopea:** None applied; staying on JSON
+  via `text as MapFile` + `:j` (with the cast bugs filed above
+  for the JSON path itself).  A manual binary `file()` +
+  `#read` cursor-IO route is **strictly worse** — it requires
+  hand-rolled ser/deser AND still doesn't get us mmap.  Better
+  to fix JSON's cast bugs upstream and wait for this language
+  surface than to take the cursor-IO detour.
+- **Pair with:** `store_durable_check(path)` /
+  `store_durable_seal(path)` — once the path-binding ships,
+  the integrity bracket wraps the *Store* (auto-mmap), not a
+  *user-managed binary file* as today.  The bracket pattern is
+  unchanged; only what's between `check` and `seal` changes from
+  "manual binary writes" to "nothing — the hash mutations are
+  the writes."
+- **Loft pointer:** `@PLAN38` (durable-Store API) — naturally
+  slots in as a future phase.  The phase doc
+  (`doc/claude/plans/future/38-loft-store-durable/01b-loft-binding.md:249`)
+  has phase 02 lined up as `store_durable_snapshot(path)` — that's
+  still snapshot semantics, *not* the path-bound-user-data-Store
+  ask.  New phase (01c, or 02b, or 04 — loft's pick).
+
 ### Div-by-zero warning still fires on `float / int_literal`
 
 - **Found while:** Re-verifying the @P368 fix on 2026-05-27.

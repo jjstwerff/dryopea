@@ -196,6 +196,43 @@ deserve a plan when the trigger to start lands.
 
 ---
 
+## Persistence destination — path-backed `Store` (deferred, awaiting loft)
+
+Today the editor saves to `dryopea_save.json` via `text as
+MapFile` round-trip.  The eventual destination is **the hash IS
+the file**: each in-game data structure (painted hexes, marker
+layer, stencil instances, …) is a `Store` mmap'd from a path —
+lookups are direct memory reads, mutations are durable on the
+next OS msync, no explicit save/load loop.
+
+The Rust side already supports this (`Store::open(path)`,
+`Store::open_durable(path, mode)`; @PLAN38 phase 01 shipped in
+loft commit `d494edc`).  The integrity bracket
+(`store_durable_check` / `store_durable_seal`) is exposed to
+`.loft` user code as of phase 01b (`8bc4b08`).  **What's missing
+is the language surface for binding a user-data `Store` to a path
+at program startup** — see [`QUESTIONS_FOR_LOFT.md` § Path-backed
+user-data Store binding](../QUESTIONS_FOR_LOFT.md).
+
+Until that lands, we **stay on JSON** for the world file —
+the manual binary `file()` + `#read` cursor-IO route is a worse
+stopgap than the existing JSON path (still requires hand-rolled
+ser/deser, still doesn't get us mmap).  Hybrid split when the
+surface lands:
+
+- **Store-backed mmap** for bulk runtime state — painted hexes,
+  marker layer, stencil instance lists (everything that mutates
+  during play).
+- **JSON** for human-edited content — `examples/palette.json`,
+  per-map metadata + objective + waves list, stencil library
+  definitions.  Diffable, hand-editable, git-friendly.
+
+When the upstream surface lands the dryopea migration is a
+**one-line annotation** on `PaintedWorld` / the marker-layer
+wrapper / etc.; the rest of the codebase doesn't change.
+
+---
+
 ## How to use this
 
 - **"What could we do next?"** — scan the table for the nearest

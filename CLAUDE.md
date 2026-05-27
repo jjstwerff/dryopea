@@ -198,6 +198,15 @@ The interactive editor saves to `dryopea_save.json` in the
 cwd.  Tests write to `tests/actual/*.json` (also gitignored).
 Both paths are blown away between runs by `scripts/test.sh`.
 
+**Eventual destination:** path-backed mmap'd `Store` (the hash
+IS the file — no save loop).  Rust side ships; loft `.loft`
+language surface for binding user-data Stores to a path is
+missing.  Filed in [`QUESTIONS_FOR_LOFT.md` § Path-backed
+user-data Store binding](QUESTIONS_FOR_LOFT.md); strategy in
+[`plans/ROADMAP.md` § Persistence destination](plans/ROADMAP.md).
+**Don't take the manual binary `file()` + `#read` detour** —
+it's strictly worse than the JSON we have today.
+
 ### Plan numbering
 
 **Never renumber existing plans.**  New plans get the next
