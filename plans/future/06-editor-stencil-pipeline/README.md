@@ -530,11 +530,20 @@ manifests/               # Composition manifests
   whatever mesh + texture API the library provides; the
   composition runtime depends on GL state management for
   multiple meshes per frame.
-- **Multi-layer + bridges** support in loft (or our
-  implementation built on top of `lib/graphics` primitives).
-  These are not yet lib_plans — they may end up there if
-  moros's implementations get extracted, or stay in
-  dryopea if they're too dryopea-specific.
+- **loft lib_plan 24 — Universal hex-world editor +
+  library extraction.**  Phases L1-L6 of that loft-side
+  plan extract the shared substrate (`hex_grid` / `hex_map`
+  / `hex_render` / `hex_stencil` / `hex_editor` /
+  `hex_entity`) out of moros's existing rough-but-tested
+  code.  **Plan 06 phases consume those slices as they
+  land** — plan 06 S1 multi-layer + bridges = lib_plan 24
+  L2 + L3 + L6 (stair-as-bridge); plan 06 S2 stencil mode
+  + mesh baker = lib_plan 24 L4 + part of L6; plan 06 S3
+  mesh composition + entity runtime = lib_plan 24 L6.
+  See [loft lib_plans/24-universal-editor/REFERENCE.md](https://github.com/jjstwerff/loft/tree/main/doc/claude/lib_plans/future/24-universal-editor)
+  for the extraction architecture.  **Without lib_plan
+  24 landing, plan 06 either reimplements (waste) or
+  copy-pastes moros code into dryopea (worst case).**
 
 This plan is **NOT** dependent on plan 02 (solver-validation
 viewer); plans 02 and 06 are parallel — 02 is for height-
