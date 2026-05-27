@@ -1,0 +1,55 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Reproducer: native codegen loses struct type information when
+// a function returns a struct whose fields include a `hash<…>`.
+// The direct call works; a wrapper-call breaks.
+//
+// Interpret mode (`loft --interpret`) — both forms run fine.
+// Native mode (default `loft <script>`) — the wrapper form
+// produces either a compile error ("Field access not supported
+// on type unknown") OR a runtime panic at `src/keys.rs:251`
+// (`index out of bounds: the len is N but the index is 65535`).
+// `65535 = u16::MAX` is loft's "unknown type" sentinel — when
+// it surfaces as a real DbRef.store_nr, the Store accessor
+// indexes off the end.
+//
+// Dryopea hit this in `src/save.loft::load_markers_or_empty`:
+// the wrapper of an if-exists branch + a fall-through to
+// `marker_empty()`.  The editor's startup path panicked
+// before the GL window opened, blocking `make play`.
+// Workaround in dryopea: Makefile's `play` target switched
+// from native to `--interpret` mode.  Retire when fixed.
+//
+// Run with:
+//   loft --lib /path/to/loft/lib loft_repros/struct_with_hash_native_return.loft
+// — defaults to native compile, reliably fails.
+
+struct E {
+    q:    integer not null,
+    r:    integer not null,
+    kind: u8      not null,
+    dir:  u8      not null,
+}
+
+struct W {
+    items: hash<E[q, r]>,
+}
+
+fn w_empty() -> W { W { items: [] } }
+
+fn passthrough(path: text) -> W { w_empty() }
+
+fn main() {
+    // (1) Direct call — works.
+    direct = w_empty();
+    println("direct len: {len(direct.items)}");
+
+    // (2) Wrapper call — native compile error / runtime panic.
+    wrapped = passthrough("nope.json");
+    println("wrapped len: {len(wrapped.items)}");
+    // expected: "wrapped len: 0"
+    // native:   compile error "Field access not supported on type unknown"
+    //           OR runtime panic at src/keys.rs:251 (DbRef.store_nr = 65535)
+    // interpret: works as expected
+}

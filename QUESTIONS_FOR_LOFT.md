@@ -129,6 +129,46 @@ fix / feature, move it to **Resolved**.
 - **Loft pointer:** narrow the `const`-param lock to the
   specific record(s) named, not the whole Store.
 
+### Native codegen loses struct type info on functions returning a struct that contains a `hash<…>`
+
+- **Found while:** trying to launch the editor via
+  `make play MAP=a`.  Loft binary panicked at
+  `src/keys.rs:251` with `index out of bounds: the len is N but
+  the index is 65535` — the `u16::MAX` "unknown type" sentinel
+  surfacing as a real `DbRef.store_nr`.  Reduced to a minimal
+  case: any function returning a struct whose fields include a
+  `hash<…>` loses its type info at the call site.  Direct
+  invocation works (`w = w_empty()` is fine); wrapping in a
+  function (`w = passthrough_returning_W()`) breaks.
+- **Kind:** bug (native codegen — type information drops
+  through the function-return-value path for structs with
+  hash-typed fields).
+- **Trigger:** native compile mode (default `loft <script>`).
+  Interpret mode (`loft --interpret <script>`) — both forms
+  run correctly.  Test suite passes 180/180 because
+  `scripts/test.sh` uses `loft test` which is interpret.
+- **Reproducer:** [`loft_repros/struct_with_hash_native_return.loft`](loft_repros/struct_with_hash_native_return.loft)
+  Demonstrates both shapes side-by-side: a direct call to
+  `w_empty()` works; `passthrough(path)` that returns
+  `w_empty()` produces either a native-compile error
+  ("Field access not supported on type unknown") or a runtime
+  panic at `src/keys.rs:251`.
+- **Concrete dryopea impact:** `src/save.loft::load_markers_or_empty`
+  has the pattern that triggers — `if file(path).exists() {
+  load... } else { marker_empty() }`.  Native compile fails on
+  this; the editor's startup panics before the GL window
+  opens.
+- **Workaround in dryopea:** `Makefile`'s `play` target runs
+  the editor under `--interpret` instead of native compile.
+  Slower per-frame (interpret loop vs. compiled native code)
+  but correctness is preserved.  Retire when fixed upstream;
+  a `play-native` target keeps the native invocation ready
+  for testing the fix.
+- **Loft pointer:** struct-return type propagation in the
+  native codegen path.  Likely the same machinery the @P374
+  fix touched, just on a different shape (plain struct
+  return, not tuple-of-structs).
+
 ### Div-by-zero warning still fires on `float / int_literal`
 
 - **Found while:** Re-verifying the @P368 fix on 2026-05-27.

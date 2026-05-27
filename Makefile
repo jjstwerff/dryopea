@@ -50,7 +50,7 @@ LOFT_ROOT ?= $(CURDIR)/../loft
 LOFT_BIN  ?= $(LOFT_ROOT)/target/release/loft
 LOFT_LIB  ?= $(LOFT_ROOT)/lib
 
-.PHONY: help play test check loft clean
+.PHONY: help play play-native test check loft clean
 
 # ── Help ─────────────────────────────────────────────────────────
 
@@ -67,7 +67,26 @@ help:
 # the loft binary is missing — `make loft` rebuilds it.  Pass
 # `MAP=<name>` to edit a named map under maps/ instead of the default
 # single-slot save.
+#
+# WORKAROUND: runs in `--interpret` mode because loft's native
+# codegen currently loses struct type information when a function
+# returns a struct containing a `hash<…>` (filed in
+# QUESTIONS_FOR_LOFT.md + loft_repros/struct_with_hash_native_return.loft).
+# load_markers_or_empty hits this; native compile panics before the
+# GL window opens.  When the upstream fix lands, drop `--interpret`
+# to get native performance back.
 play:
+	@if [ ! -x "$(LOFT_BIN)" ]; then \
+	  echo "ERROR: loft binary not found at $(LOFT_BIN)"; \
+	  echo "Run 'make loft' to build it, or set LOFT_BIN."; \
+	  exit 2; \
+	fi
+	$(LOFT_BIN) --interpret --lib $(LOFT_LIB) src/main.loft $(MAP)
+
+# Native-compile play target — currently broken by the upstream
+# struct-with-hash-return bug above.  Kept for testing the
+# eventual fix; flip `play` back to native when it works.
+play-native:
 	@if [ ! -x "$(LOFT_BIN)" ]; then \
 	  echo "ERROR: loft binary not found at $(LOFT_BIN)"; \
 	  echo "Run 'make loft' to build it, or set LOFT_BIN."; \
