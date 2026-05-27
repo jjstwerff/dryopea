@@ -20,10 +20,18 @@
 //   Tab               toggle Ground ↔ Marker mode; the badge in
 //                     the top-right of the HUD shows the current
 //                     mode (grass-green = Ground, hot pink = Marker).
-//   R / Shift+R       (marker mode) rotate the place-direction
-//                     clockwise / counter-clockwise (0..5, mod 6).
-//                     A faint outline ghost arrow at the hovered
-//                     hex previews where the next click will land.
+//   R / Shift+R       (marker mode, kind=spawn) rotate the
+//                     place-direction clockwise / counter-
+//                     clockwise (0..5, mod 6).  No-op when
+//                     kind=target (targets are spherical).
+//                     A faint outline ghost preview at the
+//                     hovered hex previews where the next click
+//                     will land.
+//   K                 (marker mode) cycle the place-kind:
+//                     SPAWN ↔ TARGET.  Targets are sub-mode
+//                     markers @PLAN50 consumes — placed at
+//                     hex coords, anchored to the extruded
+//                     surface at render time.
 //   Ctrl+S            save to dryopea_save.json
 //   Ctrl+Z            undo the most recent action.  Strokes
 //                     count as ONE action (one drag = one undo).
@@ -81,6 +89,7 @@ const KEY_MINUS: integer = 45;    // ASCII '-' — palette index 10
 const KEY_EQUAL: integer = 61;    // ASCII '=' — palette index 11
 const KEY_N:     integer = 110;   // ASCII 'n' — Ctrl+N clears all
 const KEY_H:     integer = 104;   // ASCII 'h' — recentre camera
+const KEY_K:     integer = 107;   // ASCII 'k' — cycle marker kind
 
 fn main() {
     if !gl_create_window(WINDOW_W, WINDOW_H, "dryopea editor") {
@@ -120,10 +129,14 @@ fn main() {
     // Marker-mode placement state.  `place_direction` is the
     // rotation applied to the NEXT spawn marker placement.
     // R / Shift+R rotate it (edge-detected; held key doesn't spin).
-    // `mb_held_prev` edge-detects the left button so a held mouse
-    // doesn't ping-pong place→remove every frame on the same hex.
+    // `place_kind` is the marker KIND the next click will drop —
+    // K toggles it between SPAWN and TARGET.  `mb_held_prev`
+    // edge-detects the left button so a held mouse doesn't
+    // ping-pong place→remove every frame on the same hex.
     place_direction: u8      = 0 as u8;
+    place_kind:      integer = MARKER_KIND_SPAWN;
     r_held_prev:     boolean = false;
+    k_held_prev:     boolean = false;
     mb_held_prev:    boolean = false;
 
     // Save-state tracking.  `dirty` flips to true on every paint /
@@ -176,11 +189,13 @@ fn main() {
         }
         tab_held_prev = tab_now;
 
-        // R / Shift+R (marker mode only) — rotate the place-
-        // direction.  Edge-detected so held R doesn't spin.
+        // R / Shift+R (marker mode + place_kind=SPAWN only) —
+        // rotate the place-direction.  Edge-detected so held R
+        // doesn't spin.  Ctrl+R is reload, handled separately.
         shift_held = gl_key_pressed(graphics::KEY_SHIFT);
         r_now      = gl_key_pressed(graphics::KEY_R);
-        if r_now && !r_held_prev && mode == MODE_MARKER {
+        if r_now && !r_held_prev && mode == MODE_MARKER
+        && !ctrl_held && place_kind == MARKER_KIND_SPAWN {
             place_direction = rotate_direction(
                 place_direction,
                 if shift_held { -1 } else { 1 }
@@ -188,6 +203,21 @@ fn main() {
             println("dryopea: place_direction = {place_direction as integer}");
         }
         r_held_prev = r_now;
+
+        // K (marker mode only) — cycle the place-kind between
+        // SPAWN and TARGET.  Edge-detected.  Skipped when Ctrl
+        // is held to leave room for future Ctrl+K bindings.
+        k_now = gl_key_pressed(KEY_K);
+        if k_now && !k_held_prev && mode == MODE_MARKER && !ctrl_held {
+            if place_kind == MARKER_KIND_SPAWN {
+                place_kind = MARKER_KIND_TARGET;
+                println("dryopea: place_kind = TARGET");
+            } else {
+                place_kind = MARKER_KIND_SPAWN;
+                println("dryopea: place_kind = SPAWN");
+            }
+        }
+        k_held_prev = k_now;
 
         // Ctrl+S → save (debounced to avoid Ctrl+S held-down spam).
         if ctrl_held && gl_key_pressed(graphics::KEY_S) {
@@ -366,11 +396,14 @@ fn main() {
             // Marker-mode is edge-triggered: each press is one
             // place-or-remove event, not a drag.  Click an existing
             // marker → remove (toggle); click an empty hex → place
-            // a spawn with the current rotation.  Both record one
-            // UndoEntry directly (no in-flight accumulation needed).
+            // the active kind (spawn with current rotation, OR
+            // target).  Both record one UndoEntry directly.
             if has_marker(mw, hovered.q, hovered.r) {
                 remove_marker_and_record(mw, hovered.q, hovered.r, history);
                 println("dryopea: removed marker at ({hovered.q}, {hovered.r})");
+            } else if place_kind == MARKER_KIND_TARGET {
+                place_target_and_record(mw, hovered.q, hovered.r, history);
+                println("dryopea: placed target at ({hovered.q}, {hovered.r})");
             } else {
                 place_spawn_and_record(mw, hovered.q, hovered.r,
                                        place_direction, history);
@@ -398,10 +431,17 @@ fn main() {
         render_markers(cv, cam, mw, WINDOW_W, WINDOW_H, PPM);
         // Marker-mode ghost preview at the hovered hex — only when
         // the hex is empty (placing on an occupied hex removes, so
-        // no preview).
+        // no preview).  Dispatches on place_kind: spawn → arrow
+        // ghost oriented per place_direction, target → bullseye
+        // ghost.
         if mode == MODE_MARKER && !has_marker(mw, hovered.q, hovered.r) {
-            render_ghost_arrow(cv, cam, hovered.q, hovered.r,
-                               place_direction, WINDOW_W, WINDOW_H, PPM);
+            if place_kind == MARKER_KIND_TARGET {
+                render_ghost_target(cv, cam, hovered.q, hovered.r,
+                                    WINDOW_W, WINDOW_H, PPM);
+            } else {
+                render_ghost_arrow(cv, cam, hovered.q, hovered.r,
+                                   place_direction, WINDOW_W, WINDOW_H, PPM);
+            }
         }
         render_picker(cv, picker, 12, 12);
         // Save indicator sits to the right of the picker, vertically
