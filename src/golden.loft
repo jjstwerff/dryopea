@@ -8,26 +8,14 @@
 //   cv = render_to_canvas(cam, world, 96, 96, 16.0);
 //   assert_golden(cv, "01_e1_sea_origin");
 //
-// The helper:
-//   - Saves the actual render to tests/actual/<name>.png  (always)
-//   - Loads the bytes of tests/golden/<name>.png
-//   - Compares the two PNGs byte-for-byte
-//   - On mismatch / missing golden: emits a loud `FAIL:` line to
-//     stdout AND writes a marker file `tests/actual/_FAILED_<name>.txt`
-//
-// Why marker files + println instead of assert/panic:
-//   loft's test runner currently doesn't surface
-//   runtime_error / had_fatal as a test failure (it only catches
-//   Rust panics).  An `assert(false, …)` halts the test function
-//   but the runner still reports "ok".  Filed in
-//   QUESTIONS_FOR_LOFT.md.  Until that lands, the workflow is:
-//     1. Run `loft test`.
-//     2. `ls tests/actual/_FAILED_*.txt` to see which tests
-//        actually failed.
-//     3. Manually review tests/actual/<name>.png for any
-//        new / changed test; if correct, copy to
-//        tests/golden/<name>.png.
-//   `scripts/check-goldens.sh` automates step 2.
+// The helper saves the render to tests/actual/<name>.png and
+// asserts that its bytes match tests/golden/<name>.png.  A
+// missing golden or a byte-mismatch fails the test via `assert`
+// (the loft test runner surfaces the assertion as a FAILED test
+// since @P367 landed).  Bootstrapping a new test:
+//   1. Run `scripts/test.sh` — the new golden assert FAILs.
+//   2. Review tests/actual/<name>.png.
+//   3. If it looks correct, copy to tests/golden/<name>.png.
 
 use graphics;
 
@@ -51,15 +39,7 @@ pub fn png_bytes_equal(path_a: text, path_b: text) -> boolean {
     true
 }
 
-// Internal: write the failure marker file.
-fn write_failure_marker(name: text, reason: text) {
-    wfm_marker = file("tests/actual/_FAILED_{name}.txt");
-    wfm_marker.write(reason);
-}
-
-// Save the actual + compare to the golden.  On failure, log
-// clearly + write a marker file (the loft test runner does not yet
-// surface assertion failures — see file header).
+// Save the actual render, then assert it byte-matches the golden.
 pub fn assert_golden(cv: Canvas, name: text) {
     ag_actual = "tests/actual/{name}.png";
     ag_golden = "tests/golden/{name}.png";
@@ -67,16 +47,9 @@ pub fn assert_golden(cv: Canvas, name: text) {
     cv.save_png(ag_actual);
 
     ag_golden_file = file(ag_golden);
-    if !ag_golden_file.exists() {
-        ag_reason1 = "golden missing for {name}: review {ag_actual} and copy to {ag_golden} if it looks correct";
-        println("FAIL: {ag_reason1}");
-        write_failure_marker(name, ag_reason1);
-        return;
-    }
+    assert(ag_golden_file.exists(),
+           "golden missing for {name}: review {ag_actual} and copy to {ag_golden} if it looks correct");
 
-    if !png_bytes_equal(ag_actual, ag_golden) {
-        ag_reason2 = "golden mismatch for {name}: actual={ag_actual} golden={ag_golden}";
-        println("FAIL: {ag_reason2}");
-        write_failure_marker(name, ag_reason2);
-    }
+    assert(png_bytes_equal(ag_actual, ag_golden),
+           "golden mismatch for {name}: actual={ag_actual} golden={ag_golden}");
 }
