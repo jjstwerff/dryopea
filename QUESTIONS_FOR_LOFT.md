@@ -147,6 +147,102 @@ fix / feature, move it to **Resolved**.
   inline), so the tuple-field-access path appears to need its
   own arm.
 
+### `const` parameter locks the store across unrelated writes
+
+- **Found while:** Plan 03 follow-up history work — implementing
+  `clear_and_record(pw: const PaintedWorld, mw: const MarkerWorld,
+  history: &History)`.  The function reads pw + mw to snapshot
+  every painted hex / marker into a fresh `UndoEntry`, then pushes
+  the entry to `history`.  Tests reliably failed with
+  `Claim on read-only store (size=2) (locked by:
+  lock_store(store_nr=3, rec=1))`.
+- **Kind:** bug or feature gap — `const` parameter's lock
+  scope is wider than the declared parameter; blocks unrelated
+  allocations.
+- **What dryopea sees:** marking a function parameter `const`
+  should mean "this function won't mutate this argument."  In
+  practice it appears to lock the entire Store that holds the
+  argument, so subsequent `+= [...]` allocations *anywhere* in
+  the function (even on a fresh local variable, even into a
+  different struct hierarchy) hit the lock and fail.  The two
+  `const` params live in the test's main store; the
+  `car_entry.painted += [PaintedDelta { ... }]` claim that
+  failed is on a LOCAL `UndoEntry`'s vector field — semantically
+  unrelated.
+- **Reproducer (sketch):**
+  ```loft
+  pub fn clear_and_record(
+      pw:      const PaintedWorld,
+      mw:      const MarkerWorld,
+      history: &History,
+  ) {
+      car_entry = undo_entry_empty();
+      for car_pe in pw.painted {
+          car_entry.painted += [PaintedDelta { ... }];   // FAILS here
+      }
+      // ...
+  }
+  ```
+- **Workaround in dryopea:** dropped the `const` qualifier on
+  `clear_and_record`'s pw + mw params (history.loft).  The
+  function still doesn't mutate them — just relies on convention.
+  The signature reads less safely now, but the test suite passes.
+- **Loft pointer:** the lock granularity for `const` parameter
+  arrives at Store level when it should be at value / sub-record
+  level.  Could be parser-side (don't emit the lock for `const`
+  on Store-holding types) or runtime-side (narrow the lock to
+  the specific record(s) named, not the whole Store).
+
+### Cannot pass a literal or expression to a `&` parameter — even when the param isn't `&`
+
+- **Found while:** Plan 03 follow-up M3 — tests for
+  `reload_and_record(pw_current: PaintedWorld, mw_current:
+  MarkerWorld, pw_loaded: PaintedWorld, mw_loaded: MarkerWorld,
+  history: &History)`.  The signature has NO `&` params on the
+  PaintedWorld / MarkerWorld slots — only the History at the end
+  is `&`.  Yet tests passing `marker_empty()` directly as one of
+  the world arguments failed to compile:
+  ```
+  error: Cannot pass a literal or expression to a '&' parameter
+         — assign to a variable first
+  ```
+- **Kind:** bug (error message or analysis — the diagnostic
+  blames `&` when none of the four world params are `&`)
+- **Reproducer:**
+  ```loft
+  pub fn takes_four_worlds(
+      a: PaintedWorld, b: MarkerWorld,
+      c: PaintedWorld, d: MarkerWorld,
+      history: &History,
+  ) { ... }
+
+  fn test() {
+      h = history_empty();
+      cur_pw = painted_empty();
+      cur_mw = marker_empty();
+      ld_pw  = painted_empty();
+      takes_four_worlds(cur_pw, cur_mw, ld_pw, marker_empty(), h);
+      // ─────────────────────────────────────^^^^^^^^^^^^^^^
+      // FAILS — "Cannot pass a literal or expression to a '&' parameter"
+      // (despite param d being plain MarkerWorld, not &MarkerWorld)
+  }
+  ```
+- **Workaround in dryopea:** bind every struct-valued call
+  expression to a local before passing.  Mechanical for callers;
+  awkward in test code.  See `tests/03_qol_history.loft` ~lines
+  300-360 — every reload-record test has 4 extra local bindings
+  just to dodge this.
+- **Theories:**
+  1. Loft auto-promotes struct-by-value args to `&` internally
+     for performance (avoid copy), and that promotion makes
+     them require named storage; the diagnostic is honest
+     about the internal `&` but misleading about the user's
+     declared signature.
+  2. There's a different parser path the error message
+     misclassifies.
+- **Loft pointer:** error message site + the value-arg
+  resolution logic for struct types.
+
 ### Div-by-zero warning still fires on `float / int_literal`
 
 - **Found while:** Re-verifying the @P368 fix on 2026-05-27.
@@ -210,19 +306,19 @@ fn consume(w: Wrap) {
 ```
 
 **Root cause:** the apparent "empty vector inside the struct"
-was the **JSON-cast-with-extras bug** (filed above) hiding a
-load that was actually returning zero entries from the start.
-Once GroundType declared all four extra optional fields the
-JSON has (`variant`, `color_status`, `height_override`,
-`end_drivable`), the cast started returning 11 entries, the
-struct correctly carried them across the value-pass, and the
-picker rendered.
+was actually the **JSON-cast-with-extras bug** (now § Resolved
+as @P366) hiding a load that was returning zero entries from
+the start.  Once `GroundType` declared all four extra optional
+fields the JSON has (`variant`, `color_status`,
+`height_override`, `end_drivable`), the cast started returning
+11 entries, the struct correctly carried them across the
+value-pass, and the picker rendered.
 
-Notable: bugs (1) and (2) (silent JSON-cast empty + test runner
-not failing on assert) were **compound** — they masked each
-other for ~half an hour of debugging, producing a green test
-suite while every assertion was running against a 0-length
-palette.
+Notable: **@P366** (silent JSON-cast empty on strict-reject) and
+**@P367** (test runner not failing on assert) were **compound**
+— they masked each other for ~half an hour of debugging,
+producing a green test suite while every assertion was running
+against a 0-length palette.  Both fixed in loft commit `42f8228`.
 
 ## Resolved
 
