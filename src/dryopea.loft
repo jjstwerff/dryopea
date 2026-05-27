@@ -17,5 +17,6 @@ use picker;
 use map_file;
 use markers;
 use marker_file;
+use marker_render;
 use editor_mode;
 use save;

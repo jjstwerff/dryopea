@@ -277,6 +277,122 @@ fix / feature, move it to **Resolved**.
   still snapshot semantics, *not* the path-bound-user-data-Store
   ask.  New phase (01c, or 02b, or 04 — loft's pick).
 
+### `vector<Struct>` with trailing `u8 not null` fields corrupts on `:j` save
+
+- **Found while:** Plan 03 M3 — saving the marker sidecar.
+  MarkerEntry has shape `{ q: integer, r: integer, kind: u8,
+  direction: u8 }` (two trailing u8 fields).  Iterating
+  `hash<MarkerEntry[q, r]>` and appending into a
+  `vector<MarkerEntry>`, then serialising with `:j`, produces
+  JSON where the u8 field values are **garbage memory** and the
+  preceding integer fields are zeroed for the second-and-later
+  entries.
+- **Kind:** bug (`:j` formatter or vector iteration —
+  mixed-width struct layout)
+- **What dryopea sees:**
+  ```loft
+  pub struct MarkerEntry {
+      q:         integer not null,
+      r:         integer not null,
+      kind:      u8      not null,
+      direction: u8      not null,
+  }
+
+  fn test() {
+      mw: hash<MarkerEntry[q, r]> = [];
+      mw[1, 1] = MarkerEntry { q: 1, r: 1, kind: 0 as u8, direction: 0 as u8 };
+      mw[2, 2] = MarkerEntry { q: 2, r: 2, kind: 0 as u8, direction: 3 as u8 };
+
+      out: vector<MarkerEntry> = [];
+      for e in mw {
+          out += [MarkerEntry {
+              q:         e.q,
+              r:         e.r,
+              kind:      e.kind,
+              direction: e.direction,
+          }];
+      }
+      println("{out:j}");
+      // expected: [{"q":1,"r":1,"kind":0,"direction":0},
+      //            {"q":2,"r":2,"kind":0,"direction":3}]
+      // observed: [{"q":0,"r":0,"kind":3,"direction":0},
+      //            {"q":6859879637655319924,"r":12653,
+      //             "kind":183,"direction":255}]
+  }
+  ```
+  Visible pattern: the first entry's `kind` slot received the
+  *second* placement's `direction` value (3) — i.e. fields look
+  shifted by one slot.  The second entry is full memory garbage.
+- **Workaround in dryopea:** `marker_file.loft` now declares a
+  wider on-disk shape `MarkerSaveEntry { q, r, kind: integer,
+  direction: integer }` and `save.loft`'s
+  `marker_world_to_file` widens `MarkerEntry.kind/direction` to
+  integer when building the save vector.  Same idiom as
+  `PaintedHex` (u8 in memory) ↔ `GroundEntry` (text on disk).
+- **Loft pointer:** `:j` formatter for `vector<Struct>` where the
+  struct has trailing `u8 not null` fields, OR loft's
+  vector-of-struct iteration / copy with mixed-width fields.
+  Bug surfaced AFTER M2 commit `d87d202`; the same code path
+  passed 11/11 in M1 commit `d8f311c`.  Trigger may be related
+  to adding sibling code in `markers.loft` (new functions, no
+  struct changes) — possibly codegen-order-sensitive.
+
+### Loft parser rejects `(tuple_local.N as float)`
+
+- **Found while:** Plan 03 M3 — converting the integer return
+  of `world_to_canvas` (a `(integer, integer)` tuple) into
+  floats for sub-pixel arrow geometry math.
+- **Kind:** bug (parser — cast-paren handling on tuple field
+  access)
+- **What dryopea sees:** All four forms below fail with the
+  same `Expect token ;` / `Syntax error: unexpected ')'`
+  error pointing at the cast:
+  ```loft
+  // From world.loft: hex_to_world returns (float, float).
+  // From render.loft: world_to_canvas returns (integer, integer).
+
+  pix = world_to_canvas(cam, wx, wy, w, h, ppm);
+
+  // (1) Parenthesised cast on tuple component — FAILS:
+  cx_f = (pix.0 as float);
+  //                     ^ Syntax error: unexpected ')'
+
+  // (2) Unparenthesised cast on tuple component — FAILS too:
+  cx_f = pix.0 as float;
+  //              ^ Expect token ;
+
+  // (3) Bind first, then cast the local — ALSO FAILS:
+  cx_i = pix.0;
+  cx_f = cx_i as float;
+  //          ^ Expect token ;
+
+  // (4) Works only via dual indirection: turn the integer
+  //     pixel into a separate float-typed local via a
+  //     no-op multiply, or inline the world→canvas math
+  //     so floats never become integers in the first place.
+  ```
+- **Reproducer (minimal):**
+  ```loft
+  fn pixel() -> (integer, integer) { (10, 20) }
+
+  fn test() {
+      p = pixel();
+      x = p.0 as float;   // PARSE ERROR
+      println("{x}");
+  }
+  ```
+- **Workaround in dryopea:** `marker_render.loft`'s
+  `draw_marker_arrow` inlines render.loft's `world_to_canvas`
+  math but keeps the intermediates as `float` end-to-end, so no
+  integer→float cast is needed on a tuple component.  This
+  duplicates ~6 lines of camera projection math; cleanup once
+  the parser fix ships.
+- **Loft pointer:** probably the same parser site that handles
+  the existing `(struct_field as T)` cast — that form works in
+  `painted.loft` (`pl_aq = (h.q as float);` and `(a.q as float)`
+  inline), so the tuple-field-access path appears to need its
+  own arm.
+
 ### Div-by-zero warning still fires on `float / int_literal`
 
 - **Found while:** Re-verifying the @P368 fix on 2026-05-27.

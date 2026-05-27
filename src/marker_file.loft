@@ -17,9 +17,31 @@
 // Three top-level fields here — safely below any known cast
 // threshold.
 //
+// On-disk MarkerSaveEntry vs in-memory MarkerEntry:
+//   MarkerEntry uses u8 for kind/direction (memory-efficient
+//   discriminant + heading).  But loft's vector<Struct>
+//   serialisation corrupts fields when a struct has trailing
+//   u8 fields — observed during plan 03 M3 (filed in
+//   QUESTIONS_FOR_LOFT.md § "vector<Struct> with u8 fields
+//   corrupts on :j save").  We widen to integer on disk to
+//   sidestep the bug; same idiom as painted.loft / map_file.loft
+//   (PaintedHex.kind: u8 in memory, GroundEntry.kind: text on
+//   disk).
+//
 // Plan 03 phase M1.
 
 use markers;
+
+// On-disk shape for one marker — integer fields throughout,
+// dodging the u8-in-vector save-corruption bug.  Maps to/from
+// MarkerEntry in save.loft (marker_world_to_file /
+// markerfile_to_world).
+pub struct MarkerSaveEntry {
+    q:         integer not null,
+    r:         integer not null,
+    kind:      integer not null,
+    direction: integer not null,
+}
 
 // The marker sidecar record.  `markers` MUST be non-empty when
 // this file exists on disk (see `save_markers` in save.loft —
@@ -27,7 +49,7 @@ use markers;
 // vector never round-trips through `:j` / `text as MarkerFile`
 // and the known empty-vector cast bugs can't bite).
 pub struct MarkerFile {
-    version: integer        not null,
-    name:    text           not null,
-    markers: vector<MarkerEntry>,
+    version: integer not null,
+    name:    text    not null,
+    markers: vector<MarkerSaveEntry>,
 }

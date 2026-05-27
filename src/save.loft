@@ -131,14 +131,17 @@ pub fn load_map_or_empty(
 // world (the load-or-empty pattern from above, reused).
 
 // Snapshot the current marker world into a MarkerFile.
+// Widens u8 → integer per MarkerEntry → MarkerSaveEntry to dodge
+// the vector<Struct-with-u8> save-corruption bug filed in
+// QUESTIONS_FOR_LOFT.md.
 pub fn marker_world_to_file(mw: MarkerWorld, name: text) -> MarkerFile {
-    mwtf_out: vector<MarkerEntry> = [];
+    mwtf_out: vector<MarkerSaveEntry> = [];
     for mwtf_e in mw.markers {
-        mwtf_out += [MarkerEntry {
+        mwtf_out += [MarkerSaveEntry {
             q:         mwtf_e.q,
             r:         mwtf_e.r,
-            kind:      mwtf_e.kind,
-            direction: mwtf_e.direction,
+            kind:      mwtf_e.kind as integer,
+            direction: mwtf_e.direction as integer,
         }];
     }
     MarkerFile {
@@ -162,15 +165,16 @@ pub fn load_marker_file(path: text) -> MarkerFile {
     file(path).content() as MarkerFile
 }
 
-// Materialise a MarkerWorld from a loaded MarkerFile.  Unknown
-// `kind` values (future variants we don't recognise yet) are
-// skipped — forward-compat with the same lenient policy as
+// Materialise a MarkerWorld from a loaded MarkerFile.  Narrows
+// the on-disk integer fields back to u8 in the in-memory shape.
+// Unknown `kind` values (future variants we don't recognise yet)
+// are skipped — forward-compat with the same lenient policy as
 // mapfile_to_painted.
 pub fn markerfile_to_world(mf: MarkerFile) -> MarkerWorld {
     mftw_out = marker_empty();
     for mftw_e in mf.markers {
-        if mftw_e.kind == MARKER_KIND_SPAWN as u8 {
-            place_spawn(mftw_out, mftw_e.q, mftw_e.r, mftw_e.direction);
+        if mftw_e.kind == MARKER_KIND_SPAWN {
+            place_spawn(mftw_out, mftw_e.q, mftw_e.r, mftw_e.direction as u8);
         }
     }
     mftw_out

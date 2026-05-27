@@ -1,0 +1,138 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Marker render — draws a hot-pink triangle arrow per placed
+// spawn marker at its hex centre, oriented per its direction
+// (0..5).  Sits on top of the painted-hex render — the ground
+// colour underneath stays visible.
+//
+// Plan 03 phase M3 (M4 swaps the filled-vs-outline + alpha for
+// the in-game render mode; the editor uses the same primitive).
+
+use graphics;
+use world;
+use camera;
+use markers;
+
+// Plan 03 § Editor visual specifies `#ff3060` (hot pink) so the
+// arrow stays unambiguous against any palette colour — including
+// sand `#f0d860` and the wall placeholder reds.
+pub const ARROW_COLOR:       integer = 0xff3060;
+pub const ARROW_GHOST_COLOR: integer = 0xc02050;   // dimmer for hover preview
+
+// Arrow geometry in HEX-RELATIVE units (multiplied by ppm at
+// render time so the arrow scales with zoom).  Tuned so the
+// triangle sits comfortably inside a hex without overlapping
+// neighbours.
+pub const ARROW_LEN_M:  float = 0.55;   // tip distance from hex centre
+pub const ARROW_BASE_M: float = 0.18;   // back-of-arrow offset from centre
+pub const ARROW_HALF_W: float = 0.25;   // half-width of the triangle base
+
+// Unit forward vector in canvas coords for a hex direction
+// d ∈ 0..5.  d=0 → +y (south, matching +r axial); each step is
+// 60° clockwise from south.  Result is (sin θ, cos θ) where
+// θ = d · π/3.
+pub fn direction_unit(d: u8) -> (float, float) {
+    du_theta = (d as float) * (PI / 3.0);
+    (sin(du_theta), cos(du_theta))
+}
+
+// Draw a spawn-arrow triangle at the (q, r) hex centre, pointing
+// in `direction`.  `filled` controls fill vs outline (outline is
+// used for the hover-ghost preview in marker mode).
+pub fn draw_marker_arrow(
+    cv:        Canvas,
+    cam:       EditorCamera,
+    q:         integer,
+    r:         integer,
+    direction: u8,
+    color:     integer,
+    cw:        integer,
+    ch:        integer,
+    ppm:       float,
+    filled:    boolean,
+) {
+    // Hex centre in pixel coords (float).  Inlined from
+    // render.loft's world_to_canvas so we keep floats throughout;
+    // loft's parser doesn't accept `(tuple.N as float)` on a
+    // tuple local, so casting `world_to_canvas`'s integer return
+    // is awkward.  Math is identical.
+    dma_camw  = hex_to_world(cam.pos);
+    dma_world = hex_to_world(Hex { q: q, r: r });
+    dma_dx_m  = dma_world.0 - dma_camw.0;
+    dma_dy_m  = dma_world.1 - dma_camw.1;
+    dma_cx    = (cw as float) * 0.5 + dma_dx_m * ppm + 0.5;
+    dma_cy    = (ch as float) * 0.5 + dma_dy_m * ppm + 0.5;
+
+    dma_fwd = direction_unit(direction);
+    dma_fx  = dma_fwd.0;
+    dma_fy  = dma_fwd.1;
+    // Perpendicular: (fy, -fx) — rotate forward 90° CCW in
+    // canvas-y-down coordinates.  Used to splay the two base
+    // vertices either side of the arrow's centre line.
+    dma_px = dma_fy;
+    dma_py = -dma_fx;
+
+    dma_tip_x  = dma_cx + ARROW_LEN_M * ppm * dma_fx;
+    dma_tip_y  = dma_cy + ARROW_LEN_M * ppm * dma_fy;
+    dma_back_x = dma_cx - ARROW_BASE_M * ppm * dma_fx;
+    dma_back_y = dma_cy - ARROW_BASE_M * ppm * dma_fy;
+
+    dma_a_x = dma_back_x + ARROW_HALF_W * ppm * dma_px;
+    dma_a_y = dma_back_y + ARROW_HALF_W * ppm * dma_py;
+    dma_b_x = dma_back_x - ARROW_HALF_W * ppm * dma_px;
+    dma_b_y = dma_back_y - ARROW_HALF_W * ppm * dma_py;
+
+    dma_tx = dma_tip_x as integer;
+    dma_ty = dma_tip_y as integer;
+    dma_ax = dma_a_x as integer;
+    dma_ay = dma_a_y as integer;
+    dma_bx = dma_b_x as integer;
+    dma_by = dma_b_y as integer;
+
+    if filled {
+        cv.fill_triangle(dma_tx, dma_ty, dma_ax, dma_ay, dma_bx, dma_by, color);
+    } else {
+        cv.draw_line(dma_tx, dma_ty, dma_ax, dma_ay, color);
+        cv.draw_line(dma_ax, dma_ay, dma_bx, dma_by, color);
+        cv.draw_line(dma_bx, dma_by, dma_tx, dma_ty, color);
+    }
+}
+
+// Iterate the marker world and draw every spawn marker as a
+// filled hot-pink triangle.  Sparse — most hexes have nothing.
+pub fn render_markers(
+    cv:  Canvas,
+    cam: EditorCamera,
+    mw:  MarkerWorld,
+    cw:  integer,
+    ch:  integer,
+    ppm: float,
+) {
+    for rm_e in mw.markers {
+        if rm_e.kind == MARKER_KIND_SPAWN as u8 {
+            draw_marker_arrow(cv, cam,
+                              rm_e.q, rm_e.r, rm_e.direction,
+                              ARROW_COLOR,
+                              cw, ch, ppm, true);
+        }
+    }
+}
+
+// Hover preview — outline-only triangle at the hovered hex,
+// pointing in the editor's currently selected place-direction.
+// Lets the player see where + which way the next click will
+// drop a spawn marker.
+pub fn render_ghost_arrow(
+    cv:        Canvas,
+    cam:       EditorCamera,
+    q:         integer,
+    r:         integer,
+    direction: u8,
+    cw:        integer,
+    ch:        integer,
+    ppm:       float,
+) {
+    draw_marker_arrow(cv, cam, q, r, direction,
+                      ARROW_GHOST_COLOR, cw, ch, ppm, false);
+}

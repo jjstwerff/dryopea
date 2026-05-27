@@ -95,3 +95,41 @@ pub fn marker_direction(w: const MarkerWorld, q: integer, r: integer) -> u8 {
 pub fn marker_count(w: const MarkerWorld) -> integer {
     len(w.markers)
 }
+
+// ─── Direction rotation (plan 03 M3) ────────────────────────────
+
+// Number of hex cardinal directions; spawn-marker `direction` is
+// always 0..NUM_HEX_DIRECTIONS-1.
+pub const NUM_HEX_DIRECTIONS: integer = 6;
+
+// Rotate a hex direction by `delta` steps.  Positive `delta`
+// rotates clockwise (in canvas coords / +60° per step from
+// south); negative rotates counter-clockwise.  Wraps cleanly
+// for any magnitude of delta, including negatives.
+pub fn rotate_direction(d: u8, delta: integer) -> u8 {
+    rd_n = ((d as integer) + delta) % NUM_HEX_DIRECTIONS;
+    if rd_n < 0 {
+        rd_n = rd_n + NUM_HEX_DIRECTIONS;
+    }
+    rd_n as u8
+}
+
+// Rotate the direction of the marker at (q, r), if one exists.
+// No-op on a hex with no marker.  Used by future "select-then-
+// rotate" editor UX; the M3 placement UX uses an editor-level
+// `place_direction` state and writes the new marker with that
+// direction set at place time, so this primitive isn't on the
+// main editor hot path yet.
+pub fn rotate_marker_at(w: &MarkerWorld, q: integer, r: integer, delta: integer) {
+    rma_e = w.markers[q, r];
+    if rma_e == null {
+        return;
+    }
+    rma_new_dir = rotate_direction(rma_e.direction, delta);
+    w.markers[q, r] = MarkerEntry {
+        q:         q,
+        r:         r,
+        kind:      rma_e.kind,
+        direction: rma_new_dir,
+    };
+}

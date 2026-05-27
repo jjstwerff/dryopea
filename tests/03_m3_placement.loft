@@ -1,0 +1,183 @@
+// Copyright (c) 2026 Jurjen Stellingwerff
+// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// Plan 03 phase M3 — spawn placement + rotation + arrow render.
+//
+// Covers the data primitives M3 adds (rotate_direction wrap
+// behaviour, rotate_marker_at on existing/missing markers) and
+// the render path's basics (direction unit vector at known
+// angles, that draw_marker_arrow paints non-default pixels,
+// that distinct directions produce distinct triangles).
+//
+// The editor-level wiring (Tab edge detection, R/Shift+R
+// rotation of `place_direction`, click-place vs click-remove,
+// ghost-arrow preview) lives in `src/main.loft`'s GL loop and
+// is not directly unit-testable; the primitives covered here
+// are the surface that loop calls into.
+
+use dryopea;
+use graphics;
+
+// ─── rotate_direction (wrap + delta semantics) ───────────────────
+
+fn test_rotate_zero_delta_is_noop() {
+    assert(rotate_direction(0 as u8, 0) == 0 as u8, "+0 from 0");
+    assert(rotate_direction(3 as u8, 0) == 3 as u8, "+0 from 3");
+    assert(rotate_direction(5 as u8, 0) == 5 as u8, "+0 from 5");
+}
+
+fn test_rotate_cw_step() {
+    assert(rotate_direction(0 as u8, 1) == 1 as u8, "0 +1 = 1");
+    assert(rotate_direction(2 as u8, 1) == 3 as u8, "2 +1 = 3");
+    assert(rotate_direction(4 as u8, 1) == 5 as u8, "4 +1 = 5");
+}
+
+fn test_rotate_ccw_step() {
+    assert(rotate_direction(5 as u8, -1) == 4 as u8, "5 -1 = 4");
+    assert(rotate_direction(3 as u8, -1) == 2 as u8, "3 -1 = 2");
+    assert(rotate_direction(1 as u8, -1) == 0 as u8, "1 -1 = 0");
+}
+
+fn test_rotate_wraps_positive() {
+    assert(rotate_direction(5 as u8, 1) == 0 as u8, "5 +1 wraps to 0");
+}
+
+fn test_rotate_wraps_negative() {
+    assert(rotate_direction(0 as u8, -1) == 5 as u8, "0 -1 wraps to 5");
+}
+
+fn test_rotate_large_delta() {
+    // delta beyond ±6 should still produce a valid direction.
+    assert(rotate_direction(0 as u8, 7)   == 1 as u8, "0 +7 = 1");
+    assert(rotate_direction(2 as u8, 13)  == 3 as u8, "2 +13 = 3");
+    assert(rotate_direction(0 as u8, -7)  == 5 as u8, "0 -7 = 5");
+    assert(rotate_direction(0 as u8, -13) == 5 as u8, "0 -13 = 5");
+}
+
+// ─── rotate_marker_at (existing + missing) ───────────────────────
+
+fn test_rotate_marker_at_existing() {
+    trme_w = marker_empty();
+    place_spawn(trme_w, 4, 4, 1 as u8);
+    rotate_marker_at(trme_w, 4, 4, 2);
+    assert(marker_direction(trme_w, 4, 4) == 3 as u8, "1 + 2 = 3");
+}
+
+fn test_rotate_marker_at_missing_is_noop() {
+    trmm_w = marker_empty();
+    rotate_marker_at(trmm_w, 0, 0, 1);   // nothing there
+    assert(marker_count(trmm_w) == 0, "empty world stays empty");
+}
+
+fn test_rotate_marker_at_wraps() {
+    trmw_w = marker_empty();
+    place_spawn(trmw_w, 0, 0, 5 as u8);
+    rotate_marker_at(trmw_w, 0, 0, 1);
+    assert(marker_direction(trmw_w, 0, 0) == 0 as u8, "5 +1 wraps to 0");
+}
+
+// ─── direction_unit (geometry sanity) ────────────────────────────
+
+fn test_direction_unit_d0_points_south() {
+    tdu0 = direction_unit(0 as u8);
+    // d=0 → (sin(0), cos(0)) = (0, 1) — straight south in canvas.
+    assert(tdu0.0 > -0.001 && tdu0.0 < 0.001, "d=0 forward.x ≈ 0");
+    assert(tdu0.1 > 0.999  && tdu0.1 < 1.001, "d=0 forward.y ≈ 1");
+}
+
+fn test_direction_unit_d3_points_north() {
+    tdu3 = direction_unit(3 as u8);
+    // d=3 → (sin(π), cos(π)) ≈ (0, -1) — straight north.
+    assert(tdu3.0 > -0.001 && tdu3.0 < 0.001, "d=3 forward.x ≈ 0");
+    assert(tdu3.1 > -1.001 && tdu3.1 < -0.999, "d=3 forward.y ≈ -1");
+}
+
+// ─── draw_marker_arrow + render_markers (pixel-paint sanity) ─────
+
+fn test_draw_marker_arrow_writes_pixels() {
+    // Filled triangle at the canvas centre should paint at least
+    // a few non-background pixels.  Confirms world→canvas →
+    // triangle pipeline is wired.
+    tdma_cv  = canvas(128, 128, 0x000000);
+    tdma_cam = camera_default();
+    draw_marker_arrow(tdma_cv, tdma_cam, 0, 0, 0 as u8,
+                      0xff3060, 128, 128, 24.0, true);
+    // Sample around the hex centre — at least one of these pixels
+    // should be hot pink.
+    tdma_painted = false;
+    for tdma_dy in -10..10 {
+        for tdma_dx in -6..6 {
+            if tdma_cv.get_pixel(64 + tdma_dx, 64 + tdma_dy) == 0xff3060 {
+                tdma_painted = true;
+            }
+        }
+    }
+    assert(tdma_painted, "filled arrow paints at least one hot-pink pixel near hex centre");
+}
+
+fn test_render_markers_iterates_layer() {
+    // Empty marker world → render is a no-op (canvas stays
+    // black); placing one then rendering should change pixels.
+    trm_cv  = canvas(128, 128, 0x000000);
+    trm_cam = camera_default();
+    trm_mw  = marker_empty();
+    render_markers(trm_cv, trm_cam, trm_mw, 128, 128, 24.0);
+    // Quick check: a strip down the middle should still be black.
+    trm_blank_centre = trm_cv.get_pixel(64, 64) == 0x000000;
+    assert(trm_blank_centre, "empty marker layer renders nothing at centre");
+
+    place_spawn(trm_mw, 0, 0, 0 as u8);
+    render_markers(trm_cv, trm_cam, trm_mw, 128, 128, 24.0);
+    // Sample below the hex centre — d=0 points south, so the
+    // triangle's tip ends up below the centre.  Look for any
+    // hot-pink in that vicinity.
+    trm_painted = false;
+    for trm_dy in 0..20 {
+        for trm_dx in -8..8 {
+            if trm_cv.get_pixel(64 + trm_dx, 64 + trm_dy) == 0xff3060 {
+                trm_painted = true;
+            }
+        }
+    }
+    assert(trm_painted, "placed spawn renders at least one hot-pink pixel near hex centre");
+}
+
+fn test_distinct_directions_paint_distinct_triangles() {
+    // Two markers with different directions at the SAME hex but
+    // on separate canvases — the pixel patterns must differ.
+    // Without rendering, both would look identical.  This catches
+    // a bug where direction_unit ignores its arg.
+    tdd_cv_a  = canvas(96, 96, 0x000000);
+    tdd_cv_b  = canvas(96, 96, 0x000000);
+    tdd_cam   = camera_default();
+    draw_marker_arrow(tdd_cv_a, tdd_cam, 0, 0, 0 as u8,
+                      0xff3060, 96, 96, 24.0, true);
+    draw_marker_arrow(tdd_cv_b, tdd_cam, 0, 0, 3 as u8,
+                      0xff3060, 96, 96, 24.0, true);
+
+    // The d=0 arrow tip is SOUTH of centre; the d=3 arrow tip is
+    // NORTH of centre.  Check that the south-strip differs between
+    // the two canvases.
+    tdd_south_a = tdd_cv_a.get_pixel(48, 60);
+    tdd_south_b = tdd_cv_b.get_pixel(48, 60);
+    tdd_north_a = tdd_cv_a.get_pixel(48, 36);
+    tdd_north_b = tdd_cv_b.get_pixel(48, 36);
+    // Either the south or the north sample point must differ
+    // between the two — both being identical would mean the
+    // direction discriminator was ignored.
+    assert(tdd_south_a != tdd_south_b || tdd_north_a != tdd_north_b,
+           "d=0 and d=3 produce visibly different arrow patterns");
+}
+
+// ─── save round-trip preserves directions (M1 regression check) ──
+
+fn test_save_load_preserves_rotated_direction() {
+    tslr_path = "tests/actual/03_m3_save_rot.json";
+    tslr_w = marker_empty();
+    place_spawn(tslr_w, 1, 0, 0 as u8);
+    rotate_marker_at(tslr_w, 1, 0, 2);   // direction now 2
+    save_markers(tslr_w, "rot", tslr_path);
+
+    tslr_w2 = load_markers_or_empty(tslr_path);
+    assert(marker_direction(tslr_w2, 1, 0) == 2 as u8, "rotated direction round-trips");
+}
