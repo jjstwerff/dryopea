@@ -4,66 +4,66 @@ schema_version = 1
 
 [[package]]
 name = "graphics"
-version = "0.5.2"
-url = "https://github.com/loft-lang/loft-libs-graphics/releases/download/graphics-v0.5.2/graphics-0.5.2.tar.gz"
-sha256 = "a5ee912cde280d1e869ea034ddfbdf564b119deeb0e1ccfe9fcce4e6d4677f48"
+version = "0.9.11"
+url = "https://github.com/loft-lang/loft-libs-graphics/releases/download/graphics-v0.9.11/graphics-0.9.11.tar.gz"
+sha256 = "17d0de871307ca4e1f2e36bd66bdc3a619371795601ce8a2e380c414bb21293d"
 source = "registry"
 deps = ["glb", "mesh3d"]
 
 [[package]]
 name = "glb"
-version = "0.1.2"
-url = "https://github.com/loft-lang/loft-libs-assets/releases/download/glb-v0.1.2/glb-0.1.2.tar.gz"
-sha256 = "8a1021c6b4eadd6152d1c9806501514cd8d26ef901ebdc7501f406e3c82de01c"
+version = "0.1.6"
+url = "https://github.com/loft-lang/loft-libs-assets/releases/download/glb-v0.1.6/glb-0.1.6.tar.gz"
+sha256 = "2efe8e615ff4eee689210c6567e9a18ae0b1a769472fc983ef746aff3ea7f128"
 source = "registry"
 deps = ["mesh3d"]
 
 [[package]]
 name = "mesh3d"
-version = "0.1.1"
-url = "https://github.com/loft-lang/loft-libs-assets/releases/download/mesh3d-v0.1.1/mesh3d-0.1.1.tar.gz"
-sha256 = "de8fdb1fedea6521d90634bc40b4acab2c1bb965010d766a177e40b1e8e66cfd"
+version = "0.1.4"
+url = "https://github.com/loft-lang/loft-libs-assets/releases/download/mesh3d-v0.1.4/mesh3d-0.1.4.tar.gz"
+sha256 = "4ede4eebdf3a93e62751388a4fed31650dedf556f1f5a26b49ae16c5c12c4a2d"
 source = "registry"
 
 [[package]]
 name = "gridmesh"
-version = "0.2.0"
-url = "https://github.com/loft-lang/loft-libs-graphics/releases/download/gridmesh-v0.2.0/gridmesh-0.2.0.tar.gz"
-sha256 = "26656dccc2ef56be33514d16bc0c5500b6736d3407c6c91c126c77ae9fd25d43"
+version = "0.2.6"
+url = "https://github.com/loft-lang/loft-libs-graphics/releases/download/gridmesh-v0.2.6/gridmesh-0.2.6.tar.gz"
+sha256 = "01c565805e3abcd94e4679356ff634b0fba042c321a252e6801ce713b96916c9"
 source = "registry"
 
 [[package]]
 name = "input"
-version = "0.2.0"
-url = "https://github.com/loft-lang/loft-libs-game/releases/download/input-v0.2.0/input-0.2.0.tar.gz"
-sha256 = "dad926113f0cb373b2351320f9c7621f940bee3ad6f5c481c8a700efc1b92a5d"
+version = "0.2.6"
+url = "https://github.com/loft-lang/loft-libs-game/releases/download/input-v0.2.6/input-0.2.6.tar.gz"
+sha256 = "f016eacd7f8abf541b19f5b1d653c88b23bb41f50eeab0f93a2548f5baff0ce2"
 source = "registry"
 deps = ["graphics"]
 
 [[package]]
 name = "hex_grid"
-version = "0.1.0"
-url = "https://github.com/loft-lang/loft-libs-world/releases/download/hex_grid-v0.1.0/hex_grid-0.1.0.tar.gz"
-sha256 = "f7af3fa54141dcae920666f606c5932252f801d555dd63b0b654d5355f8c1fbd"
+version = "0.1.4"
+url = "https://github.com/loft-lang/loft-libs-world/releases/download/hex_grid-v0.1.4/hex_grid-0.1.4.tar.gz"
+sha256 = "36b4ff2f15c399761fc92cf32d29ac2bc36f3fc3cc35757be884f3d0db292d40"
 source = "registry"
 
 [[package]]
 name = "imaging"
-version = "0.2.1"
-url = "https://github.com/loft-lang/loft-libs-graphics/releases/download/imaging-v0.2.1/imaging-0.2.1.tar.gz"
-sha256 = "4c5c494c0efd262a87ee74cb597c8f3ecdbaf48a48debd13553d9578dd8106bb"
+version = "0.2.2"
+url = "https://github.com/loft-lang/loft-libs-graphics/releases/download/imaging-v0.2.2/imaging-0.2.2.tar.gz"
+sha256 = "df9fd4f672a014b8e33c1a7dbd40c203fb44aee862658dc372405cbb7d4dd201"
 source = "registry"
 
 [[package]]
 name = "fixstep"
-version = "0.1.1"
-url = "https://github.com/loft-lang/loft-libs-game/releases/download/fixstep-v0.1.1/fixstep-0.1.1.tar.gz"
-sha256 = "eb46a3bd8ba315b09d71c226dfd481142323c37c2ed43ba99a99f040cc959f03"
+version = "0.1.3"
+url = "https://github.com/loft-lang/loft-libs-game/releases/download/fixstep-v0.1.3/fixstep-0.1.3.tar.gz"
+sha256 = "6d92ca7f0033dafc14cd99b38d4f1f591afa74dd96be74d7b85aba999091a900"
 source = "registry"
 
 [[package]]
 name = "hex_body"
-version = "0.3.0"
-url = "https://github.com/loft-lang/loft-libs-world/releases/download/hex_body-v0.3.0/hex_body-0.3.0.tar.gz"
-sha256 = "e43ae1c4b81ba3bc0edd9923d2af961582108dfab568c7e9392ab883ea70719e"
+version = "0.3.6"
+url = "https://github.com/loft-lang/loft-libs-world/releases/download/hex_body-v0.3.6/hex_body-0.3.6.tar.gz"
+sha256 = "72457ac8c98e2b99aae05501bec11877ab56e95cd8f6467a233dae5e8e51ed91"
 source = "registry"
