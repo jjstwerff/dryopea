@@ -27,9 +27,9 @@
 // "grass"), NOT the u8 palette index — names stay stable as
 // the palette grows; indices don't.
 pub struct GroundEntry {
-    q:    integer,
-    r:    integer,
-    kind: text,
+    pub q:    integer,
+    pub r:    integer,
+    pub kind: text,
 }
 
 // The save record.  Six top-level fields; vector last.
@@ -37,10 +37,10 @@ pub struct GroundEntry {
 // nested struct because two nested structs around a vector
 // trip the same loft cast bug at a smaller threshold.
 pub struct MapFile {
-    version:  integer,
-    name:     text,
-    cam_q:    integer,
-    cam_r:    integer,
-    cam_zoom: integer,
-    ground:   vector<GroundEntry>,
+    pub version:  integer,
+    pub name:     text,
+    pub cam_q:    integer,
+    pub cam_r:    integer,
+    pub cam_zoom: integer,
+    pub ground:   vector<GroundEntry>,
 }

@@ -151,10 +151,10 @@ pub const FLOW_CLIMB_ANY: float = 1000000.0;
 // here, a field is self-describing — the same argument that put the
 // core on `FlowField` at F2.
 pub struct FlowCell {
-    q:      integer,
-    r:      integer,
-    dist:   integer,
-    height: float,
+    pub q:      integer,
+    pub r:      integer,
+    pub dist:   integer,
+    pub height: float,
 }
 
 // A finished field: the reachable cells, the core they are distances
@@ -170,10 +170,10 @@ pub struct FlowCell {
 // builds one field per climb limit rather than one per class, and why
 // `flow_steps` needs no `kind`.
 pub struct FlowField {
-    cells:     hash<FlowCell[q, r]>,
-    core:      Hex,
+    pub cells:     hash<FlowCell[q, r]>,
+    pub core:      Hex,
     climb:     float,
-    truncated: boolean,
+    pub truncated: boolean,
 }
 
 // How many steps from (q, r) to the core, or `FLOW_UNREACHABLE`.

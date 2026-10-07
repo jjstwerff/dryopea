@@ -107,8 +107,8 @@ use hex_grid::*;
 //
 // Enforces @FR-M-Neighbour.
 pub struct Hex {
-    q: integer,
-    r: integer,
+    pub q: integer,
+    pub r: integer,
 }
 
 pub const HEX_DIAMETER: float = 1.5;            // m, vertex-to-vertex

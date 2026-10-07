@@ -123,12 +123,12 @@ pub const GL_GATE_CLEAR: integer = 0xff00ff;
 pub const GL_GATE_MARK_TOLERANCE: float = 6.0;
 
 pub struct GlGateReport {
-    cases:   integer,
+    pub cases:   integer,
     passed:  integer,
     failed:  integer,
     checks:  integer,
     shots:   integer,
-    message: text,      // "" when green
+    pub message: text,      // "" when green
 }
 
 pub fn gl_gate_report_empty() -> GlGateReport {

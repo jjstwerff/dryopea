@@ -90,45 +90,45 @@ use gridmesh::*;
 //
 // Boolean fields are HELD state, not events — see § Held keys above.
 pub struct EditorInput {
-    in_hover_q: integer,
-    in_hover_r: integer,
+    pub in_hover_q: integer,
+    pub in_hover_r: integer,
 
     // Left button state THIS frame.  Held across frames: its rising
     // edge places a marker, its falling edge ends a paint stroke.
-    in_mouse_left: boolean,
+    pub in_mouse_left: boolean,
 
     // Is a paint event due this frame?  The caller owns the rate
     // limit (main.loft debounces on `ticks()`; a script paints once
     // per scripted frame), which keeps `editor_step` free of the
     // clock and therefore reproducible.
-    in_paint_tick: boolean,
+    pub in_paint_tick: boolean,
 
     // ── Tool state (V0b group 1) ──
-    in_toggle_mode: boolean,   // Tab — Ground ↔ Marker
-    in_rotate:      boolean,   // R — turn the place-direction one step
-    in_rotate_ccw:  boolean,   // …anticlockwise instead (Shift held)
-    in_cycle_kind:  boolean,   // K — spawn ↔ target
+    pub in_toggle_mode: boolean,   // Tab — Ground ↔ Marker
+    pub in_rotate:      boolean,   // R — turn the place-direction one step
+    pub in_rotate_ccw:  boolean,   // …anticlockwise instead (Shift held)
+    pub in_cycle_kind:  boolean,   // K — spawn ↔ target
 
     // ── Camera (V0b group 2) ──
     // Pan and zoom are rate-limited by the caller, like paint: a key
     // held down should walk the camera at a readable speed, not at
     // the frame rate.  A flag set here means "step the camera now".
-    in_pan_north: boolean,
-    in_pan_south: boolean,
-    in_pan_east:  boolean,
-    in_pan_west:  boolean,
-    in_zoom_in:   boolean,
-    in_zoom_out:  boolean,
-    in_recentre:  boolean,     // H — camera back to the origin
+    pub in_pan_north: boolean,
+    pub in_pan_south: boolean,
+    pub in_pan_east:  boolean,
+    pub in_pan_west:  boolean,
+    pub in_zoom_in:   boolean,
+    pub in_zoom_out:  boolean,
+    pub in_recentre:  boolean,     // H — camera back to the origin
 
     // ── History (V0b group 4) ──
-    in_undo:      boolean,     // Ctrl+Z
-    in_redo:      boolean,     // Ctrl+Y
-    in_clear_all: boolean,     // Ctrl+N — empty both layers, recentre
+    pub in_undo:      boolean,     // Ctrl+Z
+    pub in_redo:      boolean,     // Ctrl+Y
+    pub in_clear_all: boolean,     // Ctrl+N — empty both layers, recentre
 
     // ── Disk (V0b group 5) ──
-    in_save:   boolean,        // Ctrl+S
-    in_reload: boolean,        // Ctrl+R — re-read both layers from disk
+    pub in_save:   boolean,        // Ctrl+S
+    pub in_reload: boolean,        // Ctrl+R — re-read both layers from disk
 
     // ── The GAME's half (plan 19 P2) ──
     //
@@ -148,26 +148,26 @@ pub struct EditorInput {
     // ⚠ Zero-neutral, like every other field here: a frame that does
     // not say is an EDIT frame, so every caller written before P2 —
     // and all 28 scenarios in the gate — keeps its old meaning.
-    in_playing: boolean,
+    pub in_playing: boolean,
 
     // Held direction, in COMPASS terms rather than lattice ones: this
     // is what the player pressed, and turning it into a hex is
     // `play.loft`'s job.  ⚠ Both axes may be held at once, which is how
     // the four keys reach all eight compass headings.
-    in_drive_north: boolean,
-    in_drive_south: boolean,
-    in_drive_east:  boolean,
-    in_drive_west:  boolean,
+    pub in_drive_north: boolean,
+    pub in_drive_south: boolean,
+    pub in_drive_east:  boolean,
+    pub in_drive_west:  boolean,
 
     // Shift — held, per `DESIGN.md` § Hover + boost.
-    in_boost: boolean,
+    pub in_boost: boolean,
 
     // E — `DESIGN.md` § The handful of keys' ONE context-resolved key:
     // empty hands is a pickup, full hands a deposit.  ⚠ ONE field for
     // both, because it is one key; the script's `take` / `drop` stay
     // two verbs so a line asserting a pickup cannot have been a
     // deposit.
-    in_carry: boolean,
+    pub in_carry: boolean,
 
     // Is the wall-paint key down this frame (plan 27 C3)?
     //
@@ -175,7 +175,7 @@ pub struct EditorInput {
     // arrangement `in_boost` and `in_carry` have, and what
     // `tests/19_p2` § The editor seam is blind to the play fields
     // keeps true.
-    in_paint_wall: boolean,
+    pub in_paint_wall: boolean,
 
     // Is the TRENCH key down this frame (BACKLOG C5)?
     //
@@ -187,7 +187,7 @@ pub struct EditorInput {
     // climb out of it (`moat.loft` § THE DEPTH IS THE MOAT'S COST).  A
     // cycle on one key would put that one extra press away from the
     // wall the player meant.
-    in_dig: boolean,
+    pub in_dig: boolean,
 
     // J — the jammer switch (BACKLOG C3).
     //
@@ -196,7 +196,7 @@ pub struct EditorInput {
     // is already what makes the switch REACHABLE, and a switch that
     // flipped on presence alone would flap every frame you parked
     // there.  `spawn.loft::wave_jammer_switch` owns the position half.
-    in_toggle_jammer: boolean,
+    pub in_toggle_jammer: boolean,
 
     // G — direct the crew member you are standing beside (plan 29 O3).
     //
@@ -206,7 +206,7 @@ pub struct EditorInput {
     // means *general*.  ⚠⚠ It CYCLES, because widening is the same
     // interaction as narrowing (`@X289`) — `play.loft::play_direct_crew`
     // owns the position half and the reach.
-    in_direct: boolean,
+    pub in_direct: boolean,
 
     // ── The SHELL's half (plan 19 P3) ──
     //
@@ -225,7 +225,7 @@ pub struct EditorInput {
     //
     // ⚠ Filled on EVERY frame, play or edit, unlike the six above:
     // fill it only while editing and there is no way back out.
-    in_toggle_play: boolean,
+    pub in_toggle_play: boolean,
 
     // Palette hotkey: is one down, and which entry does it select.
     // One index rather than twelve booleans — the player presses one
@@ -238,8 +238,8 @@ pub struct EditorInput {
     // which is sea, which erases.  Neutral must be the default, in
     // this struct more than anywhere: its whole job is to be built
     // by callers that do not know what was added to it last week.
-    in_select_palette: boolean,
-    in_palette_index:  integer,
+    pub in_select_palette: boolean,
+    pub in_palette_index:  integer,
 }
 
 pub fn editor_input_empty() -> EditorInput {
@@ -338,22 +338,22 @@ pub fn editor_input_copy(ic: const EditorInput) -> EditorInput {
 // re-render flag, last frame's input) that a save deliberately drops.
 pub struct EditorState {
     // ── World layers (what a save round-trips) ──
-    pw:  PaintedWorld,
-    mw:  MarkerWorld,
-    cam: EditorCamera,
+    pub pw:  PaintedWorld,
+    pub mw:  MarkerWorld,
+    pub cam: EditorCamera,
 
     // ── Tool state ──
-    picker:          Picker,
-    mode:            integer,   // MODE_GROUND | MODE_MARKER
-    place_direction: u8,        // rotation for the NEXT spawn placement, 0..5
-    place_kind:      integer,   // MARKER_KIND_SPAWN | _TARGET | _TOWER
+    pub picker:          Picker,
+    pub mode:            integer,   // MODE_GROUND | MODE_MARKER
+    pub place_direction: u8,        // rotation for the NEXT spawn placement, 0..5
+    pub place_kind:      integer,   // MARKER_KIND_SPAWN | _TARGET | _TOWER
 
     // ── Undo / redo ──
-    history: History,
+    pub history: History,
     // Deltas accumulated while the button is held.  A whole drag is
     // ONE undoable action, so the stroke is pushed onto `history`
     // when the button comes up, not per painted hex.
-    stroke:  UndoEntry,
+    pub stroke:  UndoEntry,
 
     // ── Stroke continuation ──
     // A paint tick fires at most every PAINT_DEBOUNCE_US, and the
@@ -361,13 +361,13 @@ pub struct EditorState {
     // are joined with a hex line.  `painting` says whether the
     // previous tick belongs to the same stroke — without it, a
     // release-then-quick-repress would bridge two separate strokes.
-    painting:       boolean,
-    last_paint_hex: Hex,
+    pub painting:       boolean,
+    pub last_paint_hex: Hex,
 
     // Last frame's input, for rising-edge detection.  An action that
     // must fire once per press compares against this rather than
     // trusting the caller to have resolved the edge.
-    prev: EditorInput,
+    pub prev: EditorInput,
 
     // ── Where this session saves ──
     // Empty means "not attached to a file": save and reload both
@@ -380,9 +380,9 @@ pub struct EditorState {
     marker_save_path: text,
 
     // ── Render / save bookkeeping ──
-    cf:            ChunkField,   // gridmesh dirty set — which chunks to rebuild
-    dirty:         boolean,      // in-memory state differs from disk (HUD indicator)
-    render_needed: boolean,      // view changed (camera / hover / mode / picker)
+    pub cf:            ChunkField,   // gridmesh dirty set — which chunks to rebuild
+    pub dirty:         boolean,      // in-memory state differs from disk (HUD indicator)
+    pub render_needed: boolean,      // view changed (camera / hover / mode / picker)
 }
 
 // ─── Factories ──────────────────────────────────────────────────

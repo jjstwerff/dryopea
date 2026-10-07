@@ -89,8 +89,8 @@ pub const TRAFFIC_RATE_DEFAULT: float = 0.0;
 // is the same mistake one system over).  ⚠ The RATE is stored because
 // it is a property of the map; the bank holds only the carry.
 pub struct Traffic {
-    rate: float,
-    bank: Bank,
+    pub rate: float,
+    pub bank: Bank,
 }
 
 // Factory: a quiet map.
@@ -384,7 +384,7 @@ pub const LURE_SALVAGE_REACH_HEXES: integer = 4;
 // between a distraction and a swarm.
 pub struct Lure {
     name:  text,
-    reach: integer,
+    pub reach: integer,
 }
 
 pub fn errand_lure_row(name: text, reach: integer) -> Lure {
@@ -507,11 +507,11 @@ pub const HARVEST_SHIFT_UNITS: integer = 540000000;
 // keep, and `errand_row_fault` refuses one that has not (§ Home is a
 // PLACE).
 pub struct Role {
-    name:   text,
-    empty:  integer,
-    laden:  integer,
-    period: integer,
-    shift:  integer,
+    pub name:   text,
+    pub empty:  integer,
+    pub laden:  integer,
+    pub period: integer,
+    pub shift:  integer,
 
     // ⚠⚠ **WHAT DRAWS THIS ROLE OFF ITS ROUTE** (R7b) — the fifth
     // column, and the one `plans/30` § R1 said was *deliberately not a
@@ -520,7 +520,7 @@ pub struct Role {
     //
     // ⚠ `LURE_NONE` is 0, so a row that does not name one is a role
     // nothing distracts — which is every role R1 through R7a shipped.
-    lure:   integer,
+    pub lure:   integer,
 }
 
 pub fn errand_row(name: text, empty: integer, laden: integer,
@@ -669,12 +669,12 @@ pub fn errand_role_named(name: text) -> integer {
 // wrote one: it indexes a table and is compared to nothing, and a `u8`
 // would buy a byte at the price of a cast at every index.
 pub struct Errand {
-    role:  integer,
-    home:  Hex,        // the maintenance point, or the nest
-    work:  Hex,        // the face, the picking ground, the post
-    alt:   Hex,        // the drop-off, or the second patrol leg
-    carry: u8,         // what is in the bag — empty is 0
-    slip:  integer,    // base units this mob has fallen behind (`@X302`)
+    pub role:  integer,
+    pub home:  Hex,        // the maintenance point, or the nest
+    pub work:  Hex,        // the face, the picking ground, the post
+    pub alt:   Hex,        // the drop-off, or the second patrol leg
+    pub carry: u8,         // what is in the bag — empty is 0
+    pub slip:  integer,    // base units this mob has fallen behind (`@X302`)
 
     // Which `PoiWorld.mobs` record this body belongs to, ONE-BASED
     // (`plans/30` R6b).
@@ -691,7 +691,7 @@ pub struct Errand {
     // this field, so nothing has to be kept in step when `wave_deaths`
     // compacts the roster — an index the other way round would be
     // silently invalidated by every death.
-    mob:   integer,
+    pub mob:   integer,
 }
 
 // Factory: no routine at all, which is every robot in the game today.
@@ -975,11 +975,11 @@ pub fn errand_arrive(er: Errand, row: const Role, at: const Hex,
 // ⚠ `terminal` of 0 is a round that closes on itself, which is every
 // cycle R2 built and the nest's shape (`@X338`).
 pub struct Cycle {
-    anchors: vector<integer>,   // the anchor each leg ENDS at
-    lengths: vector<integer>,   // steps in each leg
-    path:    vector<Hex>,       // `period + terminal` hexes, one per step
-    period:  integer,           // steps in a whole REPEATING round
-    terminal: integer,          // steps in the leg that ends the round
+    pub anchors: vector<integer>,   // the anchor each leg ENDS at
+    pub lengths: vector<integer>,   // steps in each leg
+    pub path:    vector<Hex>,       // `period + terminal` hexes, one per step
+    pub period:  integer,           // steps in a whole REPEATING round
+    pub terminal: integer,          // steps in the leg that ends the round
 }
 
 // A mob with no cycle at all — which is every robot in the game today.
@@ -1880,10 +1880,10 @@ pub fn cycle_hex_units(rate: integer) -> integer {
 // classes agreeing on it produce identical fields and building both is
 // duplicated work that also invites them to drift.
 pub struct ErrandField {
-    q:     integer,
-    r:     integer,
-    climb: float,
-    field: FlowField,
+    pub q:     integer,
+    pub r:     integer,
+    pub climb: float,
+    pub field: FlowField,
 }
 
 // A field for every (anchor, climb limit) a mob on a routine could be

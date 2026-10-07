@@ -71,9 +71,9 @@ pub const SKILL_EFFECT_HALF: float = 5.0;
 // because none of them has a number to scale yet, which is the test
 // that file sets for adding one.
 pub struct Skills {
-    build:  integer,
-    repair: integer,
-    scout:  integer,
+    pub build:  integer,
+    pub repair: integer,
+    pub scout:  integer,
 }
 
 // Factory: untrained, which is every crew member the game has ever had.

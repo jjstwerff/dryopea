@@ -193,10 +193,10 @@ pub const TRAP_REARM_SECONDS: float = (TRAP_REARM_UNITS as float)
 // directions to be unsafe in, and *armed* is a STATE the timer answers
 // rather than a threshold somebody compares against zero.
 pub struct TrapCharge {
-    q:     integer,
-    r:     integer,
-    spent: boolean,
-    rearm: Timer,
+    pub q:     integer,
+    pub r:     integer,
+    pub spent: boolean,
+    pub rearm: Timer,
 }
 
 // Every plate on the map that has ever been touched.  A hash must be a
@@ -208,7 +208,7 @@ pub struct TrapCharge {
 // trap that exists has been through, which is why an unheard-of hex
 // reads *armed* rather than *nothing*.
 pub struct TrapState {
-    cells: hash<TrapCharge[q, r]>,
+    pub cells: hash<TrapCharge[q, r]>,
 }
 
 // Factory: every plate armed, nobody working on anything.

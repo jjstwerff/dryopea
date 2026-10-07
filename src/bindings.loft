@@ -91,10 +91,10 @@ const KEY_G:     integer = 103;   // 'g' — direct a crew member (plan 29 O3)
 // than a name pattern (`"palette_{n}"`) so the resolver never builds
 // a string per frame to ask a question the record can answer.
 pub struct EditorAction {
-    ea_name:    text,
-    ea_keys:    vector<integer>,
-    ea_ctrl:    integer,
-    ea_palette: integer,
+    pub ea_name:    text,
+    pub ea_keys:    vector<integer>,
+    pub ea_ctrl:    integer,
+    pub ea_palette: integer,
 }
 
 fn act(name: text, key: integer, ctrl: integer) -> EditorAction {
@@ -314,7 +314,7 @@ pub fn editor_bindings(actions: const vector<EditorAction>) -> Bindings {
 // accessor — see its warning.
 pub struct EditorInputSource {
     eis_state:   input::InputState,
-    eis_actions: vector<EditorAction>,
+    pub eis_actions: vector<EditorAction>,
 }
 
 pub fn input_source_new() -> EditorInputSource {

@@ -42,10 +42,10 @@ use markers::*;
 // in memory.  Maps to/from it in save.loft (marker_world_to_file
 // / markerfile_to_world).
 pub struct MarkerSaveEntry {
-    q:         integer,
-    r:         integer,
-    kind:      u8,
-    direction: u8,
+    pub q:         integer,
+    pub r:         integer,
+    pub kind:      u8,
+    pub direction: u8,
 }
 
 // The marker sidecar record.  `markers` MUST be non-empty when
@@ -54,7 +54,7 @@ pub struct MarkerSaveEntry {
 // vector never round-trips through `:j` / `text as MarkerFile`
 // and the known empty-vector cast bugs can't bite).
 pub struct MarkerFile {
-    version: integer,
-    name:    text,
-    markers: vector<MarkerSaveEntry>,
+    pub version: integer,
+    pub name:    text,
+    pub markers: vector<MarkerSaveEntry>,
 }

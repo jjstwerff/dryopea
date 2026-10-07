@@ -64,12 +64,12 @@ const VALIDATE_EXT: text = ".keys";
 // green, and anything else is the FIRST reason it went red — the
 // number that moved, with the script and line that moved it.
 pub struct ValidateReport {
-    scripts: integer,   // scripts played
-    passed:  integer,
-    failed:  integer,
-    checks:  integer,   // measurements that passed, summed
+    pub scripts: integer,   // scripts played
+    pub passed:  integer,
+    pub failed:  integer,
+    pub checks:  integer,   // measurements that passed, summed
     shots:   integer,   // pictures written
-    message: text,      // "" when green
+    pub message: text,      // "" when green
 }
 
 pub fn validate_report_empty() -> ValidateReport {

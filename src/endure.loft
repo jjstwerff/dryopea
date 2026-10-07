@@ -95,7 +95,7 @@ pub const ENDURANCE_REST_DIVISOR: integer = 3;
 // full pool.  Storing what is LEFT would make every partial literal a
 // crew member who is already exhausted.
 pub struct Endurance {
-    spent: integer,
+    pub spent: integer,
 }
 
 // Factory: fully rested, which is how everybody arrives.

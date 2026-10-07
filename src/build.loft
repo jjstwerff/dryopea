@@ -157,18 +157,18 @@ pub const BUILD_TOWER:  u8 = 1;   // place a tower marker on it
 
 // One ordered structure.
 pub struct BuildOrder {
-    q:     integer,
-    r:     integer,
-    what:  u8,        // BUILD_GROUND / BUILD_TOWER — how to read `kind`
-    kind:  u8,        // palette index, for BUILD_GROUND
-    spent: integer,   // helper time put in — see § Work is what has been SPENT
+    pub q:     integer,
+    pub r:     integer,
+    pub what:  u8,        // BUILD_GROUND / BUILD_TOWER — how to read `kind`
+    pub kind:  u8,        // palette index, for BUILD_GROUND
+    pub spent: integer,   // helper time put in — see § Work is what has been SPENT
 }
 
 // Every order on the map.  Lives on `WaveState`, never saved: a map
 // holds the GROUND and the MARKERS (`maps.loft`), and an order is
 // something a RUN is in the middle of.
 pub struct BuildLayer {
-    cells: hash<BuildOrder[q, r]>,
+    pub cells: hash<BuildOrder[q, r]>,
 }
 
 // Factory: nothing ordered.
@@ -376,10 +376,10 @@ pub const BUILD_REACH_HEXES: integer = 1;
 
 // One builder's tick of construction.
 pub struct BuildWork {
-    q:        integer,
-    r:        integer,
-    spent:    integer,    // helper time put in — 0 when nothing was in reach
-    finished: boolean,    // did this spend complete the order?
+    pub q:        integer,
+    pub r:        integer,
+    pub spent:    integer,    // helper time put in — 0 when nothing was in reach
+    pub finished: boolean,    // did this spend complete the order?
 }
 
 // Work for one tick by a builder standing at `at`.

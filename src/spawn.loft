@@ -469,14 +469,14 @@ pub const PRE_WALK_SECONDS: float   = (PRE_WALK_UNITS as float)
 // carried its scale would default to a mover that never moves.
 // `tick_bank.loft` § WHAT THE BANK HOLDS is the whole argument.
 pub struct Enemy {
-    q:       integer,
-    r:       integer,
-    kind:    u8,
-    heading: u8,
-    alive:   boolean,
-    taken:   float,
-    stand:   Timer,
-    bank:    Bank,
+    pub q:       integer,
+    pub r:       integer,
+    pub kind:    u8,
+    pub heading: u8,
+    pub alive:   boolean,
+    pub taken:   float,
+    pub stand:   Timer,
+    pub bank:    Bank,
 
     // Is this robot going about its BUSINESS, rather than lost?
     // BACKLOG B4.
@@ -492,7 +492,7 @@ pub struct Enemy {
     // wave, and it never goes back (`errand.loft` § The bubble is the
     // whole mechanic).  ⚠ And only while the core is JAMMING (BACKLOG
     // C3) — a dark core cuts nobody off.
-    errand:  boolean,
+    pub errand:  boolean,
 
     // The ROUTINE this robot is running — five anchors and a bag
     // (`plans/30` R1, `errand.loft` § THE ROUTINE).
@@ -513,7 +513,7 @@ pub struct Enemy {
     // `route.role`** — `wave_cutoff` clears `errand` and nothing else,
     // and that function is what makes the bubble's one-way door
     // impossible to forget rather than merely documented.
-    route:   Errand,
+    pub route:   Errand,
 }
 
 // What this enemy has left, in HP — 0.0 once it has absorbed its whole
@@ -588,19 +588,19 @@ pub fn enemy_standing(e: const Enemy) -> boolean {
 // yet — recorded here so the name is not read as a claim about what
 // it holds.
 pub struct WaveState {
-    enemies:     vector<Enemy>,
-    pick_cursor: integer,
-    heights:     HeightLayer,
-    damage:      DamageLayer,
-    towers:      TowerState,
-    wallet:      Wallet,
-    player:      Vehicle,
-    crew:        vector<Helper>,
-    cargo:       CargoLayer,
-    schedule:    WaveSchedule,
-    orders:      BuildLayer,
-    traffic:     Traffic,
-    jammer:      Jammer,
+    pub enemies:     vector<Enemy>,
+    pub pick_cursor: integer,
+    pub heights:     HeightLayer,
+    pub damage:      DamageLayer,
+    pub towers:      TowerState,
+    pub wallet:      Wallet,
+    pub player:      Vehicle,
+    pub crew:        vector<Helper>,
+    pub cargo:       CargoLayer,
+    pub schedule:    WaveSchedule,
+    pub orders:      BuildLayer,
+    pub traffic:     Traffic,
+    pub jammer:      Jammer,
 
     // Has the player left, and how far through the countdown are they
     // (`plans/28` S1).
@@ -609,8 +609,8 @@ pub struct WaveState {
     // because a scenario has to be able to author it and `state_diff`
     // has to be able to see it — the same reasons the jammer above is a
     // field of the wave rather than of the session.
-    scramble:    Scramble,
-    traps:       TrapState,
+    pub scramble:    Scramble,
+    pub traps:       TrapState,
 
     // The scenario's PLACES, and the populations attached to them
     // (`plans/30` R6b, `poi.loft`).
@@ -626,7 +626,7 @@ pub struct WaveState {
     // ⚠ **Nothing builds one yet**, so `poi_world_new()`'s empty lists
     // are the whole game today and `poi_step` returns before it reads
     // anything.
-    pois:    PoiWorld,
+    pub pois:    PoiWorld,
 
     // What time it is, in `fixstep` base units since this run began
     // (`plans/30` R3).
@@ -649,7 +649,7 @@ pub struct WaveState {
     // ([loft#914]'s silent default, a sixth time).  ⚠ A mob authored
     // into a run that is already under way carries the difference in
     // `slip`, which is what makes `slip` one field rather than two.
-    now:         integer,
+    pub now:         integer,
 }
 
 // Factory: a fresh wave state with no enemies, a cursor at 0, the
@@ -1325,8 +1325,8 @@ fn enemy_walk_heading(e: Enemy, pal: vector<GroundType>, pw: PaintedWorld,
 
 // One climb limit's field for this tick.
 pub struct ClassField {
-    climb: float,
-    field: FlowField,
+    pub climb: float,
+    pub field: FlowField,
 }
 
 // A field for every distinct CLIMB LIMIT among the alive enemies, each

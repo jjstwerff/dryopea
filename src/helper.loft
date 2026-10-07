@@ -136,19 +136,19 @@ pub const HELPER_RECOVERY_SECONDS: float = (HELPER_RECOVERY_UNITS as float)
 // is built one `helper_add` at a time, so the factory is the only door
 // and there is no partial literal to protect.
 pub struct Helper {
-    q:       integer,
-    r:       integer,
-    to_q:    integer,
-    to_r:    integer,
-    alive:   boolean,
-    bank:    Bank,      // banked ground, always under a whole hex
-    taken:   float,     // damage ABSORBED, never HP remaining
-    recover: Timer,     // the recovery clock; unarmed when not in it
+    pub q:       integer,
+    pub r:       integer,
+    pub to_q:    integer,
+    pub to_r:    integer,
+    pub alive:   boolean,
+    pub bank:    Bank,      // banked ground, always under a whole hex
+    pub taken:   float,     // damage ABSORBED, never HP remaining
+    pub recover: Timer,     // the recovery clock; unarmed when not in it
 
     // How much this crew member has left in them (BACKLOG C2).
     //
     // ⚠ Stored as SPENT, so a partial literal reads as RESTED.
-    endurance: Endurance,
+    pub endurance: Endurance,
 
     // What this crew member is good at (BACKLOG C1).
     //
@@ -156,7 +156,7 @@ pub struct Helper {
     // because the roster slot is already this person's identity for
     // the whole run — two containers keyed by the same index are two
     // facts that can disagree about who is who.
-    skills:  Skills,
+    pub skills:  Skills,
 
     // What the player has told this crew member to do (plan 29 O3) —
     // a `TASK_*`, and `TASK_ANY` is *nobody has told them anything*.
@@ -169,7 +169,7 @@ pub struct Helper {
     // ⚠ Beside `skills` and for the identical reason — a remit is a
     // fact about this person, and `docs/DESIGN.md` § 9 § It is a
     // RATCHET makes it persist for the rest of the run.
-    remit:   integer,
+    pub remit:   integer,
 
     // Where they are already going, so a job started is not abandoned
     // for one no nearer (`job_pick`).
@@ -177,7 +177,7 @@ pub struct Helper {
     // ⚠ It is a CACHE of a decision, never a second source of truth:
     // `wave_assign` recomputes it every tick and only the stickiness
     // reads it.
-    job:     Job,
+    pub job:     Job,
 
     // ⚠⚠ **Has somebody TOLD this crew member where to go?**
     //
@@ -198,7 +198,7 @@ pub struct Helper {
     // somebody a remit replaces a hex somebody sent them to, and
     // cycling back round to `TASK_ANY` hands them back to the default
     // completely.
-    ordered: boolean,
+    pub ordered: boolean,
 }
 
 // Factory: a helper standing at (q, r) with nothing banked.
