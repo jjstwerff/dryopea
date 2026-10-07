@@ -1232,7 +1232,7 @@ pub fn enemy_move_to(e: Enemy, q: integer, r: integer, occ: Occupancy) {
 //
 // Inclusive at the boundary, matching `active_spawn_markers`'
 // `>= disable_radius`: the hex the radius names is in.
-pub fn enemy_in_bubble(e: const Enemy, core: Hex) -> boolean {
+pub fn enemy_in_bubble(e: const Enemy, core: const Hex) -> boolean {
     lat_distance(core, Hex { q: e.q, r: e.r }) <= SCRAMBLER_BUBBLE_RADIUS
 }
 
@@ -1253,7 +1253,7 @@ pub fn enemy_in_bubble(e: const Enemy, core: Hex) -> boolean {
 // ⚠ `enemy_in_bubble` stays the GEOMETRIC question and keeps its own
 // callers — where the boundary is, is a fact about the world, and
 // `tests/11_f5b_bubble_handoff.loft` asks it of a bare coordinate.
-pub fn enemy_engaged(e: const Enemy, core: Hex) -> boolean {
+pub fn enemy_engaged(e: const Enemy, core: const Hex) -> boolean {
     !e.errand && enemy_in_bubble(e, core)
 }
 

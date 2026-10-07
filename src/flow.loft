@@ -223,7 +223,7 @@ pub fn flow_height(f: const FlowField, q: integer, r: integer) -> float {
 // honest answer rather than a special case: nothing can walk to a
 // place nothing can stand.
 pub fn flow_build(pal: vector<GroundType>, pw: PaintedWorld, hl: const HeightLayer,
-                  kind: u8, core: Hex) -> FlowField {
+                  kind: u8, core: const Hex) -> FlowField {
     // ⚠ Bound, not returned as a bare tail call — see § A struct
     // cannot ride home on two tail calls, below.
     fb_out = flow_sweep(pal, pw, hl, climb_limit(kind), false, core);
@@ -312,7 +312,7 @@ fn sweep_ground(pal: vector<GroundType>, pw: PaintedWorld, hl: const HeightLayer
 // The sweep both fields are.  `climb` is the only thing that differs
 // between routing and desire.
 fn flow_sweep(pal: vector<GroundType>, pw: PaintedWorld, hl: const HeightLayer,
-              climb: float, besiege: boolean, core: Hex) -> FlowField {
+              climb: float, besiege: boolean, core: const Hex) -> FlowField {
     fb_f = FlowField { cells: [], core: core, climb: climb, truncated: false };
     if !sweep_ground(pal, pw, hl, besiege, core.q, core.r) { return fb_f; }
 
