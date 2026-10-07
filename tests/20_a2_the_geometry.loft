@@ -23,6 +23,8 @@
 #cwd
 
 use dryopea::*;
+use hex_body::*;
+use mesh3d::*;
 
 fn near2(a: float, b: float) -> boolean {
     d = a - b;

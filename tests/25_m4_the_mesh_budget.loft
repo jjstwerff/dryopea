@@ -47,6 +47,7 @@
 #cwd
 
 use dryopea::*;
+use gridmesh::*;
 
 const PALETTE: text = "examples/palette.json";
 

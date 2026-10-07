@@ -46,6 +46,7 @@
 #cwd
 
 use dryopea::*;
+use mesh3d::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

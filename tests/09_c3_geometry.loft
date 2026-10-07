@@ -30,6 +30,7 @@
 #cwd
 
 use dryopea::*;
+use graphics::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

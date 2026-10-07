@@ -32,6 +32,8 @@
 #cwd
 
 use dryopea::*;
+use mesh3d::*;
+use hex_body::*;
 
 fn near4(a: float, b: float) -> boolean {
     d = a - b;

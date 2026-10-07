@@ -43,6 +43,7 @@
 #cwd
 
 use dryopea::*;
+use graphics::*;
 
 const PALETTE: text = "examples/palette.json";
 
