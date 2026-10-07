@@ -1282,7 +1282,7 @@ pub fn enemy_engaged(e: const Enemy, core: const Hex) -> boolean {
 // cuts a robot off is being inside the bubble, not walking while there.
 //
 // Example: @DRY-124
-pub fn wave_cutoff(state: WaveState, core: Hex) -> integer {
+pub fn wave_cutoff(state: WaveState, core: const Hex) -> integer {
     if !jammer_on(state.jammer) { return 0; }
     wc_n = 0;
     for wc_e in state.enemies {
@@ -1348,7 +1348,7 @@ pub struct ClassField {
 // day a class gains a second movement axis the key goes red instead of
 // quietly sharing a field it should not.
 pub fn wave_fields(state: const WaveState, pal: vector<GroundType>,
-                   pw: PaintedWorld, core: Hex) -> vector<ClassField> {
+                   pw: PaintedWorld, core: const Hex) -> vector<ClassField> {
     wf_out: vector<ClassField> = [];
     for wf_e in state.enemies {
         if wf_e.alive && !fields_have(wf_out, climb_limit(wf_e.kind)) {
@@ -1526,7 +1526,7 @@ fn wave_needs_desire(state: const WaveState, fields: const vector<ClassField>) -
 // moves nobody — which is what a caller that skipped the build should
 // see, rather than a plausible wrong move.
 pub fn wave_desire(state: const WaveState, fields: const vector<ClassField>,
-                   pal: vector<GroundType>, pw: PaintedWorld, core: Hex) -> FlowField {
+                   pal: vector<GroundType>, pw: PaintedWorld, core: const Hex) -> FlowField {
     if !wave_needs_desire(state, fields) { return flow_empty(); }
     flow_desire(pal, pw, state.heights, core)
 }
@@ -2140,7 +2140,7 @@ fn wave_deaths(state: WaveState) -> integer {
 // incremental, and its gate is equality with this — so this path
 // stays the reference implementation and is not optimised away.
 pub fn wave_tick(state: WaveState, pal: vector<GroundType>, pw: PaintedWorld,
-                 mw: MarkerWorld, core: Hex) {
+                 mw: MarkerWorld, core: const Hex) {
     // ⚠ **The schedule goes FIRST, before anything reads the roster**
     // (plan 16 W1), so a wave that arrives this tick is a wave this
     // tick's fields, occupancy and move order already know about.
@@ -2677,7 +2677,7 @@ pub const SPAWN_DISABLE_RADIUS: integer = 10;
 // window is unlimited precisely so there is time to look.
 //
 // Example: @DRY-112
-pub fn wave_traffic_step(state: WaveState, mw: MarkerWorld, core: Hex) -> integer {
+pub fn wave_traffic_step(state: WaveState, mw: MarkerWorld, core: const Hex) -> integer {
     wts_n = traffic_due(state.traffic, TICK_STEP_UNITS);
     if wts_n <= 0 { return 0; }
     wts_before = len(state.enemies);
@@ -2695,7 +2695,7 @@ pub fn wave_traffic_step(state: WaveState, mw: MarkerWorld, core: Hex) -> intege
     len(state.enemies) - wts_before
 }
 
-pub fn wave_schedule_step(state: WaveState, mw: MarkerWorld, core: Hex) -> integer {
+pub fn wave_schedule_step(state: WaveState, mw: MarkerWorld, core: const Hex) -> integer {
     wss_due = wave_schedule_due(state.schedule, alive_count(state) == 0,
                                 TICK_STEP_UNITS);
     if wss_due <= 0 { return 0; }

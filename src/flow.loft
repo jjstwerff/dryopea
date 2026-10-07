@@ -250,7 +250,7 @@ pub fn flow_build(pal: vector<GroundType>, pw: PaintedWorld, hl: const HeightLay
 // own SURFACE rule and that stops being true, which is the case
 // `hex_walkable`'s note is watching for.
 pub fn flow_desire(pal: vector<GroundType>, pw: PaintedWorld, hl: const HeightLayer,
-                   core: Hex) -> FlowField {
+                   core: const Hex) -> FlowField {
     fd_out = flow_sweep(pal, pw, hl, FLOW_CLIMB_ANY, true, core);
     fd_out
 }
