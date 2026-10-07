@@ -49,9 +49,9 @@ source = "registry"
 
 [[package]]
 name = "imaging"
-version = "0.2.2"
-url = "https://github.com/loft-lang/loft-libs-graphics/releases/download/imaging-v0.2.2/imaging-0.2.2.tar.gz"
-sha256 = "df9fd4f672a014b8e33c1a7dbd40c203fb44aee862658dc372405cbb7d4dd201"
+version = "0.4.4"
+url = "https://github.com/loft-lang/loft-libs-graphics/releases/download/imaging-v0.4.4/imaging-0.4.4.tar.gz"
+sha256 = "b18e8f7a971b863b55b8e22a36dde8d30f3e53a743c8e1852dc9b21e62b99646"
 source = "registry"
 
 [[package]]

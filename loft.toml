@@ -61,7 +61,12 @@ mesh3d = ">=0.1.1"
 # `probe/README.md`: "adding it to dryopea's manifest on the strength of
 # a probe is how an experiment becomes a commitment nobody decided to
 # make."  M3 is the phase that needs it, so M3 is when it joins.
-imaging = ">=0.2.0"
+# ⚠ `>=0.4.4`: the first release whose `Image` fields are `pub` (C140 — a
+# field is private to its file), and `gl_png_canvas` reads `width`/`height`/
+# `data`.  0.4 declares two breaks and neither changes an answer here:
+# `png()` answers `Image?` (gl_png_canvas already tests null), and `Pixel`
+# gained `a` while `value()` stays the 24-bit 0xRRGGBB it was.
+imaging = ">=0.4.4"
 
 # `moros_map` is the shared world data model — Map / Chunk / Hex with
 # {q,r,cy} multi-floor, height, material, walls, items.  Plan 07 W1
