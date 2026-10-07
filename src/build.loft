@@ -86,13 +86,13 @@
 // what is coming.  The pattern is copied; the record is not extended.
 // *Equality of shape is evidence; sameness of rule is the claim.*
 
-use painted;
-use palette;
-use damage;
-use lattice;
-use fixstep;
-use save;
-use markers;
+use painted::*;
+use palette::*;
+use damage::*;
+use lattice::*;
+use fixstep::*;
+use save::*;
+use markers::*;
 
 // How long one helper takes over each structure, in the clock's base
 // units — `numbers.json` § `wall.build_time_wall` (10 s) and

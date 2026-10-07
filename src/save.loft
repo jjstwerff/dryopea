@@ -10,12 +10,12 @@
 //
 // Plan 01 phase E4.
 
-use map_file;
-use marker_file;
-use markers;
-use palette;
-use painted;
-use camera;
+use map_file::*;
+use marker_file::*;
+use markers::*;
+use palette::*;
+use painted::*;
+use camera::*;
 
 // Linear scan for the palette index of a given type name.
 // Returns -1 if the name is unknown — callers treat that as

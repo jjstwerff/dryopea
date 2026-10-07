@@ -15,7 +15,7 @@
 //
 // Plan 01 phase E1/E3.
 
-use lattice;
+use lattice::*;
 
 // One painted hex.
 //

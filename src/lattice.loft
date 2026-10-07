@@ -92,7 +92,7 @@
 // answer without anybody noticing.  The prefix makes the migration
 // greppable and C6 can drop it.
 
-use hex_grid;
+use hex_grid::*;
 
 // ─── The coordinate, and the metre ──────────────────────────────
 //

@@ -65,16 +65,16 @@
 // honouring them here would mean reading a clock.  They arrive as
 // `in_*_tick` booleans: the caller decides WHEN, this decides WHAT.
 
-use lattice;
-use painted;
-use markers;
-use camera;
-use picker;
-use history;
-use chunks;
-use editor_mode;
-use save;
-use gridmesh;
+use lattice::*;
+use painted::*;
+use markers::*;
+use camera::*;
+use picker::*;
+use history::*;
+use chunks::*;
+use editor_mode::*;
+use save::*;
+use gridmesh::*;
 
 // ─── Input ──────────────────────────────────────────────────────
 

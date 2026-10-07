@@ -32,7 +32,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const PALETTE:     text = "examples/palette.json";
 const SAVE_PATH:   text = "tests/actual/d001_session.json";

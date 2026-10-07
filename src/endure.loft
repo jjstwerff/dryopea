@@ -60,7 +60,7 @@
 // building that restores faster.  It is not built, so the rest rate is
 // one constant here and the quarters are its multiplier when they land.
 
-use fixstep;
+use fixstep::*;
 
 // A full pool, in the clock's base units of work — ten minutes.
 pub const ENDURANCE_POOL_UNITS: integer = 1800000000;

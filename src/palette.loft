@@ -8,7 +8,7 @@
 //
 // Plan 01 phase E2.
 
-use graphics;     // rgb() for parse_hex_color output
+use graphics::*;     // rgb() for parse_hex_color output
 
 // Matches the JSON shape directly.  Field names = JSON keys.
 //   color stays as "#rrggbb" text; callers parse on demand via

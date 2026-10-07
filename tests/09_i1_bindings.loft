@@ -28,7 +28,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 // ─── Key codes, as `main.loft` spelled them ─────────────────────
 //

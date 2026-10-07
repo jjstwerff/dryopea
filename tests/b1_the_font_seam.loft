@@ -13,8 +13,8 @@
 // wrong version also satisfies is not one (`CLAUDE.md` § Testing
 // something that moves).
 
-use dryopea;
-use graphics;
+use dryopea::*;
+use graphics::*;
 
 // Lit pixels on a fresh canvas after one draw through the seam.
 fn seam_lit(sl_f: const Font, sl_s: text, sl_size: float) -> integer {

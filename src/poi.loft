@@ -129,15 +129,15 @@
 // builds a `PoiWorld` yet, exactly as `ROLE_NONE` is what every
 // `Enemy { … }` literal already means.
 
-use lattice;
-use flow;
-use painted;
-use palette;
-use passable;
-use height;
-use errand;
-use spawn;
-use fixstep;
+use lattice::*;
+use flow::*;
+use painted::*;
+use palette::*;
+use passable::*;
+use height::*;
+use errand::*;
+use spawn::*;
+use fixstep::*;
 
 // ─── ⚠ WHAT KIND OF PLACE ───────────────────────────────────────
 

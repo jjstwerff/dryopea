@@ -53,17 +53,17 @@
 // is what says it is right; "it arrived" would never have told them
 // apart.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
-use vehicle;
-use fixstep;
-use build;
-use skill;
-use endure;
-use task;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use vehicle::*;
+use fixstep::*;
+use build::*;
+use skill::*;
+use endure::*;
+use task::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 //

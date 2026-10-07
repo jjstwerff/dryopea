@@ -20,7 +20,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 fn main() {
     // One optional argument: the name of a single script to play,

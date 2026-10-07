@@ -32,7 +32,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 // Adjacency + direction over ±16; distance over every PAIR in ±6,
 // which is 169² = 28 561 comparisons.

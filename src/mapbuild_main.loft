@@ -18,7 +18,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 fn main() {
     // One optional argument: the name of a single map to build,

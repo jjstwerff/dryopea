@@ -41,21 +41,21 @@
 // which is `ground_gl.loft`'s own reason for clearing a kind a tile no
 // longer holds.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
-use render;
-use render_camera;
-use ground_gl;
-use entity_view;
-use markers;
-use spawn;
-use part;
-use catalogue;
-use mesh3d;
-use graphics;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use render::*;
+use render_camera::*;
+use ground_gl::*;
+use entity_view::*;
+use markers::*;
+use spawn::*;
+use part::*;
+use catalogue::*;
+use mesh3d::*;
+use graphics::*;
 
 // One group per class — the roster is not tiled, so a class is a single
 // buffer and the key is a constant.

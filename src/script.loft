@@ -223,33 +223,40 @@
 // jump back to the origin when a button lifts, and V1b's `snap`
 // renders the hover preview under it.
 
-use lattice;
-use camera;
-use painted;
-use markers;
-use picker;
-use palette;
-use editor_mode;
-use editor_step;
-use bindings;
-use editor_view;
-use measure;
-use save;
-use height;
-use passable;
-use damage;
-use wallet;
-use vehicle;
-use helper;
-use landing;
-use task;
-use occupancy;
-use spawn;
-use errand;
-use poi;
-use fixstep;
-use play;
-use graphics;
+use lattice::*;
+use camera::*;
+use painted::*;
+use markers::*;
+use picker::*;
+use palette::*;
+use editor_mode::*;
+use editor_step::*;
+use bindings::*;
+use editor_view::*;
+use measure::*;
+use save::*;
+use height::*;
+use passable::*;
+use damage::*;
+use wallet::*;
+use vehicle::*;
+use helper::*;
+use landing::*;
+use task::*;
+use occupancy::*;
+use spawn::*;
+use errand::*;
+use poi::*;
+use fixstep::*;
+use play::*;
+use graphics::*;
+use waves::*;
+use build::*;
+use carry::*;
+use jammer::*;
+use scramble::*;
+use tower::*;
+use trap::*;
 
 // ─── The run record ─────────────────────────────────────────────
 

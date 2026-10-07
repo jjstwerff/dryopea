@@ -58,8 +58,8 @@
 // for, so the owner field speaks that vocabulary and `BLOCKER_NONE` —
 // which already means "nobody" — is what the ground is.
 
-use lattice;
-use occupancy;
+use lattice::*;
+use occupancy::*;
 
 // ─── What can be carried ────────────────────────────────────────
 

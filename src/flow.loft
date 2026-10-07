@@ -104,12 +104,12 @@
 // either; the closest is `hex_shape::flood_outside`, which is
 // boolean reachability over a bounded box.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
-use moat;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use moat::*;
 
 // No route to the core.
 //

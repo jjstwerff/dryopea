@@ -36,7 +36,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const R1_SRC: text = "src";
 

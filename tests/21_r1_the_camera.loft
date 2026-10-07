@@ -43,7 +43,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 // Angular tolerance when two projections of the same layout are
 // compared.  The overview is 1° off vertical, so it is a perspective

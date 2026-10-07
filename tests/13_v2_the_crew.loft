@@ -49,7 +49,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

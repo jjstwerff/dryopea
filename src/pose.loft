@@ -47,14 +47,15 @@
 // **No colour.**  A class is a row of DATA and colour is a UNIFORM
 // (`@X074`).
 
-use mesh3d;
-use fixstep;
-use part;
-use part_mesh;
-use catalogue;
-use carry;
-use vehicle;
-use tower;
+use mesh3d::*;
+use fixstep::*;
+use part::*;
+use part_mesh::*;
+use catalogue::*;
+use carry::*;
+use vehicle::*;
+use tower::*;
+use hex_body::*;
 
 // ─── The rotors ─────────────────────────────────────────────────
 

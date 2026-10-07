@@ -60,19 +60,19 @@
 // silent default lands on *the way the game already worked*, which is
 // the only direction it could safely land.
 
-use spawn;
-use markers;
-use lattice;
-use passable;
-use flow;
-use painted;
-use palette;
-use height;
-use occupancy;
-use fixstep;
-use task;
-use carry;
-use vehicle;
+use spawn::*;
+use markers::*;
+use lattice::*;
+use passable::*;
+use flow::*;
+use painted::*;
+use palette::*;
+use height::*;
+use occupancy::*;
+use fixstep::*;
+use task::*;
+use carry::*;
+use vehicle::*;
 
 // Robots per second one source puts on the road, when a map says
 // nothing — `traffic <rate>` is how a scenario says otherwise.

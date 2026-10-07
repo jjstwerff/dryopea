@@ -10,10 +10,10 @@
 //
 // Plan 01 phase E1 — golden-image validation.
 
-use graphics;
-use lattice;
-use camera;
-use painted;
+use graphics::*;
+use lattice::*;
+use camera::*;
+use painted::*;
 
 // ── Palette colours (mirrors examples/palette.json) ──────────────
 //

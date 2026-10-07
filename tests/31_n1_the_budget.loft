@@ -48,7 +48,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 // A carry big enough that the baseline and the budget cannot be
 // confused, and not a round multiple of it — a span of exactly 2x is

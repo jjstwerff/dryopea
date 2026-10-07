@@ -9,10 +9,10 @@
 // Plan 03 phase M3 (M4 swaps the filled-vs-outline + alpha for
 // the in-game render mode; the editor uses the same primitive).
 
-use graphics;
-use lattice;
-use camera;
-use markers;
+use graphics::*;
+use lattice::*;
+use camera::*;
+use markers::*;
 
 // Plan 03 § Editor visual specifies `#ff3060` (hot pink) so the
 // arrow stays unambiguous against any palette colour — including

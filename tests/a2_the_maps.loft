@@ -31,7 +31,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const PAL:   text = "examples/palette.json";
 const SHOTS: text = "tests/actual";

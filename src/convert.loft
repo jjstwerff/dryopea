@@ -38,8 +38,8 @@
 // changes in its own diff, which is the same problem as converting
 // by hand.
 
-use lattice;
-use relabel;
+use lattice::*;
+use relabel::*;
 
 // One command's coordinate layout.
 //

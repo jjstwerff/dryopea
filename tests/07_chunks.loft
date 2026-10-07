@@ -10,8 +10,8 @@
 
 #cwd
 
-use dryopea;
-use gridmesh;
+use dryopea::*;
+use gridmesh::*;
 
 // ─── chunks_from_painted ───────────────────────────────────────
 

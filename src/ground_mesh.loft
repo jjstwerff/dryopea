@@ -65,14 +65,14 @@
 // get it backwards and, with `GL_CULL_FACE` on, the ground is invisible
 // while every other valve reads healthy.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
-use render_camera;
-use mesh_chunks;
-use mesh3d;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use render_camera::*;
+use mesh_chunks::*;
+use mesh3d::*;
 
 // The z of a top face, given the hex's height.  A separate name because
 // the eventual water surface will not use it (see § Open below) and

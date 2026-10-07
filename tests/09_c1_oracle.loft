@@ -44,8 +44,8 @@
 
 #cwd
 
-use dryopea;
-use hex_grid;
+use dryopea::*;
+use hex_grid::*;
 
 // ±16 cells, as the phase's Verify says.  33×33 = 1089 cells; every
 // per-cell check below runs over all of them, and the six-direction

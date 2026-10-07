@@ -42,8 +42,9 @@
 // taking two endpoints and a thickness needs no rotation concept and is
 // the shape to reach for when they are wanted.
 
-use mesh3d;
-use part;
+use mesh3d::*;
+use part::*;
+use hex_body::*;
 
 // How many segments a round limb is drawn with.
 //

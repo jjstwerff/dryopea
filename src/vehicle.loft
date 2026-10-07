@@ -48,12 +48,12 @@
 // `passable.loft`'s, the vehicle is a third KIND, and a second
 // implementation would be the thing plan 11 F1 exists to prevent.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
-use fixstep;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use fixstep::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 //

@@ -42,11 +42,11 @@
 // masquerading as each other: `unknown > 0` means the renderer
 // changed, a drift failure means the JSON did.
 
-use lattice;
-use camera;
-use painted;
-use render;
-use graphics;
+use lattice::*;
+use camera::*;
+use painted::*;
+use render::*;
+use graphics::*;
 
 // Colour → bucket, so a frame costs one hash lookup per pixel
 // rather than a scan of eleven.

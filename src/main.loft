@@ -146,8 +146,8 @@
 
 #cwd
 
-use dryopea;
-use graphics;
+use dryopea::*;
+use graphics::*;
 
 // The window size and the frame composition both live in
 // `src/editor_view.loft` (VIEW_W / VIEW_H / view_ppm +

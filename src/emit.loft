@@ -39,24 +39,29 @@
 // on how it reads, so the readable form is an optimisation with a test
 // already behind it rather than a thing to get right first.
 
-use lattice;
-use painted;
-use palette;
-use markers;
-use height;
-use damage;
-use tower;
-use trap;
-use wallet;
-use vehicle;
-use helper;
-use task;
-use carry;
-use waves;
-use spawn;
-use errand;
-use poi;
-use fixstep;
+use lattice::*;
+use painted::*;
+use palette::*;
+use markers::*;
+use height::*;
+use damage::*;
+use tower::*;
+use trap::*;
+use wallet::*;
+use vehicle::*;
+use helper::*;
+use task::*;
+use carry::*;
+use waves::*;
+use spawn::*;
+use errand::*;
+use poi::*;
+use fixstep::*;
+use build::*;
+use endure::*;
+use jammer::*;
+use occupancy::*;
+use passable::*;
 
 // ─── The pieces ─────────────────────────────────────────────────
 

@@ -37,9 +37,9 @@
 // a reducer and a delete button, and it is the negative control
 // `plans/18` § Invariant gate names for this phase.
 
-use palette;
-use editor_step;
-use script;
+use palette::*;
+use editor_step::*;
+use script::*;
 
 // ─── What makes a predicate usable ──────────────────────────────
 

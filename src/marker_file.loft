@@ -36,7 +36,7 @@
 //
 // Plan 03 phase M1.
 
-use markers;
+use markers::*;
 
 // On-disk shape for one marker — the same shape MarkerEntry has
 // in memory.  Maps to/from it in save.loft (marker_world_to_file

@@ -21,9 +21,9 @@
 //
 // Plan 03 follow-up — QoL polish.
 
-use lattice;
-use painted;
-use markers;
+use lattice::*;
+use painted::*;
+use markers::*;
 
 // One painted-hex change: (q, r) went from `old_kind` to
 // `new_kind`.  Sea (kind 0) is the absence-of-paint sentinel;

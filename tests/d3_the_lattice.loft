@@ -36,7 +36,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const ARCHIVE: text = "archive/gameplay.data";
 

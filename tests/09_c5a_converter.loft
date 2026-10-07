@@ -28,7 +28,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const SCRIPTS: text = "tests/scripts";
 

@@ -39,7 +39,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const PALETTE_PATH: text = "examples/palette.json";
 

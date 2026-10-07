@@ -83,9 +83,9 @@
 // reading is taken against the default list), and it wants its own
 // measurement rather than riding along with a file format.
 
-use lattice;
-use passable;
-use fixstep;
+use lattice::*;
+use passable::*;
+use fixstep::*;
 
 // ─── The authored list ──────────────────────────────────────────
 

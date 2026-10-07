@@ -24,7 +24,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 fn main() {
     cm_args = arguments();

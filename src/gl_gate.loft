@@ -67,29 +67,30 @@
 // rasteriser, which is `@X010`'s *two rasterisers over ONE geometry*
 // stated as something a frame can fail.  `@X078`.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
-use render;
-use render_camera;
-use measure;
-use editor_step;
-use editor_view;
-use script;
-use ground_gl;
-use entity_view;
-use entity_gl;
-use play;
-use play_view;
-use hud;
-use wallet;
-use part;
-use catalogue;
-use mesh3d;
-use graphics;
-use imaging;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use render::*;
+use render_camera::*;
+use measure::*;
+use editor_step::*;
+use editor_view::*;
+use script::*;
+use ground_gl::*;
+use entity_view::*;
+use entity_gl::*;
+use play::*;
+use play_view::*;
+use hud::*;
+use wallet::*;
+use part::*;
+use catalogue::*;
+use mesh3d::*;
+use graphics::*;
+use imaging::*;
+use vehicle::*;
 
 pub const GL_GATE_SCRIPTS_DIR: text = "tests/gl";
 pub const GL_GATE_SHOTS_DIR:   text = "shots";

@@ -22,7 +22,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 fn near2(a: float, b: float) -> boolean {
     d = a - b;
