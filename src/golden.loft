@@ -17,7 +17,7 @@
 //   2. Review tests/actual/<name>.png.
 //   3. If it looks correct, copy to tests/golden/<name>.png.
 
-use graphics;
+use graphics::*;
 
 // Compare two PNG files byte-for-byte.  PNG encoding is
 // deterministic in lib/graphics, so byte-equality is a valid

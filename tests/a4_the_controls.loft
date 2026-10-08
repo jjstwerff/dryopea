@@ -34,7 +34,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const NOTE: text = "docs/PLAYING.md";
 const PAL:  text = "examples/palette.json";

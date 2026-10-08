@@ -42,11 +42,11 @@
 // masquerading as each other: `unknown > 0` means the renderer
 // changed, a drift failure means the JSON did.
 
-use lattice;
-use camera;
-use painted;
-use render;
-use graphics;
+use lattice::*;
+use camera::*;
+use painted::*;
+use render::*;
+use graphics::*;
 
 // Colour → bucket, so a frame costs one hash lookup per pixel
 // rather than a scan of eleven.
@@ -59,9 +59,9 @@ struct ColorTable  { by_color: hash<ColorBucket[color]> }
 // not a palette colour at all. Every band in every scenario was
 // sized on the assumption that it stays 0.
 pub struct FrameCounts {
-    counts:  vector<integer>,
-    unknown: integer,
-    total:   integer,
+    pub counts:  vector<integer>,
+    pub unknown: integer,
+    pub total:   integer,
 }
 
 fn color_table(buckets: integer) -> ColorTable {

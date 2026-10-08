@@ -13,7 +13,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 // ─── Availability flags ─────────────────────────────────────────
 

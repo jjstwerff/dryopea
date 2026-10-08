@@ -17,7 +17,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 fn main() {
     gm_only = arguments()[0] ?? "";

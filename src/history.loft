@@ -21,19 +21,19 @@
 //
 // Plan 03 follow-up — QoL polish.
 
-use lattice;
-use painted;
-use markers;
+use lattice::*;
+use painted::*;
+use markers::*;
 
 // One painted-hex change: (q, r) went from `old_kind` to
 // `new_kind`.  Sea (kind 0) is the absence-of-paint sentinel;
 // painting it on a painted hex erases the entry (painted.loft's
 // sparse semantics).
 pub struct PaintedDelta {
-    q:        integer,
-    r:        integer,
-    old_kind: integer,
-    new_kind: integer,
+    pub q:        integer,
+    pub r:        integer,
+    pub old_kind: integer,
+    pub new_kind: integer,
 }
 
 // One marker change: (q, r) went from `(old_present, old_kind,
@@ -59,8 +59,8 @@ pub struct MarkerDelta {
 // markers (a future "select region + clear" — clear-all today
 // snapshots everything into one entry).
 pub struct UndoEntry {
-    painted: vector<PaintedDelta>,
-    markers: vector<MarkerDelta>,
+    pub painted: vector<PaintedDelta>,
+    pub markers: vector<MarkerDelta>,
 }
 
 // Linear action timeline.  Position `cursor` is "after the most
@@ -68,8 +68,8 @@ pub struct UndoEntry {
 // and above cursor are redoable.  Truncation drops the future-
 // redo branch when a new action lands during undone state.
 pub struct History {
-    entries: vector<UndoEntry>,
-    cursor:  integer,
+    pub entries: vector<UndoEntry>,
+    pub cursor:  integer,
 }
 
 // Maximum undo depth.  When `entries` grows past this, the

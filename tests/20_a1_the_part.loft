@@ -45,7 +45,8 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
+use hex_body::*;
 
 // A tolerance, and it is a float round-trip's rather than a knob: a
 // quarter turn goes through `cos(τ/4)`, which is 6.1e-17 and not 0.

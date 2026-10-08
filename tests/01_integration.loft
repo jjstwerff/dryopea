@@ -12,7 +12,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const INT_SAVE: text = "tests/actual/01_integration_save.json";
 

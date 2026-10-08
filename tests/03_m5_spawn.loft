@@ -19,7 +19,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const PALETTE_PATH: text = "examples/palette.json";
 const GRASS:        integer = 5;      // examples/palette.json, in file order

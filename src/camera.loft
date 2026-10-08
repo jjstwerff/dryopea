@@ -11,27 +11,27 @@
 //
 // Plan 01 phase E1.
 
-use lattice;
+use lattice::*;
 
 // Editor camera — a hex position the world rotates around, plus a
 // zoom level.  Per-frame mutation through a reference (see
 // camera_update).  The in-game over-the-shoulder camera (plan 12)
 // is a separate concept and is NOT this struct.
 pub struct EditorCamera {
-    pos:  Hex,
-    zoom: integer,        // 1 = closest; higher = more world visible
+    pub pos:  Hex,
+    pub zoom: integer,        // 1 = closest; higher = more world visible
 }
 
 // Pan direction + zoom signals, set true for the frame an action
 // is requested.  The input dispatcher upstream handles
 // discrete-vs-continuous semantics (key-just-pressed vs key-held).
 pub struct InputState {
-    in_pan_north: boolean,
-    in_pan_south: boolean,
-    in_pan_east:  boolean,
-    in_pan_west:  boolean,
-    in_zoom_in:   boolean,
-    in_zoom_out:  boolean,
+    pub in_pan_north: boolean,
+    pub in_pan_south: boolean,
+    pub in_pan_east:  boolean,
+    pub in_pan_west:  boolean,
+    pub in_zoom_in:   boolean,
+    pub in_zoom_out:  boolean,
 }
 
 pub const ZOOM_MIN: integer = 1;

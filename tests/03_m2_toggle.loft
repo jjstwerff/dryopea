@@ -15,8 +15,8 @@
 
 #cwd
 
-use dryopea;
-use graphics;
+use dryopea::*;
+use graphics::*;
 
 // ─── Mode constants ─────────────────────────────────────────────
 

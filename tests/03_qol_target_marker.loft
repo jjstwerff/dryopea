@@ -16,8 +16,8 @@
 
 #cwd
 
-use dryopea;
-use graphics;
+use dryopea::*;
+use graphics::*;
 
 // ─── place_target inserts a TARGET kind ─────────────────────────
 

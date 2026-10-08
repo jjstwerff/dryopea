@@ -18,7 +18,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const E4_SAVE: text = "tests/actual/01_e4_saveload.json";
 

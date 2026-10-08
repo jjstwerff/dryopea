@@ -20,7 +20,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 fn core_at(q: integer, r: integer) -> Hex { Hex { q: q, r: r } }
 

@@ -11,7 +11,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const M1_SAVE: text = "tests/actual/03_m1_markers.json";
 

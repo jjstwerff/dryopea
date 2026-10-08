@@ -33,7 +33,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const PALETTE: text = "examples/palette.json";
 

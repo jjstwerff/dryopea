@@ -83,25 +83,26 @@
 // **No window.**  A5 gives the entities a GATE, exactly as plan 25 M3
 // gave the ground one — `make play` still draws nothing.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
-use render;
-use render_camera;
-use occupancy;
-use carry;
-use vehicle;
-use helper;
-use tower;
-use markers;
-use spawn;
-use part;
-use part_mesh;
-use catalogue;
-use pose;
-use mesh3d;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use render::*;
+use render_camera::*;
+use occupancy::*;
+use carry::*;
+use vehicle::*;
+use helper::*;
+use tower::*;
+use markers::*;
+use spawn::*;
+use part::*;
+use part_mesh::*;
+use catalogue::*;
+use pose::*;
+use mesh3d::*;
+use graphics::*;
 
 // ─── The drawn classes ──────────────────────────────────────────
 //

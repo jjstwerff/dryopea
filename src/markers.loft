@@ -95,17 +95,17 @@ pub fn marker_kind_of(name: text) -> integer {
 // reinterpret the field (e.g. item kind id), repurpose it, or
 // ignore it.  The flat shape keeps the on-disk JSON one schema.
 pub struct MarkerEntry {
-    q:         integer,
-    r:         integer,
-    kind:      u8,
-    direction: u8,
+    pub q:         integer,
+    pub r:         integer,
+    pub kind:      u8,
+    pub direction: u8,
 }
 
 // The marker layer container — a hash must be a struct field
 // (loft idiom; see painted.loft § PaintedWorld for the same
 // shape).
 pub struct MarkerWorld {
-    markers: hash<MarkerEntry[q, r]>,
+    pub markers: hash<MarkerEntry[q, r]>,
 }
 
 // Factory: empty marker world (no markers anywhere).

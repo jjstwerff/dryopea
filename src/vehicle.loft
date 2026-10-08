@@ -48,12 +48,12 @@
 // `passable.loft`'s, the vehicle is a third KIND, and a second
 // implementation would be the thing plan 11 F1 exists to prevent.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
-use fixstep;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use fixstep::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 //
@@ -191,15 +191,15 @@ pub const VEHICLE_SALVAGE_REACH_HEXES: integer = 1;
 // Zero is the neutral value for it, so a `Vehicle { }` literal is a
 // player standing squarely on its hex.
 pub struct Vehicle {
-    q:          integer,
-    r:          integer,
-    to_q:       integer,
-    to_r:       integer,
-    parked:     boolean,   // false = not in the world at all
-    boost: Timer,          // the boost, while it burns
-    cool:  Timer,          // the wait before another boost is available
-    taken:      float,     // blocker damage ABSORBED, never HP remaining
-    bank:       Bank,      // banked ground, always under a whole hex
+    pub q:          integer,
+    pub r:          integer,
+    pub to_q:       integer,
+    pub to_r:       integer,
+    pub parked:     boolean,   // false = not in the world at all
+    pub boost: Timer,          // the boost, while it burns
+    pub cool:  Timer,          // the wait before another boost is available
+    pub taken:      float,     // blocker damage ABSORBED, never HP remaining
+    pub bank:       Bank,      // banked ground, always under a whole hex
 }
 
 // Factory: no vehicle in the world.
@@ -482,8 +482,8 @@ pub fn collectable(hl: const HeightLayer, q: integer, r: integer) -> boolean {
 // cleared to nothing loses its entry, so its source is gone by the
 // time anyone could ask.
 pub struct Salvage {
-    metres: float,
-    source: integer,
+    pub metres: float,
+    pub source: integer,
 }
 
 pub fn vehicle_salvage(v: const Vehicle, hl: HeightLayer,

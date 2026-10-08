@@ -54,13 +54,13 @@
 // Nothing does that today, and the loop costs nothing when it cannot
 // fire.
 
-use lattice;
-use markers;
-use palette;
-use painted;
-use height;
-use passable;
-use fixstep;
+use lattice::*;
+use markers::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use fixstep::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 //
@@ -238,19 +238,19 @@ pub const TOWER_REPAIR_REACH_HEXES: integer = 1;
 // progress — but the ammunition is the top's, and that is the
 // distinction plan 17 exists to draw.
 pub struct TowerCharge {
-    q:           integer,
-    r:           integer,
-    charge:      float,
-    shots:       integer,
-    repair:      Timer,
-    top_removed: boolean,
+    pub q:           integer,
+    pub r:           integer,
+    pub charge:      float,
+    pub shots:       integer,
+    pub repair:      Timer,
+    pub top_removed: boolean,
 }
 
 // What every tower on the map has banked.  A hash must be a struct
 // field — the same loft idiom `PaintedWorld`, `HeightLayer` and
 // `DamageLayer` follow.
 pub struct TowerState {
-    cells: hash<TowerCharge[q, r]>,
+    pub cells: hash<TowerCharge[q, r]>,
 }
 
 // Factory: every tower cold, with nothing banked.

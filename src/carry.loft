@@ -58,8 +58,8 @@
 // for, so the owner field speaks that vocabulary and `BLOCKER_NONE` —
 // which already means "nobody" — is what the ground is.
 
-use lattice;
-use occupancy;
+use lattice::*;
+use occupancy::*;
 
 // ─── What can be carried ────────────────────────────────────────
 
@@ -225,11 +225,11 @@ pub const CARGO_GONE: integer = -2;
 // A kind that needs a second payload field has outgrown this and should
 // say so rather than overloading one integer twice.
 pub struct CarryObject {
-    kind:  u8,
-    subj:  integer,   // the payload: a crew index, or a top's spent shots
-    q:     integer,
-    r:     integer,
-    owner: integer,
+    pub kind:  u8,
+    pub subj:  integer,   // the payload: a crew index, or a top's spent shots
+    pub q:     integer,
+    pub r:     integer,
+    pub owner: integer,
 }
 
 // Every carryable thing in the run.
@@ -237,7 +237,7 @@ pub struct CarryObject {
 // Runtime state: it rides on `WaveState` beside the rubble layer and
 // the damage ledger, and never reaches a save.
 pub struct CargoLayer {
-    items: vector<CarryObject>,
+    pub items: vector<CarryObject>,
 }
 
 // Factory: nothing carryable exists.

@@ -17,7 +17,7 @@ entry = "src/dryopea.loft"
 # save_png (works without a GL context — see the library's own
 # tests/canvas.loft for the pattern).  GL window functions also live
 # in this lib for the live renderer.
-graphics = ">=0.5.0"
+graphics = ">=0.9.12"   # GroupVboSet.slots is pub from 0.9.12 (loft C140)
 
 # Plan 07 — shared world substrate.  `gridmesh` is the standalone,
 # zero-dependency chunk + dirty + mesh-pipeline toolkit (axial).
@@ -61,7 +61,12 @@ mesh3d = ">=0.1.1"
 # `probe/README.md`: "adding it to dryopea's manifest on the strength of
 # a probe is how an experiment becomes a commitment nobody decided to
 # make."  M3 is the phase that needs it, so M3 is when it joins.
-imaging = ">=0.2.0"
+# ⚠ `>=0.4.4`: the first release whose `Image` fields are `pub` (C140 — a
+# field is private to its file), and `gl_png_canvas` reads `width`/`height`/
+# `data`.  0.4 declares two breaks and neither changes an answer here:
+# `png()` answers `Image?` (gl_png_canvas already tests null), and `Pixel`
+# gained `a` while `value()` stays the 24-bit 0xRRGGBB it was.
+imaging = ">=0.4.4"
 
 # `moros_map` is the shared world data model — Map / Chunk / Hex with
 # {q,r,cy} multi-floor, height, material, walls, items.  Plan 07 W1
@@ -97,7 +102,7 @@ moros_map = { path = "../moros/lib/moros_map" }
 # ⚠⚠ Its README has advertised the slot since bootstrap — the `time/`
 # row reads *"frame counter, dt, scheduling"* — and `time` shipped as
 # date arithmetic instead, so the slot was never filled.  This fills it.
-fixstep = ">=0.1"
+fixstep = ">=0.1.4"   # Timer and TickClock literals need pub fields (loft C140)
 
 # Plan 20 A1 — the PART MODEL, and dryopea re-implements none of it.
 # `docs/PARTS.md` § D1 (`@X001`) decided this after the first draft got it

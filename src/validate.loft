@@ -48,9 +48,9 @@
 // beside files that are expected to be green and still leave the
 // sweep meaning one thing.
 
-use palette;
-use editor_step;
-use script;
+use palette::*;
+use editor_step::*;
+use script::*;
 
 // Where the gate looks, unless a caller says otherwise.  A test
 // points all three somewhere disposable.
@@ -64,12 +64,12 @@ const VALIDATE_EXT: text = ".keys";
 // green, and anything else is the FIRST reason it went red — the
 // number that moved, with the script and line that moved it.
 pub struct ValidateReport {
-    scripts: integer,   // scripts played
-    passed:  integer,
-    failed:  integer,
-    checks:  integer,   // measurements that passed, summed
+    pub scripts: integer,   // scripts played
+    pub passed:  integer,
+    pub failed:  integer,
+    pub checks:  integer,   // measurements that passed, summed
     shots:   integer,   // pictures written
-    message: text,      // "" when green
+    pub message: text,      // "" when green
 }
 
 pub fn validate_report_empty() -> ValidateReport {

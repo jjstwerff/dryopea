@@ -97,12 +97,12 @@
 // part of the state*.  ⚠ What IS part of the claim is the order WITHIN a
 // tile, and that is a coordinate walk; see `ground_chunk_mesh`.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
-use gridmesh;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use gridmesh::*;
 
 // 32x32 hexes per tile — the same figure `chunks.loft` uses, and
 // moros_map's, so the shared substrate stays consistent.  ⚠ A separate

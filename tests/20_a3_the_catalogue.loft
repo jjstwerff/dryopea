@@ -31,7 +31,8 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
+use hex_body::*;
 
 fn near3(a: float, b: float) -> boolean {
     d = a - b;

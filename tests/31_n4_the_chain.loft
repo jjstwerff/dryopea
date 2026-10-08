@@ -28,7 +28,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 fn near(got: float, want: float) -> boolean {
     got - want < 0.001 && want - got < 0.001

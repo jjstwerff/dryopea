@@ -15,7 +15,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const RENDER_W: integer = 96;
 const RENDER_H: integer = 96;

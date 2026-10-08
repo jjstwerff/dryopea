@@ -29,7 +29,8 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
+use graphics::*;
 
 const PALETTE_PATH: text = "examples/palette.json";
 

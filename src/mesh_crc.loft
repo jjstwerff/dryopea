@@ -65,7 +65,7 @@
 // upstream yet.  ⚠ The trigger to move it: a second dryopea caller that
 // is not a test, or plan 20 wanting it for entity meshes.
 
-use mesh3d;
+use mesh3d::*;
 
 // Fixed-point scale — see § The scale is the TOLERANCE.  One part in a
 // million of a metre, against a world whose smallest real step is 1 m of

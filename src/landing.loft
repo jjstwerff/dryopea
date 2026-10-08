@@ -27,15 +27,15 @@
 // world, pick and seed answer the same hex, which is
 // @FR-L-Landing-Is-A-Function and what lets a `.keys` file author one.
 
-use lattice;
-use painted;
-use palette;
-use passable;
-use markers;
-use height;
-use spawn;
-use helper;
-use play;
+use lattice::*;
+use painted::*;
+use palette::*;
+use passable::*;
+use markers::*;
+use height::*;
+use spawn::*;
+use helper::*;
+use play::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 //
@@ -93,10 +93,10 @@ pub const LANDING_SEARCH_LIMIT: integer = LANDING_PICK_EDGE_BUFFER;
 // takes an omitted field's default silently, and *not landed* is the
 // safe neutral — the same spelling rule `wallet.carried` follows.
 pub struct Landing {
-    q:   integer,
-    r:   integer,
-    ok:  boolean,
-    why: text,
+    pub q:   integer,
+    pub r:   integer,
+    pub ok:  boolean,
+    pub why: text,
 }
 
 // Example: @DRY-221

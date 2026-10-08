@@ -111,7 +111,8 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
+use mesh3d::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS: integer = 5;

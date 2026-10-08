@@ -97,7 +97,7 @@
 // § R0 measured exact classification through GL at zero drift, and
 // that property is what three gates stand on.
 
-use graphics;
+use graphics::*;
 
 // The font, relative to the repo root.  ⚠ DejaVu Sans **Bold**:
 // BOLD because text is drawn over a busy world and a hairline face is
@@ -149,9 +149,9 @@ pub const FONT_NO_HANDLE: integer = -1;
 // makes — and that one paints the wrong typeface exactly (203 pixels
 // against the good font's 203).
 pub struct Font {
-    handle: integer,
-    path:   text,
-    loaded: boolean,
+    pub handle: integer,
+    pub path:   text,
+    pub loaded: boolean,
 }
 
 // Where the repo's font is, as an ABSOLUTE path.

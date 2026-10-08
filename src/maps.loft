@@ -44,20 +44,20 @@
 // reading, and it is not the same reading: a map edited in the
 // EDITOR and saved never went past the builder.
 
-use palette;
-use painted;
-use markers;
-use lattice;
-use editor_step;
-use script;
-use scenario;
-use validate;
-use save;
-use height;
-use passable;
-use flow;
-use spawn;
-use play;
+use palette::*;
+use painted::*;
+use markers::*;
+use lattice::*;
+use editor_step::*;
+use script::*;
+use scenario::*;
+use validate::*;
+use save::*;
+use height::*;
+use passable::*;
+use flow::*;
+use spawn::*;
+use play::*;
 
 // Where maps live, and the extension their source is written in.
 pub const MAPS_DIR: text = "maps";
@@ -96,9 +96,9 @@ pub fn map_names(dir: text) -> vector<text> {
 // means green, anything else is the FIRST reason it went red.
 pub struct MapBuildReport {
     maps:    integer,   // sources found
-    built:   integer,
+    pub built:   integer,
     checks:  integer,   // measurements the sources made, summed
-    message: text,      // "" when green
+    pub message: text,      // "" when green
 }
 
 // Example: @DRY-089

@@ -16,14 +16,14 @@
 //
 // Plan 01 phase E2.
 
-use graphics;
-use palette;
+use graphics::*;
+use palette::*;
 
 // Mutable picker state.  Holds the loaded palette + which row is
 // currently active (the type future paint actions will use).
 pub struct Picker {
-    palette: vector<GroundType>,
-    active:  integer,     // index into palette; 0..palette.len()-1
+    pub palette: vector<GroundType>,
+    pub active:  integer,     // index into palette; 0..palette.len()-1
 }
 
 // Factory.  Active starts at 0 (sea — the implicit default; painting

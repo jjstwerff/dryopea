@@ -17,8 +17,8 @@
 
 #cwd
 
-use dryopea;
-use graphics;
+use dryopea::*;
+use graphics::*;
 
 // ─── rotate_direction (wrap + delta semantics) ───────────────────
 

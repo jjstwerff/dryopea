@@ -49,9 +49,9 @@
 // occupancy was built as well, because they trod on this hex to get
 // here and a plate under a besieging robot has to go off.
 pub struct OccupiedHex {
-    q:      integer,
-    r:      integer,
-    n:      integer,
+    pub q:      integer,
+    pub r:      integer,
+    pub n:      integer,
     visits: integer,
 }
 

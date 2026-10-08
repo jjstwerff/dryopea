@@ -48,8 +48,8 @@
 // the clock reads **t0** for all of them, so a verb that grew a
 // tick would go red naming the file that reached it.
 
-use editor_step;
-use script;
+use editor_step::*;
+use script::*;
 
 // The extension a scenario is written in.  One definition, because
 // `scenario_path` and `scenario_stem` have to agree about it.

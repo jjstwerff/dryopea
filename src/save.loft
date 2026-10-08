@@ -10,12 +10,12 @@
 //
 // Plan 01 phase E4.
 
-use map_file;
-use marker_file;
-use markers;
-use palette;
-use painted;
-use camera;
+use map_file::*;
+use marker_file::*;
+use markers::*;
+use palette::*;
+use painted::*;
+use camera::*;
 
 // Linear scan for the palette index of a given type name.
 // Returns -1 if the name is unknown — callers treat that as
@@ -35,9 +35,9 @@ pub fn palette_index_of(palette: vector<GroundType>, name: text) -> integer {
 // Fields not yet edited by E4 (markers, waves, …) populate with
 // placeholders / empty defaults — later plan phases fill them in.
 pub fn paint_to_mapfile(
-    pw:      PaintedWorld,
-    cam:     EditorCamera,
-    palette: vector<GroundType>,
+    pw:      const PaintedWorld,
+    cam:     const EditorCamera,
+    palette: const vector<GroundType>,
     name:    text,
 ) -> MapFile {
     ptm_ground: vector<GroundEntry> = [];
@@ -103,9 +103,9 @@ pub fn mapfile_to_painted(
 // Snapshot a painted world + camera and write the save in one
 // call.  The editor's primary save-on-Ctrl+S entry point.
 pub fn save_world(
-    pw:      PaintedWorld,
-    cam:     EditorCamera,
-    palette: vector<GroundType>,
+    pw:      const PaintedWorld,
+    cam:     const EditorCamera,
+    palette: const vector<GroundType>,
     name:    text,
     path:    text,
 ) {
@@ -145,7 +145,7 @@ pub fn load_map_or_empty(
 // straight field copy — the u8 → integer widening it used to do
 // went away with the loft bug that forced it (marker_file.loft
 // § On-disk MarkerSaveEntry).
-pub fn marker_world_to_file(mw: MarkerWorld, name: text) -> MarkerFile {
+pub fn marker_world_to_file(mw: const MarkerWorld, name: text) -> MarkerFile {
     mwtf_out: vector<MarkerSaveEntry> = [];
     for mwtf_e in mw.markers {
         mwtf_out += [MarkerSaveEntry {
@@ -204,7 +204,7 @@ pub fn markerfile_to_world(mf: MarkerFile) -> MarkerWorld {
 //     QUESTIONS_FOR_LOFT.md): an absent sidecar load-or-empty
 //     yields an empty MarkerWorld, exact behaviour we want.
 //   - count == 0 AND sidecar absent: no-op.
-pub fn save_markers(mw: MarkerWorld, name: text, path: text) {
+pub fn save_markers(mw: const MarkerWorld, name: text, path: text) {
     if marker_count(mw) == 0 {
         if file(path).exists() {
             delete(path);

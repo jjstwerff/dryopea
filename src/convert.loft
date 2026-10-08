@@ -38,8 +38,8 @@
 // changes in its own diff, which is the same problem as converting
 // by hand.
 
-use lattice;
-use relabel;
+use lattice::*;
+use relabel::*;
 
 // One command's coordinate layout.
 //
@@ -55,7 +55,7 @@ use relabel;
 //
 // Token 0 is the command word itself, so indices start at 1.
 pub struct KeysSchema {
-    ks_cmd:    text,
+    pub ks_cmd:    text,
     ks_pair_a: integer,
     ks_pair_b: integer,
     ks_pair_c: integer,

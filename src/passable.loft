@@ -78,11 +78,11 @@
 // table, which is why they are derived here rather than added to
 // `examples/numbers.json` as a third statement of the same fact.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use moat;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use moat::*;
 
 // ─── Enemy classes ──────────────────────────────────────────────
 //

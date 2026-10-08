@@ -98,16 +98,17 @@
 // What the one-seam rule demands is that ONE function calls
 // `wave_tick`.  One does.
 
-use lattice;
-use markers;
-use editor_step;
-use occupancy;
-use carry;
-use vehicle;
-use fixstep;
-use spawn;
-use poi;
-use render_camera;
+use lattice::*;
+use markers::*;
+use editor_step::*;
+use occupancy::*;
+use carry::*;
+use vehicle::*;
+use fixstep::*;
+use spawn::*;
+use poi::*;
+use render_camera::*;
+use build::*;
 
 // ─── State ──────────────────────────────────────────────────────
 
@@ -122,7 +123,7 @@ use render_camera;
 pub struct PlayState {
     // The roster, the layers, the towers, the wallet, the crew, the
     // cargo — everything the simulation owns.
-    wave: WaveState,
+    pub wave: WaveState,
 
     // Elapsed time not yet spent as whole ticks — plan 26 L1.
     //
@@ -138,7 +139,7 @@ pub struct PlayState {
     // over a repeating fraction loses the last tick for 602 of the
     // first 1000 counts, which is why `play_ticks` had to refuse to be
     // spelled as a duration.  See `tick_clock.loft`.
-    clock: TickClock,
+    pub clock: TickClock,
 
     // Whole ticks played, ever.  The run's CLOCK — plan 12 B7 compares
     // it between a base with defences and the same base without, and
@@ -147,14 +148,14 @@ pub struct PlayState {
     // ⚠ **A count of TICKS, not of seconds** (plan 19 § Open questions
     // 3).  The accumulator changes who decides WHEN a tick happens; it
     // does not change what one IS.
-    ticks: integer,
+    pub ticks: integer,
 
     // Last frame's input, for the play actions' rising edges (plan 19
     // P2).  ⚠ **Its own record, never `EditorState.prev`**: that one is
     // written at the END of `editor_step`, so a play action reading it
     // would compare this frame against itself.  Same shape, same
     // `editor_input_copy`, one frame apart.
-    prev: EditorInput,
+    pub prev: EditorInput,
 
     // Is the player laying a wall trail (plan 27 C3)?
     //
@@ -167,7 +168,7 @@ pub struct PlayState {
     //
     // ⚠ So `WaveState` gains nothing, and `state_diff`, `emit_keys` and
     // the `.keys` vocabulary all stay exactly as total as they were.
-    painting: boolean,
+    pub painting: boolean,
 
     // Is the player laying a TRENCH trail (BACKLOG C5)?
     //
@@ -183,12 +184,12 @@ pub struct PlayState {
     // ⚠ Stored as *digging*, so [loft#914]'s silent default on a
     // partial `PlayState` literal is **not digging** — the way the game
     // worked before this field existed.
-    digging: boolean,
+    pub digging: boolean,
 
     // Is this session LIVE — the game running, or the map being edited?
     // Plan 19 P3.  ⚠ See § The mode is remembered by the SESSION for why
     // it is here and not a local in `main()`.
-    playing: boolean,
+    pub playing: boolean,
 
     // The camera the session is looking through, and the boom the
     // player has asked for (plan 21 R2, `@X014`).
@@ -203,7 +204,7 @@ pub struct PlayState {
     // until the ease existed there was nothing for a session to
     // REMEMBER between frames, and a field nobody reads is a decision
     // validated by nothing.
-    cam: CameraRig,
+    pub cam: CameraRig,
 
     // How far each POI's population can get from it, one integer apiece
     // (`plans/30` R6b, `poi.loft::poi_reaches`).
@@ -226,7 +227,7 @@ pub struct PlayState {
     // ⚠ Rebuilt whenever its length stops matching the POI list, which
     // is safe because **a POI does not move** (`@FR-E-Place-State`) and
     // its reach does not change with its state (`@X304`).
-    reach: vector<integer>,
+    pub reach: vector<integer>,
 }
 
 pub fn play_state_new() -> PlayState {

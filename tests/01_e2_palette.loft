@@ -8,7 +8,8 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
+use graphics::*;
 
 // ─────────────────────────────────────────────────────────────────
 // Hex-color parsing

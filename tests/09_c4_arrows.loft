@@ -34,8 +34,8 @@
 
 #cwd
 
-use dryopea;
-use hex_grid;
+use dryopea::*;
+use hex_grid::*;
 
 const SWEEP: integer = 8;
 

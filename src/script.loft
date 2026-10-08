@@ -223,33 +223,40 @@
 // jump back to the origin when a button lifts, and V1b's `snap`
 // renders the hover preview under it.
 
-use lattice;
-use camera;
-use painted;
-use markers;
-use picker;
-use palette;
-use editor_mode;
-use editor_step;
-use bindings;
-use editor_view;
-use measure;
-use save;
-use height;
-use passable;
-use damage;
-use wallet;
-use vehicle;
-use helper;
-use landing;
-use task;
-use occupancy;
-use spawn;
-use errand;
-use poi;
-use fixstep;
-use play;
-use graphics;
+use lattice::*;
+use camera::*;
+use painted::*;
+use markers::*;
+use picker::*;
+use palette::*;
+use editor_mode::*;
+use editor_step::*;
+use bindings::*;
+use editor_view::*;
+use measure::*;
+use save::*;
+use height::*;
+use passable::*;
+use damage::*;
+use wallet::*;
+use vehicle::*;
+use helper::*;
+use landing::*;
+use task::*;
+use occupancy::*;
+use spawn::*;
+use errand::*;
+use poi::*;
+use fixstep::*;
+use play::*;
+use graphics::*;
+use waves::*;
+use build::*;
+use carry::*;
+use jammer::*;
+use scramble::*;
+use tower::*;
+use trap::*;
 
 // ─── The run record ─────────────────────────────────────────────
 
@@ -259,13 +266,13 @@ use graphics;
 // and its cursor are the same object because the cursor IS part of
 // where the run got to.
 pub struct ScriptRun {
-    ok:       boolean,
-    line:     integer,   // 1-based line of the failure; 0 when ok
-    message:  text,      // "" when ok
-    commands: integer,   // commands executed
-    frames:   integer,   // `editor_step` calls made
-    snaps:    integer,   // pictures written
-    checks:   integer,   // measurements that passed
+    pub ok:       boolean,
+    pub line:     integer,   // 1-based line of the failure; 0 when ok
+    pub message:  text,      // "" when ok
+    pub commands: integer,   // commands executed
+    pub frames:   integer,   // `editor_step` calls made
+    pub snaps:    integer,   // pictures written
+    pub checks:   integer,   // measurements that passed
 
     hover_q:  integer,
     hover_r:  integer,
@@ -287,12 +294,12 @@ pub struct ScriptRun {
     // its own copies — which is the two-games defect `play.loft`
     // exists to make unwritable.  `run.play.ticks` is plan 12 B7's
     // clock, moved and not renamed.
-    play: PlayState,
+    pub play: PlayState,
 
     // Where `snap` writes.  Per-run rather than a constant, so the
     // suite can drop its shots in `tests/actual/` (wiped between
     // runs) while a validation run keeps them in `shots/`.
-    shots_dir: text,
+    pub shots_dir: text,
 
     // The keyboard this run types on (plan 09 I1) — `input`'s
     // abstract state plus dryopea's one key table.  Per-run rather
@@ -300,7 +307,7 @@ pub struct ScriptRun {
     // into each other, and so a run can be given REBOUND keys: a
     // script that still passes under a remap is what proves the
     // indirection is real rather than decorative.
-    isrc: EditorInputSource,
+    pub isrc: EditorInputSource,
 }
 
 // Default home for shots: gitignored, rewritten every run.  A shot

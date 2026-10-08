@@ -67,11 +67,11 @@
 // prediction, and until then a planet is JSON — the format
 // `maps/*.json` already round-trips.
 
-use editor_step;
-use maps;
-use save;
-use painted;
-use markers;
+use editor_step::*;
+use maps::*;
+use save::*;
+use painted::*;
+use markers::*;
 
 // Where every planet's state lives, relative to the working directory.
 //

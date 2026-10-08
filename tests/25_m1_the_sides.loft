@@ -53,7 +53,8 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
+use mesh3d::*;
 
 const PALETTE_PATH: text = "examples/palette.json";
 

@@ -87,7 +87,7 @@
 // restriction**: a missing part and a cycle are two answers wanting
 // different fixes, so they never share a wording.
 
-use hex_body;
+use hex_body::*;
 
 // ─── What a part offers ─────────────────────────────────────────
 
@@ -109,8 +109,8 @@ pub struct Socket {
 // ⚠⚠ **Every field below names the joint; none of them says where.**
 // See this file's header: the absence IS the invariant.
 pub struct Binding {
-  bd_socket: text,      // the socket's name, in the part that offers it
-  bd_part:   text,      // what goes in it, by catalogue name
+  pub bd_socket: text,      // the socket's name, in the part that offers it
+  pub bd_part:   text,      // what goes in it, by catalogue name
 }
 
 // A part: a rig, the sockets it offers, and what is in them.
@@ -121,12 +121,12 @@ pub struct Binding {
 // sockets, which is the other record.  `""` fits nothing, which is what
 // a root part (the hover unit) is.
 pub struct Part {
-  pt_name:  text,
-  pt_fits:  text,
-  pt_rig:   Rig,                  // hex_body's — see the header
-  pt_limbs: vector<Limb>,         // what it is MADE of (plan 20 A3)
-  pt_socks: vector<Socket>,
-  pt_binds: vector<Binding>,
+  pub pt_name:  text,
+  pub pt_fits:  text,
+  pub pt_rig:   Rig,                  // hex_body's — see the header
+  pub pt_limbs: vector<Limb>,         // what it is MADE of (plan 20 A3)
+  pub pt_socks: vector<Socket>,
+  pub pt_binds: vector<Binding>,
 }
 
 // ─── What a part is MADE of ─────────────────────────────────────
@@ -156,14 +156,14 @@ pub const LIMB_CONE = 2;    // a truncated cone about +z: sx = bottom radius, sy
 // ⚠ The size fields mean different things per kind, which is what a
 // tagged shape record is; `part_extent` is the one place that knows.
 pub struct Limb {
-  lb_bone: integer,     // which bone of the part's rig it rides
-  lb_cx:   float,       // centre, in that bone's frame
-  lb_cy:   float,
-  lb_cz:   float,
-  lb_kind: integer,     // LIMB_BOX / LIMB_DISC / LIMB_CONE
-  lb_sx:   float,       // box: full x extent.  disc: radius.  cone: bottom radius
-  lb_sy:   float,       // box: full y extent.  disc: radius.  cone: top radius
-  lb_sz:   float,       // box: full z extent.  disc: thickness.  cone: height
+  pub lb_bone: integer,     // which bone of the part's rig it rides
+  pub lb_cx:   float,       // centre, in that bone's frame
+  pub lb_cy:   float,
+  pub lb_cz:   float,
+  pub lb_kind: integer,     // LIMB_BOX / LIMB_DISC / LIMB_CONE
+  pub lb_sx:   float,       // box: full x extent.  disc: radius.  cone: bottom radius
+  pub lb_sy:   float,       // box: full y extent.  disc: radius.  cone: top radius
+  pub lb_sz:   float,       // box: full z extent.  disc: thickness.  cone: height
 }
 
 // The catalogue: parts by name.
@@ -173,7 +173,7 @@ pub struct Limb {
 // cannot iterate a hash — which is a fit rather than a compromise, as
 // nothing here ever needs to sweep the catalogue.
 pub struct PartSet {
-  ps_parts: hash<Part[pt_name]>,
+  pub ps_parts: hash<Part[pt_name]>,
 }
 
 // ─── Building one ───────────────────────────────────────────────

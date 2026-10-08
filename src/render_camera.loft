@@ -54,14 +54,14 @@
 // solve that did not happen**, and the only way to see that is to ask
 // the artefact rather than the intent.
 
-use lattice;
-use fixstep;
-use vehicle;
-use palette;
-use painted;
-use height;
-use passable;
-use mesh3d;
+use lattice::*;
+use fixstep::*;
+use vehicle::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use mesh3d::*;
 
 // π.  loft has no builtin, and `mesh3d` exports none.
 pub const CAM_PI: float = 3.14159265358979;
@@ -120,11 +120,11 @@ pub const CAMERA_FOLLOW_DISTANCE: float = 5.830951894845301;
 // `elevation` is degrees above the ground plane (90 = straight down
 // from above).  `distance` is eye-to-target separation in metres.
 pub struct RenderCamera {
-    target:    Vec3,
-    azimuth:   float,
-    elevation: float,
-    distance:  float,
-    fov_y:     float,
+    pub target:    Vec3,
+    pub azimuth:   float,
+    pub elevation: float,
+    pub distance:  float,
+    pub fov_y:     float,
     near:      float,
     far:       float,
     up:        Vec3,
@@ -512,11 +512,11 @@ pub fn camera_boom_free(pal: vector<GroundType>, pw: PaintedWorld, hl: const Hei
 // way permanently rewrites the player's zoom: the camera would pull in
 // behind the wall and stay there after it had gone.
 pub struct CameraRig {
-    cam:  RenderCamera,
-    boom: float,
+    pub cam:  RenderCamera,
+    pub boom: float,
     // Has everything arrived?  Read by the snap, and by a test that
     // wants to know whether the ease is still working.
-    rested: boolean,
+    pub rested: boolean,
 }
 
 pub fn camera_rig_new() -> CameraRig {

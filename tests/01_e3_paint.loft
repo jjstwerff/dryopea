@@ -9,7 +9,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const E3_W: integer = 96;
 const E3_H: integer = 96;

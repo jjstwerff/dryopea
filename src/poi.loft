@@ -129,15 +129,15 @@
 // builds a `PoiWorld` yet, exactly as `ROLE_NONE` is what every
 // `Enemy { … }` literal already means.
 
-use lattice;
-use flow;
-use painted;
-use palette;
-use passable;
-use height;
-use errand;
-use spawn;
-use fixstep;
+use lattice::*;
+use flow::*;
+use painted::*;
+use palette::*;
+use passable::*;
+use height::*;
+use errand::*;
+use spawn::*;
+use fixstep::*;
 
 // ─── ⚠ WHAT KIND OF PLACE ───────────────────────────────────────
 
@@ -159,8 +159,8 @@ pub const POI_KIND_COUNT: integer = 6;
 // three anchors this POI is standing on**.  That is the whole of
 // *anchors derive from the POI*, and it is data.
 pub struct PoiKind {
-    name:   text,
-    anchor: integer,
+    pub name:   text,
+    pub anchor: integer,
 }
 
 pub fn poi_kind_row(name: text, anchor: integer) -> PoiKind {
@@ -329,11 +329,11 @@ pub fn poi_state_fault() -> text {
 // place instead of a leg.  ⚠ It is one field on a POI and **nothing at
 // all on a mob**, which is `@FR-E-Place-State` paying for itself.
 pub struct Poi {
-    kind:  integer,
-    q:     integer,
-    r:     integer,
-    state: integer,
-    since: integer,   // base units at which the current state began
+    pub kind:  integer,
+    pub q:     integer,
+    pub r:     integer,
+    pub state: integer,
+    pub since: integer,   // base units at which the current state began
 }
 
 // A place that is not a place — which is every scenario today.
@@ -391,12 +391,12 @@ pub fn poi_state_set(p: Poi, state: integer, now: integer) {
 // them lands where is decided by the ROLE's row and the KIND's row
 // together — see `poi_errand` — and never by their order here.
 pub struct PoiRoute {
-    poi:   integer,   // index into `PoiWorld.pois`
-    role:  integer,   // an `errand.loft` role — the round it walks
-    kind:  u8,        // the mover class, which is what decides passability
-    a:     Hex,
-    b:     Hex,
-    count: integer,   // how many mobs are on this route
+    pub poi:   integer,   // index into `PoiWorld.pois`
+    pub role:  integer,   // an `errand.loft` role — the round it walks
+    pub kind:  u8,        // the mover class, which is what decides passability
+    pub a:     Hex,
+    pub b:     Hex,
+    pub count: integer,   // how many mobs are on this route
 }
 
 pub fn poi_route(poi: integer, role: integer, kind: u8,
@@ -440,10 +440,10 @@ pub fn poi_route(poi: integer, role: integer, kind: u8,
 // computable — `errand_home_done` asks the row, the routine, the rate
 // and a hex, and never a roster.
 pub struct PoiMob {
-    route: integer,   // index into `PoiWorld.routes`
-    seat:  integer,   // its place in the rota — 0 .. count-1
-    slip:  integer,   // base units it has fallen behind (`@FR-E-Slip`)
-    gone:  boolean,   // its round has ended, and it never comes back
+    pub route: integer,   // index into `PoiWorld.routes`
+    pub seat:  integer,   // its place in the rota — 0 .. count-1
+    pub slip:  integer,   // base units it has fallen behind (`@FR-E-Slip`)
+    pub gone:  boolean,   // its round has ended, and it never comes back
 
     // ⚠⚠ **DID WE GIVE THIS MOB A BODY, and it is the one MIRROR on this
     // record** (`plans/30` R6b).  Who has a body is otherwise read off
@@ -456,7 +456,7 @@ pub struct PoiMob {
     // killed, or the bubble took it*.  Only this flag tells them apart,
     // and getting it wrong is a RESURRECTION — a POI quietly making a
     // second copy of a robot the player watched die.
-    live:  boolean,
+    pub live:  boolean,
 }
 
 pub fn poi_mob(route: integer, seat: integer) -> PoiMob {
@@ -471,9 +471,9 @@ pub fn poi_mob(route: integer, seat: integer) -> PoiMob {
 // is a vector of hexes rather than a vector of legs.  Each route carries
 // its POI's index instead.
 pub struct PoiWorld {
-    pois:   vector<Poi>,
-    routes: vector<PoiRoute>,
-    mobs:   vector<PoiMob>,
+    pub pois:   vector<Poi>,
+    pub routes: vector<PoiRoute>,
+    pub mobs:   vector<PoiMob>,
 }
 
 // No places at all — which is every scenario today.
@@ -601,8 +601,8 @@ pub fn poi_errand(p: const Poi, rt: const PoiRoute) -> Errand {
 // a query.  ⚠ FLAT for [loft#974]'s reason, like `Cycle` and `PoiWorld`
 // above.
 pub struct Bound {
-    centres: vector<Hex>,
-    radii:   vector<integer>,
+    pub centres: vector<Hex>,
+    pub radii:   vector<integer>,
 }
 
 // A region containing NOTHING — which is what a POI with no population
@@ -1143,11 +1143,11 @@ pub fn poi_reaches(w: const PoiWorld, pal: vector<GroundType>,
 // ⚠ Every field is an integer, so this struct is safe to hold and to
 // return; nothing here carries a vector ([loft#974]).
 pub struct PoiSurvey {
-    tier:  integer,   // the POI's own tier — CULL, or the best of its mobs
+    pub tier:  integer,   // the POI's own tier — CULL, or the best of its mobs
     live:  integer,   // mobs that need a body
-    seen:  integer,   // mobs computed, and not drawn
+    pub seen:  integer,   // mobs computed, and not drawn
     done:  integer,   // mobs whose round has ended
-    asked: integer,   // ⚠ mobs evaluated — THE COST
+    pub asked: integer,   // ⚠ mobs evaluated — THE COST
 }
 
 pub fn poi_survey_new() -> PoiSurvey {

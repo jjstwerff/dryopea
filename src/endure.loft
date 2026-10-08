@@ -60,7 +60,7 @@
 // building that restores faster.  It is not built, so the rest rate is
 // one constant here and the quarters are its multiplier when they land.
 
-use fixstep;
+use fixstep::*;
 
 // A full pool, in the clock's base units of work — ten minutes.
 pub const ENDURANCE_POOL_UNITS: integer = 1800000000;
@@ -95,7 +95,7 @@ pub const ENDURANCE_REST_DIVISOR: integer = 3;
 // full pool.  Storing what is LEFT would make every partial literal a
 // crew member who is already exhausted.
 pub struct Endurance {
-    spent: integer,
+    pub spent: integer,
 }
 
 // Factory: fully rested, which is how everybody arrives.

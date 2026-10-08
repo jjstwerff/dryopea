@@ -23,7 +23,7 @@
 
 #cwd
 
-use dryopea;
+use dryopea::*;
 
 const PAL:      text = "examples/palette.json";
 const R0_MAPS: text = "maps";
