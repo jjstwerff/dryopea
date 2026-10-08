@@ -17,7 +17,7 @@ entry = "src/dryopea.loft"
 # save_png (works without a GL context — see the library's own
 # tests/canvas.loft for the pattern).  GL window functions also live
 # in this lib for the live renderer.
-graphics = ">=0.5.0"
+graphics = ">=0.9.12"   # GroupVboSet.slots is pub from 0.9.12 (loft C140)
 
 # Plan 07 — shared world substrate.  `gridmesh` is the standalone,
 # zero-dependency chunk + dirty + mesh-pipeline toolkit (axial).
@@ -102,7 +102,7 @@ moros_map = { path = "../moros/lib/moros_map" }
 # ⚠⚠ Its README has advertised the slot since bootstrap — the `time/`
 # row reads *"frame counter, dt, scheduling"* — and `time` shipped as
 # date arithmetic instead, so the slot was never filled.  This fills it.
-fixstep = ">=0.1"
+fixstep = ">=0.1.4"   # Timer and TickClock literals need pub fields (loft C140)
 
 # Plan 20 A1 — the PART MODEL, and dryopea re-implements none of it.
 # `docs/PARTS.md` § D1 (`@X001`) decided this after the first draft got it
