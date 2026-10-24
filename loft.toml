@@ -61,7 +61,7 @@ mesh3d = ">=0.1.1"
 # `probe/README.md`: "adding it to dryopea's manifest on the strength of
 # a probe is how an experiment becomes a commitment nobody decided to
 # make."  M3 is the phase that needs it, so M3 is when it joins.
-imaging = ">=0.2.0"
+imaging = ">=0.4.4"   # the first release whose `Image` fields are `pub` (loft C140)
 
 # `moros_map` is the shared world data model — Map / Chunk / Hex with
 # {q,r,cy} multi-floor, height, material, walls, items.  Plan 07 W1
