@@ -55,11 +55,11 @@
 // belt and braces; the default ground is what a player who CLEARS the
 // rubble is left standing on.
 
-use lattice;
-use palette;
-use painted;
-use height;
-use passable;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 //

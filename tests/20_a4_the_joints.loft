@@ -32,6 +32,19 @@
 #cwd
 
 use dryopea;
+use part::*;
+use vehicle::*;
+use mesh3d::*;
+use carry::*;
+use catalogue::*;
+use fixstep::*;
+use hex_body::*;
+use lattice::*;
+use mesh_crc::*;
+use occupancy::*;
+use part_mesh::*;
+use pose::*;
+use tower::*;
 
 fn near4(a: float, b: float) -> boolean {
     d = a - b;

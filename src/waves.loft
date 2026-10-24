@@ -84,8 +84,8 @@
 // measurement rather than riding along with a file format.
 
 use lattice;
-use passable;
-use fixstep;
+use passable::*;
+use fixstep::*;
 
 // ─── The authored list ──────────────────────────────────────────
 
@@ -305,7 +305,7 @@ pub struct WaveSchedule {
 }
 
 // One all-REGULAR part per entry — what a `vector<integer>` list means.
-fn regular_parts(counts: vector<integer>) -> vector<WavePart> {
+fn regular_parts(counts: const vector<integer>) -> vector<WavePart> {
     rp_out: vector<WavePart> = [];
     rp_i = 0;
     for rp_c in counts {
@@ -324,7 +324,7 @@ fn regular_parts(counts: vector<integer>) -> vector<WavePart> {
 // `wave_schedule_compose`, which is why plan 23 K1 moved no existing
 // reading — a list authored before composition existed still describes
 // the same run.
-pub fn wave_schedule_of(waves: vector<integer>, delay: float) -> WaveSchedule {
+pub fn wave_schedule_of(waves: const vector<integer>, delay: float) -> WaveSchedule {
     wso_p = regular_parts(waves);
     WaveSchedule { parts: wso_p, length: len(waves), sent: 0,
                    lull: timer_new(),

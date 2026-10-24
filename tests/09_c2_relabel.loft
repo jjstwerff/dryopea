@@ -33,6 +33,9 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use painted::*;
+use relabel::*;
 
 // Adjacency + direction over ±16; distance over every PAIR in ±6,
 // which is 169² = 28 561 comparisons.

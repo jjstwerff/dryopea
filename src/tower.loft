@@ -54,13 +54,13 @@
 // Nothing does that today, and the loop costs nothing when it cannot
 // fire.
 
-use lattice;
+use lattice::*;
 use markers;
-use palette;
-use painted;
-use height;
-use passable;
-use fixstep;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use fixstep::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 //

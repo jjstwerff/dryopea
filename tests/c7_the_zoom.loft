@@ -37,6 +37,13 @@
 #cwd
 
 use dryopea;
+use painted::*;
+use camera::*;
+use editor_step::*;
+use editor_view::*;
+use render::*;
+use lattice::*;
+use measure::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

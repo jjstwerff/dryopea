@@ -68,6 +68,15 @@
 #cwd
 
 use dryopea;
+use height::*;
+use painted::*;
+use palette::*;
+use ground_mesh::*;
+use lattice::*;
+use mesh_chunks::*;
+use passable::*;
+use mesh3d::*;
+use mesh_crc::*;
 
 const PALETTE_PATH: text = "examples/palette.json";
 

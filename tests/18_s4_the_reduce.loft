@@ -30,6 +30,12 @@
 #cwd
 
 use dryopea;
+use script::*;
+use editor_step::*;
+use emit::*;
+use lattice::*;
+use palette::*;
+use reduce::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

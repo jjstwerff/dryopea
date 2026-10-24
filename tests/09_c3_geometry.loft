@@ -30,6 +30,11 @@
 #cwd
 
 use dryopea;
+use graphics::*;
+use camera::*;
+use lattice::*;
+use painted::*;
+use render::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

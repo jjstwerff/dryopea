@@ -29,6 +29,22 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use painted::*;
+use poi::*;
+use spawn::*;
+use camera::*;
+use compare::*;
+use errand::*;
+use fixstep::*;
+use markers::*;
+use palette::*;
+use passable::*;
+use picker::*;
+use play::*;
+use vehicle::*;
+use editor_step::*;
+use flow::*;
 
 const PALETTE: text    = "examples/palette.json";
 const GRASS:   integer = 5;

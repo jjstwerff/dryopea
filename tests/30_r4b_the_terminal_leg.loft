@@ -40,6 +40,18 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use errand::*;
+use flow::*;
+use lattice::*;
+use painted::*;
+use fixstep::*;
+use height::*;
+use markers::*;
+use palette::*;
+use passable::*;
+use play::*;
+use spawn::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

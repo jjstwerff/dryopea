@@ -9,6 +9,13 @@
 #cwd
 
 use dryopea;
+use camera::*;
+use painted::*;
+use palette::*;
+use picker::*;
+use graphics::*;
+use render::*;
+use golden::*;
 
 // ─────────────────────────────────────────────────────────────────
 // Hex-color parsing

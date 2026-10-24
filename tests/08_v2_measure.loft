@@ -25,7 +25,17 @@
 #cwd
 
 use dryopea;
-use graphics;
+use graphics::*;
+use painted::*;
+use camera::*;
+use editor_step::*;
+use lattice::*;
+use palette::*;
+use render::*;
+use editor_view::*;
+use measure::*;
+use script::*;
+use spawn::*;
 
 const PALETTE: text = "examples/palette.json";
 

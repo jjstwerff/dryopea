@@ -21,6 +21,14 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use markers::*;
+use painted::*;
+use palette::*;
+use spawn::*;
+use scramble::*;
+use vehicle::*;
+use wallet::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

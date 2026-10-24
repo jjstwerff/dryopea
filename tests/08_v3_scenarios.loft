@@ -19,6 +19,9 @@
 #cwd
 
 use dryopea;
+use script::*;
+use editor_step::*;
+use spawn::*;
 
 const PALETTE: text = "examples/palette.json";
 

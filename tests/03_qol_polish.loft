@@ -17,7 +17,13 @@
 #cwd
 
 use dryopea;
-use graphics;
+use graphics::*;
+use camera::*;
+use hud::*;
+use lattice::*;
+use markers::*;
+use painted::*;
+use render::*;
 
 // ─── Save indicator ─────────────────────────────────────────────
 

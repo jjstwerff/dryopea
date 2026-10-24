@@ -121,6 +121,17 @@
 #cwd
 
 use dryopea;
+use painted::*;
+use palette::*;
+use height::*;
+use helper::*;
+use lattice::*;
+use occupancy::*;
+use passable::*;
+use spawn::*;
+use vehicle::*;
+use fixstep::*;
+use flow::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

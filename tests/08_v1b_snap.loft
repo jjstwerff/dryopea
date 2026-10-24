@@ -24,6 +24,14 @@
 
 use dryopea;
 use graphics;
+use editor_mode::*;
+use editor_step::*;
+use editor_view::*;
+use golden::*;
+use render::*;
+use script::*;
+use markers::*;
+use painted::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

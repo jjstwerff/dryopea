@@ -71,8 +71,8 @@
 // way § The CARRY and never the BUDGET explains.  ⚠ What a base opens
 // with is no longer a constant; `wallet_budget` is where it is asked.
 
-use lattice;
-use height;
+use lattice::*;
+use height::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 //

@@ -25,6 +25,13 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use palette::*;
+use script::*;
+use validate::*;
+use compare::*;
+use emit::*;
+use height::*;
 
 const PALETTE: text = "examples/palette.json";
 const SCRIPTS: text = "tests/scripts";

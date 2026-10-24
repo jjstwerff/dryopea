@@ -11,6 +11,17 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use palette::*;
+use build::*;
+use endure::*;
+use helper::*;
+use markers::*;
+use painted::*;
+use play::*;
+use spawn::*;
+use compare::*;
+use lattice::*;
 
 const PALETTE: text = "examples/palette.json";
 

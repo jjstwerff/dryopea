@@ -37,6 +37,7 @@
 #cwd
 
 use dryopea;
+use skill::*;
 
 const ARCHIVE: text = "archive/gameplay.data";
 

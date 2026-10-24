@@ -82,13 +82,13 @@
 // be asked about a world that is not in a run at all**, which is what
 // makes the set claims below testable.
 
-use lattice;
-use markers;
-use build;
-use height;
-use tower;
-use trap;
-use skill;
+use lattice::*;
+use markers::*;
+use build::*;
+use height::*;
+use tower::*;
+use trap::*;
+use skill::*;
 
 // ─── The four jobs ──────────────────────────────────────────────
 //

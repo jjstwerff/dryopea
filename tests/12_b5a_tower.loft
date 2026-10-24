@@ -34,6 +34,18 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use markers::*;
+use painted::*;
+use palette::*;
+use spawn::*;
+use damage::*;
+use editor_step::*;
+use height::*;
+use passable::*;
+use save::*;
+use tower::*;
+use script::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

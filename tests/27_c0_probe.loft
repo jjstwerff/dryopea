@@ -23,6 +23,17 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use height::*;
+use painted::*;
+use palette::*;
+use damage::*;
+use lattice::*;
+use passable::*;
+use play_view::*;
+use mesh3d::*;
+use ground_mesh::*;
+use mesh_crc::*;
 
 const PALETTE: text = "examples/palette.json";
 

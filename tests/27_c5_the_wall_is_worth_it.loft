@@ -23,6 +23,10 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use build::*;
+use painted::*;
+use script::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "shots";

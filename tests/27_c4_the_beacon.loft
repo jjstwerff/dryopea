@@ -19,6 +19,20 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use lattice::*;
+use palette::*;
+use play::*;
+use build::*;
+use carry::*;
+use fixstep::*;
+use helper::*;
+use markers::*;
+use occupancy::*;
+use painted::*;
+use vehicle::*;
+use wallet::*;
+use spawn::*;
 
 const PALETTE: text = "examples/palette.json";
 

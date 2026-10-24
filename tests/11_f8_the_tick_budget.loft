@@ -57,6 +57,17 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use markers::*;
+use painted::*;
+use palette::*;
+use spawn::*;
+use damage::*;
+use flow::*;
+use height::*;
+use occupancy::*;
+use passable::*;
+use tower::*;
 
 const PALETTE: text = "examples/palette.json";
 

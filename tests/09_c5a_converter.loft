@@ -29,6 +29,10 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use convert::*;
+use relabel::*;
+use validate::*;
 
 const SCRIPTS: text = "tests/scripts";
 

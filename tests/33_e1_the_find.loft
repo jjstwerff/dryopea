@@ -46,6 +46,23 @@
 #cwd
 
 use dryopea;
+use markers::*;
+use painted::*;
+use palette::*;
+use script::*;
+use spawn::*;
+use carry::*;
+use catalogue::*;
+use compare::*;
+use editor_step::*;
+use entity_view::*;
+use helper::*;
+use lattice::*;
+use occupancy::*;
+use vehicle::*;
+use emit::*;
+use mesh3d::*;
+use part::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

@@ -38,6 +38,14 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use script::*;
+use spawn::*;
+use waves::*;
+use compare::*;
+use palette::*;
+use passable::*;
+use emit::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

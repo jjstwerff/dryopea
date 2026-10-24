@@ -14,6 +14,10 @@
 #cwd
 
 use dryopea;
+use history::*;
+use painted::*;
+use lattice::*;
+use markers::*;
 
 // ─── Availability flags ─────────────────────────────────────────
 

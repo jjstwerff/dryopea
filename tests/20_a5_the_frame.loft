@@ -43,6 +43,26 @@
 #cwd
 
 use dryopea;
+use markers::*;
+use painted::*;
+use palette::*;
+use spawn::*;
+use mesh3d::*;
+use catalogue::*;
+use entity_gl::*;
+use entity_view::*;
+use gl_gate::*;
+use ground_gl::*;
+use helper::*;
+use lattice::*;
+use mesh_crc::*;
+use part_mesh::*;
+use passable::*;
+use render::*;
+use tower::*;
+use vehicle::*;
+use pose::*;
+use render_camera::*;
 
 const PALETTE: text = "examples/palette.json";
 

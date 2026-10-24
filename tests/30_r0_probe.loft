@@ -24,6 +24,17 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use height::*;
+use painted::*;
+use palette::*;
+use lattice::*;
+use maps::*;
+use passable::*;
+use picker::*;
+use spawn::*;
+use flow::*;
+use save::*;
 
 const PAL:      text = "examples/palette.json";
 const R0_MAPS: text = "maps";

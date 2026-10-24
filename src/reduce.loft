@@ -38,8 +38,8 @@
 // `plans/18` § Invariant gate names for this phase.
 
 use palette;
-use editor_step;
-use script;
+use editor_step::*;
+use script::*;
 
 // ─── What makes a predicate usable ──────────────────────────────
 

@@ -39,6 +39,17 @@
 #cwd
 
 use dryopea;
+use errand::*;
+use flow::*;
+use lattice::*;
+use painted::*;
+use carry::*;
+use fixstep::*;
+use height::*;
+use occupancy::*;
+use palette::*;
+use passable::*;
+use spawn::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

@@ -44,6 +44,23 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use painted::*;
+use palette::*;
+use play::*;
+use build::*;
+use damage::*;
+use height::*;
+use lattice::*;
+use markers::*;
+use moat::*;
+use passable::*;
+use script::*;
+use vehicle::*;
+use ground_mesh::*;
+use wallet::*;
+use mesh3d::*;
+use mesh_crc::*;
 
 const PALETTE: text = "examples/palette.json";
 const SEA:       integer = 0;

@@ -27,15 +27,15 @@
 // world, pick and seed answer the same hex, which is
 // @FR-L-Landing-Is-A-Function and what lets a `.keys` file author one.
 
-use lattice;
-use painted;
-use palette;
-use passable;
-use markers;
-use height;
-use spawn;
-use helper;
-use play;
+use lattice::*;
+use painted::*;
+use palette::*;
+use passable::*;
+use markers::*;
+use height::*;
+use spawn::*;
+use helper::*;
+use play::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 //

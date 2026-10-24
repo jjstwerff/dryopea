@@ -22,6 +22,17 @@
 #cwd
 
 use dryopea;
+use markers::*;
+use painted::*;
+use palette::*;
+use editor_step::*;
+use helper::*;
+use landing::*;
+use lattice::*;
+use play::*;
+use spawn::*;
+use maps::*;
+use script::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

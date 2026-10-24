@@ -120,9 +120,9 @@
 // distance and dig**, which is the most shootable thing a robot can do
 // (`@M060`).
 
-use palette;
-use painted;
-use height;
+use palette::*;
+use painted::*;
+use height::*;
 
 // How many metres of depth one unit of palette `drop` is worth.
 //

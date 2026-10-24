@@ -33,6 +33,11 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use editor_mode::*;
+use markers::*;
+use painted::*;
+use picker::*;
 
 const PALETTE:     text = "examples/palette.json";
 const SAVE_PATH:   text = "tests/actual/d001_session.json";

@@ -29,6 +29,10 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use helper::*;
+use wallet::*;
+use scramble::*;
 
 fn near(got: float, want: float) -> boolean {
     got - want < 0.001 && want - got < 0.001

@@ -51,10 +51,11 @@
 // zero-length bone at an OFFSET rather than the tip of a 6 m one.
 
 use lattice;
-use part;
+use part::*;
 use vehicle;
 use damage;
 use tower;
+use hex_body::*;
 
 // ─── The hover unit  (`PARTS.md` § D7) ──────────────────────────
 

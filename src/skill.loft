@@ -47,7 +47,7 @@
 // `BACKLOG E1` owes the measurement of how fast a level is earned;
 // this file owns only what a level is worth.
 
-use lattice;
+use lattice::*;
 use fixstep;
 
 // What a fully-saturated skill is worth, over an untrained one.

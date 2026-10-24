@@ -69,18 +69,18 @@
 // the other way, and getting it wrong would make every upload a silent
 // no-op with a green suite over it.
 
-use lattice;
-use palette;
-use painted;
-use height;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
 use passable;
-use render;
-use render_camera;
-use mesh_chunks;
-use ground_mesh;
-use mesh3d;
-use graphics;
-use gridmesh;
+use render::*;
+use render_camera::*;
+use mesh_chunks::*;
+use ground_mesh::*;
+use mesh3d::*;
+use graphics::*;
+use gridmesh::*;
 
 // ⚠ `graphics` declares these file-scope and NOT `pub`, so they do not
 // cross the package boundary.  Mirrored from `graphics.loft` § GL state

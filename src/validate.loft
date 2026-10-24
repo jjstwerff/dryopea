@@ -48,9 +48,9 @@
 // beside files that are expected to be green and still leave the
 // sweep meaning one thing.
 
-use palette;
-use editor_step;
-use script;
+use palette::*;
+use editor_step::*;
+use script::*;
 
 // Where the gate looks, unless a caller says otherwise.  A test
 // points all three somewhere disposable.

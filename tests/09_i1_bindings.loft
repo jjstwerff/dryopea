@@ -29,6 +29,12 @@
 #cwd
 
 use dryopea;
+use bindings::*;
+use editor_step::*;
+use lattice::*;
+use markers::*;
+use painted::*;
+use script::*;
 
 // ─── Key codes, as `main.loft` spelled them ─────────────────────
 //

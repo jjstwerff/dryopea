@@ -42,6 +42,16 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use painted::*;
+use palette::*;
+use spawn::*;
+use wallet::*;
+use damage::*;
+use editor_step::*;
+use markers::*;
+use passable::*;
+use script::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

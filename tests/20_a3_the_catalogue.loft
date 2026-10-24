@@ -32,6 +32,14 @@
 #cwd
 
 use dryopea;
+use catalogue::*;
+use damage::*;
+use lattice::*;
+use part::*;
+use tower::*;
+use vehicle::*;
+use hex_body::*;
+use part_mesh::*;
 
 fn near3(a: float, b: float) -> boolean {
     d = a - b;

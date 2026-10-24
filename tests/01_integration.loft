@@ -13,6 +13,11 @@
 #cwd
 
 use dryopea;
+use camera::*;
+use painted::*;
+use palette::*;
+use save::*;
+use render::*;
 
 const INT_SAVE: text = "tests/actual/01_integration_save.json";
 

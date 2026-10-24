@@ -98,16 +98,17 @@
 // What the one-seam rule demands is that ONE function calls
 // `wave_tick`.  One does.
 
-use lattice;
-use markers;
-use editor_step;
-use occupancy;
-use carry;
-use vehicle;
-use fixstep;
-use spawn;
-use poi;
-use render_camera;
+use lattice::*;
+use markers::*;
+use editor_step::*;
+use occupancy::*;
+use carry::*;
+use vehicle::*;
+use fixstep::*;
+use spawn::*;
+use poi::*;
+use render_camera::*;
+use build::*;
 
 // ─── State ──────────────────────────────────────────────────────
 

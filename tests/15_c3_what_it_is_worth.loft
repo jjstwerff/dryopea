@@ -51,6 +51,10 @@
 #cwd
 
 use dryopea;
+use script::*;
+use editor_step::*;
+use helper::*;
+use spawn::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

@@ -32,6 +32,9 @@
 #cwd
 
 use dryopea;
+use waves::*;
+use passable::*;
+use spawn::*;
 
 const WAVES: text = "examples/waves.json";
 

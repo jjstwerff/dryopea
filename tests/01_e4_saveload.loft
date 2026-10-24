@@ -19,6 +19,11 @@
 #cwd
 
 use dryopea;
+use map_file::*;
+use camera::*;
+use painted::*;
+use palette::*;
+use save::*;
 
 const E4_SAVE: text = "tests/actual/01_e4_saveload.json";
 

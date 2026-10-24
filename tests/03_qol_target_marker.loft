@@ -17,7 +17,14 @@
 #cwd
 
 use dryopea;
-use graphics;
+use graphics::*;
+use camera::*;
+use history::*;
+use marker_file::*;
+use marker_render::*;
+use markers::*;
+use painted::*;
+use save::*;
 
 // ─── place_target inserts a TARGET kind ─────────────────────────
 

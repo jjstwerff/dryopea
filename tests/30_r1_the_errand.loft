@@ -37,6 +37,10 @@
 #cwd
 
 use dryopea;
+use errand::*;
+use lattice::*;
+use spawn::*;
+use passable::*;
 
 const R1_SRC: text = "src";
 

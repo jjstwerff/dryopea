@@ -32,6 +32,12 @@
 #cwd
 
 use dryopea;
+use flow::*;
+use lattice::*;
+use painted::*;
+use height::*;
+use palette::*;
+use passable::*;
 
 const PALETTE: text = "examples/palette.json";
 

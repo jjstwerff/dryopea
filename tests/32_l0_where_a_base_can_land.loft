@@ -27,6 +27,12 @@
 #cwd
 
 use dryopea;
+use palette::*;
+use editor_step::*;
+use lattice::*;
+use maps::*;
+use landing::*;
+use script::*;
 
 const PALETTE: text = "examples/palette.json";
 const MAPS:    text = "maps";

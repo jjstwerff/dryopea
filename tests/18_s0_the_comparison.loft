@@ -36,6 +36,23 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use spawn::*;
+use carry::*;
+use compare::*;
+use damage::*;
+use fixstep::*;
+use height::*;
+use helper::*;
+use occupancy::*;
+use passable::*;
+use tower::*;
+use vehicle::*;
+use wallet::*;
+use waves::*;
+use markers::*;
+use painted::*;
+use palette::*;
 
 const PALETTE: text = "examples/palette.json";
 

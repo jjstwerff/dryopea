@@ -12,6 +12,9 @@
 #cwd
 
 use dryopea;
+use marker_file::*;
+use markers::*;
+use save::*;
 
 const M1_SAVE: text = "tests/actual/03_m1_markers.json";
 

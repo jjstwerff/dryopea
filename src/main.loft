@@ -147,7 +147,30 @@
 #cwd
 
 use dryopea;
-use graphics;
+use graphics::*;
+use bindings::*;
+use editor_mode::*;
+use editor_view::*;
+use entity_gl::*;
+use maps::*;
+use palette::*;
+use persist::*;
+use picker::*;
+use play_view::*;
+use save::*;
+use scenario::*;
+use editor_step::*;
+use ground_gl::*;
+use play::*;
+use scramble::*;
+use script::*;
+use spawn::*;
+use wallet::*;
+use waves::*;
+use chunks::*;
+use markers::*;
+use painted::*;
+use render::*;
 
 // The window size and the frame composition both live in
 // `src/editor_view.loft` (VIEW_W / VIEW_H / view_ppm +

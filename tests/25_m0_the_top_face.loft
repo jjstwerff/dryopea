@@ -40,6 +40,14 @@
 #cwd
 
 use dryopea;
+use height::*;
+use painted::*;
+use lattice::*;
+use palette::*;
+use passable::*;
+use render_camera::*;
+use mesh3d::*;
+use ground_mesh::*;
 
 const PALETTE_PATH: text = "examples/palette.json";
 

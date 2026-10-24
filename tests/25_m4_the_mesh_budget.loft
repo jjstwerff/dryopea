@@ -47,6 +47,13 @@
 #cwd
 
 use dryopea;
+use height::*;
+use painted::*;
+use palette::*;
+use gridmesh::*;
+use ground_mesh::*;
+use mesh_chunks::*;
+use ground_gl::*;
 
 const PALETTE: text = "examples/palette.json";
 

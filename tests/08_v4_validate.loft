@@ -23,6 +23,7 @@
 #cwd
 
 use dryopea;
+use validate::*;
 
 const PALETTE: text = "examples/palette.json";
 

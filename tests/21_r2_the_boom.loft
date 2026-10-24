@@ -35,6 +35,19 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use painted::*;
+use palette::*;
+use play::*;
+use render_camera::*;
+use vehicle::*;
+use damage::*;
+use fixstep::*;
+use height::*;
+use lattice::*;
+use markers::*;
+use passable::*;
+use tower::*;
 
 const PALETTE: text = "examples/palette.json";
 

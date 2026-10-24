@@ -34,6 +34,15 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use markers::*;
+use painted::*;
+use palette::*;
+use spawn::*;
+use waves::*;
+use fixstep::*;
+use passable::*;
+use wallet::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

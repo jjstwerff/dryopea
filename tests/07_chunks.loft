@@ -12,6 +12,8 @@
 
 use dryopea;
 use gridmesh;
+use painted::*;
+use chunks::*;
 
 // ─── chunks_from_painted ───────────────────────────────────────
 

@@ -18,7 +18,11 @@
 #cwd
 
 use dryopea;
-use graphics;
+use graphics::*;
+use camera::*;
+use marker_render::*;
+use markers::*;
+use save::*;
 
 // ─── rotate_direction (wrap + delta semantics) ───────────────────
 

@@ -18,7 +18,7 @@
 //
 // Plan 03 phase M2.
 
-use graphics;
+use graphics::*;
 
 // Mode discriminants.  APPEND new modes — never reorder, since
 // future on-disk save state may persist the current mode for

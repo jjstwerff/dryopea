@@ -35,6 +35,11 @@
 #cwd
 
 use dryopea;
+use bindings::*;
+use maps::*;
+use palette::*;
+use spawn::*;
+use tower::*;
 
 const NOTE: text = "docs/PLAYING.md";
 const PAL:  text = "examples/palette.json";

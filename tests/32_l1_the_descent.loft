@@ -27,6 +27,11 @@
 #cwd
 
 use dryopea;
+use markers::*;
+use painted::*;
+use palette::*;
+use landing::*;
+use lattice::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

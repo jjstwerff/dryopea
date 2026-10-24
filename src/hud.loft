@@ -26,8 +26,8 @@
 //
 // Plan 03 follow-up — QoL polish.  ⚠ Plan 19 P7 added § The wallet.
 
-use graphics;
-use wallet;
+use graphics::*;
+use wallet::*;
 
 // ─── Save-state indicator ───────────────────────────────────────
 //

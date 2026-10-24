@@ -28,6 +28,19 @@
 #cwd
 
 use dryopea;
+use build::*;
+use height::*;
+use lattice::*;
+use markers::*;
+use painted::*;
+use palette::*;
+use task::*;
+use tower::*;
+use trap::*;
+use helper::*;
+use skill::*;
+use spawn::*;
+use vehicle::*;
 
 const PALETTE: text    = "examples/palette.json";
 const GRASS:   integer = 5;

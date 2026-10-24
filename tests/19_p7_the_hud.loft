@@ -43,6 +43,15 @@
 #cwd
 
 use dryopea;
+use graphics::*;
+use entity_view::*;
+use gl_gate::*;
+use hud::*;
+use palette::*;
+use play::*;
+use play_view::*;
+use render::*;
+use wallet::*;
 
 const PALETTE: text = "examples/palette.json";
 

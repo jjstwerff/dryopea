@@ -39,6 +39,14 @@
 #cwd
 
 use dryopea;
+use painted::*;
+use palette::*;
+use damage::*;
+use height::*;
+use lattice::*;
+use validate::*;
+use editor_step::*;
+use script::*;
 
 const PALETTE: text = "examples/palette.json";
 const SCRIPTS: text = "tests/scripts";

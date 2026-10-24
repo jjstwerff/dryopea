@@ -41,6 +41,14 @@
 #cwd
 
 use dryopea;
+use painted::*;
+use palette::*;
+use height::*;
+use lattice::*;
+use moat::*;
+use passable::*;
+use render::*;
+use vehicle::*;
 
 const PALETTE: text = "examples/palette.json";
 const SEA:        integer = 0;

@@ -30,6 +30,15 @@
 #cwd
 
 use dryopea;
+use gl_gate::*;
+use ground_gl::*;
+use height::*;
+use measure::*;
+use painted::*;
+use palette::*;
+use render::*;
+use render_camera::*;
+use graphics::*;
 
 const PALETTE_PATH: text = "examples/palette.json";
 

@@ -121,8 +121,8 @@
 // `catalogue.loft`'s and adding a class there is plan 20's surface and
 // the GL gate's.
 
-use lattice;
-use fixstep;
+use lattice::*;
+use fixstep::*;
 
 // ─── The numbers ────────────────────────────────────────────────
 

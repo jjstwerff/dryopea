@@ -16,8 +16,8 @@
 //
 // Plan 01 phase E2.
 
-use graphics;
-use palette;
+use graphics::*;
+use palette::*;
 
 // Mutable picker state.  Holds the loaded palette + which row is
 // currently active (the type future paint actions will use).

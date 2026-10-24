@@ -46,24 +46,27 @@
 // on a run where the hashes happened to fill differently.
 
 use lattice;
-use height;
-use damage;
-use build;
+use height::*;
+use damage::*;
+use build::*;
 use skill;
-use endure;
-use tower;
-use trap;
-use wallet;
-use vehicle;
-use helper;
-use task;
-use carry;
-use waves;
-use spawn;
-use fixstep;
-use painted;
-use markers;
-use errand;
+use endure::*;
+use tower::*;
+use trap::*;
+use wallet::*;
+use vehicle::*;
+use helper::*;
+use task::*;
+use carry::*;
+use waves::*;
+use spawn::*;
+use fixstep::*;
+use painted::*;
+use markers::*;
+use errand::*;
+use poi::*;
+use jammer::*;
+use passable::*;
 
 // ─── The roster ─────────────────────────────────────────────────
 //

@@ -112,6 +112,18 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use painted::*;
+use palette::*;
+use play::*;
+use render_camera::*;
+use vehicle::*;
+use mesh3d::*;
+use fixstep::*;
+use height::*;
+use lattice::*;
+use markers::*;
+use spawn::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS: integer = 5;

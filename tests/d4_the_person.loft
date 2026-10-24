@@ -34,6 +34,14 @@
 #cwd
 
 use dryopea;
+use spawn::*;
+use camera::*;
+use compare::*;
+use helper::*;
+use painted::*;
+use palette::*;
+use skill::*;
+use save::*;
 
 const PALETTE: text = "examples/palette.json";
 

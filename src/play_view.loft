@@ -63,30 +63,30 @@
 // which is where the picker, the HUD, the hover preview and the whole
 // of `validate.sh`'s 654 measurements live.
 
-use lattice;
-use palette;
-use painted;
-use height;
+use lattice::*;
+use palette::*;
+use painted::*;
+use height::*;
 use passable;
-use render;
-use render_camera;
-use mesh_chunks;
+use render::*;
+use render_camera::*;
+use mesh_chunks::*;
 use ground_mesh;
-use ground_gl;
+use ground_gl::*;
 use entity_view;
-use entity_gl;
-use editor_view;
-use hud;
+use entity_gl::*;
+use editor_view::*;
+use hud::*;
 use wallet;
-use editor_step;
+use editor_step::*;
 use markers;
-use spawn;
+use spawn::*;
 use part;
-use catalogue;
-use play;
+use catalogue::*;
+use play::*;
 use mesh3d;
-use graphics;
-use gridmesh;
+use graphics::*;
+use gridmesh::*;
 
 // The sky, behind everything the world does not cover.
 //

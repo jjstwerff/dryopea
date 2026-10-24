@@ -54,14 +54,14 @@
 // solve that did not happen**, and the only way to see that is to ask
 // the artefact rather than the intent.
 
-use lattice;
-use fixstep;
-use vehicle;
-use palette;
-use painted;
-use height;
-use passable;
-use mesh3d;
+use lattice::*;
+use fixstep::*;
+use vehicle::*;
+use palette::*;
+use painted::*;
+use height::*;
+use passable::*;
+use mesh3d::*;
 
 // π.  loft has no builtin, and `mesh3d` exports none.
 pub const CAM_PI: float = 3.14159265358979;

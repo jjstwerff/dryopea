@@ -23,6 +23,13 @@
 #cwd
 
 use dryopea;
+use painted::*;
+use editor_step::*;
+use height::*;
+use palette::*;
+use passable::*;
+use script::*;
+use spawn::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

@@ -60,6 +60,16 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use painted::*;
+use palette::*;
+use spawn::*;
+use damage::*;
+use markers::*;
+use passable::*;
+use tower::*;
+use vehicle::*;
+use wallet::*;
 
 const PALETTE: text = "examples/palette.json";
 const GRASS:   integer = 5;

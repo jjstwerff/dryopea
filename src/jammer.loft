@@ -82,7 +82,7 @@
 // core a top colour and a bottom pulse; a dark core is what a player
 // should SEE, and nothing here draws.
 
-use wallet;
+use wallet::*;
 
 // One core's jamming, as a switch.
 //

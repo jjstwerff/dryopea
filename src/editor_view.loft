@@ -26,17 +26,17 @@
 // No GL here either — `Canvas` is the software rasteriser, which is
 // what lets a shot be taken with no window open.
 
-use lattice;
-use camera;
+use lattice::*;
+use camera::*;
 use painted;
-use markers;
-use picker;
-use editor_mode;
-use editor_step;
-use render;
-use marker_render;
-use hud;
-use graphics;
+use markers::*;
+use picker::*;
+use editor_mode::*;
+use editor_step::*;
+use render::*;
+use marker_render::*;
+use hud::*;
+use graphics::*;
 
 // The editor's window, and the size of a shot.  One definition:
 // a picture the harness measures has to be the picture the player

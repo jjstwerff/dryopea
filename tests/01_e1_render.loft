@@ -16,6 +16,10 @@
 #cwd
 
 use dryopea;
+use camera::*;
+use painted::*;
+use render::*;
+use golden::*;
 
 const RENDER_W: integer = 96;
 const RENDER_H: integer = 96;

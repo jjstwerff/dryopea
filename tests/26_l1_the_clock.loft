@@ -67,6 +67,10 @@
 #cwd
 
 use dryopea;
+use fixstep::*;
+use play::*;
+use spawn::*;
+use vehicle::*;
 
 // ─────────────────────────────────────────────────────────────────
 // The float path, as it was before L1 — kept as the control

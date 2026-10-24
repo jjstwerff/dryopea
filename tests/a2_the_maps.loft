@@ -32,6 +32,22 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use markers::*;
+use painted::*;
+use compare::*;
+use height::*;
+use lattice::*;
+use maps::*;
+use palette::*;
+use picker::*;
+use play::*;
+use spawn::*;
+use passable::*;
+use save::*;
+use vehicle::*;
+use wallet::*;
+use waves::*;
 
 const PAL:   text = "examples/palette.json";
 const SHOTS: text = "tests/actual";

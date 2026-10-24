@@ -29,6 +29,21 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use script::*;
+use compare::*;
+use errand::*;
+use fixstep::*;
+use markers::*;
+use painted::*;
+use palette::*;
+use passable::*;
+use poi::*;
+use spawn::*;
+use convert::*;
+use emit::*;
+use lattice::*;
+use relabel::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

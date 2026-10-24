@@ -18,6 +18,13 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use camera::*;
+use editor_mode::*;
+use history::*;
+use markers::*;
+use painted::*;
+use picker::*;
 
 const PALETTE: text = "examples/palette.json";
 

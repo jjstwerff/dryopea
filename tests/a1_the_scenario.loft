@@ -35,6 +35,16 @@
 #cwd
 
 use dryopea;
+use editor_step::*;
+use markers::*;
+use painted::*;
+use scenario::*;
+use script::*;
+use validate::*;
+use play::*;
+use spawn::*;
+use vehicle::*;
+use waves::*;
 
 const PALETTE: text = "examples/palette.json";
 const SHOTS:   text = "tests/actual";

@@ -10,6 +10,9 @@
 #cwd
 
 use dryopea;
+use camera::*;
+use lattice::*;
+use painted::*;
 
 // ─────────────────────────────────────────────────────────────────
 // World math

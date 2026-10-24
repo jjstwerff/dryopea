@@ -36,6 +36,10 @@
 
 use dryopea;
 use hex_grid;
+use lattice::*;
+use history::*;
+use marker_render::*;
+use painted::*;
 
 const SWEEP: integer = 8;
 

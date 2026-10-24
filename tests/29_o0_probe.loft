@@ -32,6 +32,17 @@
 #cwd
 
 use dryopea;
+use lattice::*;
+use painted::*;
+use palette::*;
+use spawn::*;
+use build::*;
+use helper::*;
+use markers::*;
+use passable::*;
+use tower::*;
+use trap::*;
+use vehicle::*;
 
 const PALETTE: text    = "examples/palette.json";
 const GRASS:   integer = 5;

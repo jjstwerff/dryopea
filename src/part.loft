@@ -87,7 +87,7 @@
 // restriction**: a missing part and a cycle are two answers wanting
 // different fixes, so they never share a wording.
 
-use hex_body;
+use hex_body::*;
 
 // ─── What a part offers ─────────────────────────────────────────
 
