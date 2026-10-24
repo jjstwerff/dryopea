@@ -106,8 +106,8 @@ pub const INTER_WAVE_DELAY_SECONDS: float = 15.0;
 // (measured, plan 16 W0) — it is the `vector<Struct>` shape that hangs
 // and that miscompiles to zero entries on the native backend.
 pub struct WaveFile {
-    inter_wave_delay_seconds: integer,
-    waves: vector<integer>,
+    pub inter_wave_delay_seconds: integer,
+    pub waves: vector<integer>,
 
     // What each wave is MADE of, when it is more than its count.
     //
@@ -126,7 +126,7 @@ pub struct WaveFile {
     // was refused for years because the cast HUNG on it.**  That family
     // is fixed and verified on both backends (`@M088`, 2026-08-29), so
     // this shape is available rather than blocked.
-    parts: vector<WaveFilePart>,
+    pub parts: vector<WaveFilePart>,
 }
 
 // One authored part — *wave 2 is eight scouts and four miners*.
@@ -137,9 +137,9 @@ pub struct WaveFile {
 // name is looked up through that one table, so adding a class stays one
 // row and this file cannot drift from the `.keys` vocabulary.
 pub struct WaveFilePart {
-    wave:  integer,
-    count: integer,
-    class: text,
+    pub wave:  integer,
+    pub count: integer,
+    pub class: text,
 }
 
 // Everything wrong with a wave file, or "" when it is sound.
@@ -268,9 +268,9 @@ pub fn wave_list_default() -> vector<integer> {
 // ⚠ **`count` is the only place a number of robots is written down.**
 // Nothing stores a wave's total; `wave_schedule_size` sums it.
 pub struct WavePart {
-    wave:  integer,
-    count: integer,
-    kind:  integer,     // `passable.loft` § ENEMY_KIND_*
+    pub wave:  integer,
+    pub count: integer,
+    pub kind:  integer,     // `passable.loft` § ENEMY_KIND_*
 }
 
 // ─── The schedule ───────────────────────────────────────────────
@@ -296,12 +296,12 @@ pub struct WavePart {
 // every factory here keeps is *every index in `0..length` carries at
 // least one part*, which is what makes `wave_schedule_size` total.
 pub struct WaveSchedule {
-    parts:   vector<WavePart>,
+    pub parts:   vector<WavePart>,
     length:  integer,     // how many waves the list holds
-    sent:    integer,     // waves spawned so far; also the next index
-    lull:    Timer,       // the wait before the next wave
-    delay:   integer,     // base time units between waves
-    running: boolean,
+    pub sent:    integer,     // waves spawned so far; also the next index
+    pub lull:    Timer,       // the wait before the next wave
+    pub delay:   integer,     // base time units between waves
+    pub running: boolean,
 }
 
 // One all-REGULAR part per entry — what a `vector<integer>` list means.

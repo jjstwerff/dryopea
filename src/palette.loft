@@ -42,17 +42,17 @@ use graphics::*;     // rgb() for parse_hex_color output
 // With `?` on the field the type tells the truth, the guard is not
 // redundant, and `passable.loft` reads a height it can trust.
 pub struct GroundType {
-    name:            text,
-    color:           text,
-    sub_palette:     text,
-    slope:           integer?,
-    drop:            integer?,
-    drainage:        boolean,
-    walk_ground:     boolean,
-    walk_vehicle:    boolean,
-    buildable:       boolean,
-    extrusion_kind:  text,
-    height_override: float?,
+    pub name:            text,
+    pub color:           text,
+    pub sub_palette:     text,
+    pub slope:           integer?,
+    pub drop:            integer?,
+    pub drainage:        boolean,
+    pub walk_ground:     boolean,
+    pub walk_vehicle:    boolean,
+    pub buildable:       boolean,
+    pub extrusion_kind:  text,
+    pub height_override: float?,
 }
 
 pub fn load_palette(path: text) -> vector<GroundType> {

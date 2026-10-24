@@ -150,10 +150,10 @@ pub fn rubble_source_name(source: u8) -> text {
 // One hex, how far runtime has raised it in metres, and what the pile
 // is made of.
 pub struct HexRise {
-    q:      integer,
-    r:      integer,
-    metres: float,
-    source: u8,
+    pub q:      integer,
+    pub r:      integer,
+    pub metres: float,
+    pub source: u8,
 }
 
 // What runtime has piled on the map.  A hash must be a struct field
@@ -162,7 +162,7 @@ pub struct HexRise {
 // every caller doing its own null arithmetic — the same reason
 // `flow_distance` is the field's only door.
 pub struct HeightLayer {
-    cells: hash<HexRise[q, r]>,
+    pub cells: hash<HexRise[q, r]>,
 }
 
 // Factory: the map exactly as painted.

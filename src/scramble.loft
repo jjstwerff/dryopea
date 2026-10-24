@@ -198,9 +198,9 @@ pub const ABOARD_REACH_HEXES: integer = 1;
 // manifest a CONSERVATION — aboard plus left behind is the roster — and
 // a caller that computed one from the other could not fail the check.
 pub struct Manifest {
-    points: float,
-    crew:   integer,
-    left:   integer,
+    pub points: float,
+    pub crew:   integer,
+    pub left:   integer,
 }
 
 // Is this crew member close enough to the core to have boarded?

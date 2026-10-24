@@ -305,9 +305,9 @@ pub fn enemy_height(kind: u8) -> float {
 
 // One hex and what it has absorbed, in HP.
 pub struct StructureHit {
-    q:     integer,
-    r:     integer,
-    taken: float,
+    pub q:     integer,
+    pub r:     integer,
+    pub taken: float,
 }
 
 // What every structure on the map has absorbed.  A hash must be a
@@ -315,7 +315,7 @@ pub struct StructureHit {
 // `HeightLayer` follow), and wrapping it gives "a miss is undamaged"
 // one door rather than every caller doing its own null arithmetic.
 pub struct DamageLayer {
-    cells: hash<StructureHit[q, r]>,
+    pub cells: hash<StructureHit[q, r]>,
 }
 
 // Factory: the base exactly as built.

@@ -29,15 +29,15 @@ use lattice::*;
 // 255 leaves room for many more types without changing the field
 // width).
 pub struct PaintedHex {
-    q:    integer,
-    r:    integer,
-    kind: u8,
+    pub q:    integer,
+    pub r:    integer,
+    pub kind: u8,
 }
 
 // The world container — a hash must be a struct field (loft idiom)
 // rather than a bare local.
 pub struct PaintedWorld {
-    painted: hash<PaintedHex[q, r]>,
+    pub painted: hash<PaintedHex[q, r]>,
 }
 
 // Factory: empty world (sea everywhere by implicit default).

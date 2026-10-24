@@ -59,9 +59,9 @@ struct ColorTable  { by_color: hash<ColorBucket[color]> }
 // not a palette colour at all. Every band in every scenario was
 // sized on the assumption that it stays 0.
 pub struct FrameCounts {
-    counts:  vector<integer>,
-    unknown: integer,
-    total:   integer,
+    pub counts:  vector<integer>,
+    pub unknown: integer,
+    pub total:   integer,
 }
 
 fn color_table(buckets: integer) -> ColorTable {
