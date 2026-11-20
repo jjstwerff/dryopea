@@ -897,7 +897,7 @@ source of truth and the listing is a navigational summary of it.
 | `play.loft` | **the game's seam** — `PlayState`, `play_ticks` / `play_advance` / `play_step`, and the ONE call to `wave_tick` |
 | **`fixstep`** (library) | ⚠⚠ **a PACKAGE, not in `src/`** — `TickClock`, `Bank`, `Timer`, the `approach` ease.  `loft api fixstep` is the surface |
 | `play_view.loft` | **what a live session LOOKS LIKE** — the composition `main.loft` calls in play mode |
-| `bindings.loft` | **the ONE key table** — keys → actions → `EditorInput`.  ⚠ Never add a `gl_key_pressed` |
+| `bindings.loft` | **the ONE key table** — keys → actions → `EditorInput`.  ⚠ Never add a `Window.key_down` |
 | `script.loft` | the `.keys` script runner and its whole vocabulary — commands name ACTIONS, never keys.  ⚠⚠ Since `plans/30` R7a it can say a PLACE: `poi` / `route` / `mob` / `routine` (`@X345`), and **a route ENLISTS its own population**.  ⚠⚠ Since `plans/32` L3 it can say a LANDING: `land <q> <r> [seed]`, which **runs the landing rather than recording its result** (`@FR-L-Landing-Is-A-Function`) — a `.keys` file names the seed because dryopea has no RNG |
 | `scenario.loft` | **a `.keys` scenario opened as a live STARTING POSITION** — and the command line's `script=` |
 | `validate.loft` / `validate_main.loft` | the SECOND gate: sweep `tests/scripts/`, sum the measurements, report the FIRST failure |
@@ -914,7 +914,7 @@ source of truth and the listing is a navigational summary of it.
 | `render_camera.loft` | **the GAME's camera** — `RenderCamera`, the two presets, `lat_to_world`, and the EASE (`CameraRig`, `camera_boom_free`) |
 | `ground_mesh.loft` | **the GROUND, as triangles** — a six-triangle top fan per hex, one vertical quad per faced edge, one TILE per palette kind |
 | `mesh_chunks.loft` | **the mesher's DOMAIN** — which hexes are drawn, which tile each lands in, which tiles an edit invalidates |
-| `ground_gl.loft` | **the ground, DRAWN** — one flat-unlit shader, one `GroupVboSet` per palette kind, the colour as a UNIFORM |
+| `ground_gl.loft` | **the ground, DRAWN** — one flat-unlit shader, one `GroupMeshes` per palette kind, the colour as a UNIFORM |
 | `gl_gate.loft` / `gl_gate_main.loft` | **the THIRD gate** — draw each `tests/gl/*.keys` through real GL and count with `classify_canvas` ITSELF |
 | `mesh_crc.loft` | **do two mesh builds agree?** — the geometry folded to one integer, triangles included |
 | `painted.loft` | `PaintedHex` / `PaintedWorld` — sparse, sea-default ground |
@@ -953,7 +953,7 @@ source of truth and the listing is a navigational summary of it.
 | `part_mesh.loft` | **a part, as TRIANGLES** — and it contains no forward kinematics |
 | `pose.loft` | **the pose comes from the SIMULATION** — ⚠ read the sim, never a second flag |
 | `entity_view.loft` | **the ROSTER, as triangles** — ⚠ nothing here is STATE.  ⚠⚠ Since `plans/33` E1 the ledger is drawn too (`entity_bake_cargo`), and it filters on **`CARGO_GONE` and nothing else** so the frame's count and `cargo_count` are one number by construction (`@X349`) |
-| `entity_gl.loft` | **the entities, DRAWN** — one `GroupVboSet` per drawn class, re-upserted WHOLE every frame |
+| `entity_gl.loft` | **the entities, DRAWN** — one `GroupMeshes` per drawn class, re-upserted WHOLE every frame |
 
 ## Important conventions
 
@@ -1601,7 +1601,7 @@ names; most of them exist because somebody did it without reading.
 | Clear rubble / collect after a tower | `src/vehicle.loft::salvage_at` — the shared chassis |
 | Place or restore a marker of any kind | `src/markers.loft::place_marker` — the ONE dispatch |
 | Add a marker kind | append a constant, bump `MARKER_KIND_COUNT`, add rows — ⚠⚠ **and the cycle grows in 47 places**: BACKLOG C4's fourth kind moved **33 `.keys` fixtures and 14 inline test scripts** by one `do cycle_kind` press.  ⚠ Each file's own `marker … spawn` assertion is what makes the omission loud  ⚠⚠ **RE-MEASURED 2026-08-30 (`plans/33` E0) AND THE 47 IS STALE: it is ~89 files today** — **70 `.keys` (266 `do cycle_kind` presses) and 23 `.loft` test files** — because the corpus doubled under a number nobody re-read.  ⚠ `@M044`'s rule with a new instrument: **re-measure before quoting a delta**.  ⚠⚠ And it is now a DESIGN lever rather than a cost note: a **CARGO** kind is ~5 sites, so `plans/33` buys a find as one cargo row and defers the marker row |
-| Change what a key does | `src/bindings.loft::editor_actions` — the ONE table; never a `gl_key_pressed` |
+| Change what a key does | `src/bindings.loft::editor_actions` — the ONE table; never a `Window.key_down` |
 | Add a PLAY action (a key that drives the game) | a row in `editor_actions` + a field on `EditorInput` + `play.loft::play_actions` |
 | Ask why WASD does two different things | `src/bindings.loft::editor_input_from` — `playing` fills one set or the other |
 

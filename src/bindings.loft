@@ -369,9 +369,12 @@ pub fn input_source_feed(
     input_tick_from_state(src.eis_state, keys, mx, my, mbtn, wheel);
 }
 
-// Advance the source one tick by polling GL.  The editor's loop.
-pub fn input_source_poll(src: EditorInputSource) {
-    input_tick(src.eis_state);
+// Advance the source one tick from the window: its held keys and
+// mouse, and the wheel out of `events` — what `w.events()` answered
+// after this frame's `w.poll()`.  The editor's loop.
+pub fn input_source_poll(src: EditorInputSource, w: const graphics::Window,
+                         events: const vector<graphics::Event>) {
+    input_tick(src.eis_state, w, events);
 }
 
 // ─── Lookups (the script's half) ────────────────────────────────

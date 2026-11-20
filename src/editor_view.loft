@@ -40,7 +40,7 @@ use graphics::*;
 
 // The editor's window, and the size of a shot.  One definition:
 // a picture the harness measures has to be the picture the player
-// looks at, so `snap` and `gl_create_window` take their size from
+// looks at, so `snap` and `open_window` take their size from
 // the same place.
 pub const VIEW_W:   integer = 960;
 pub const VIEW_H:   integer = 720;

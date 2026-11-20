@@ -607,7 +607,7 @@ pub fn test_a_boundary_edit_names_the_tile_across_the_edge() {
 
 // ─── The drawn region ───────────────────────────────────────────
 
-// ⚠ The kind list is an UPLOAD order (M3 makes one `GroupVboSet` per
+// ⚠ The kind list is an UPLOAD order (M3 makes one `GroupMeshes` per
 // palette kind), so it has to be a function of the map alone.  Ascending
 // is the cheapest such order and `ground_chunk_kinds` promises it —
 // promised in a comment is not promised.

@@ -22,7 +22,7 @@
 // 1.5-second stall landing inside one of its two halves.
 //
 // ⚠ So the load-bearing gates here count **floats baked** — the size of
-// the buffer `gl_upload_vertices` is handed.  That is deterministic,
+// the buffer `Window.upload` is handed.  That is deterministic,
 // machine-independent, and it is what a cost regression in a mesher
 // actually looks like: geometry that should not be there.  ⚠⚠ It is
 // exactly the instrument M1 needed and did not have — *"no guard draws
@@ -40,7 +40,7 @@
 // all the work `ground_gl_upload_chunks` does.  ⚠ It cannot measure the
 // uploader itself: a GL call inside `loft test` answers *"native
 // function not loaded"*.  So the loop around them (a dozen integer
-// comparisons per tile) and `gl_upload_vertices` (the driver's) are not
+// comparisons per tile) and `Window.upload` (the driver's) are not
 // priced.  ⚠ `ground_gl_bake` exists so this file prices the code the
 // renderer runs rather than a second copy of it.
 

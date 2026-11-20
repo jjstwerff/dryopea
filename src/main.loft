@@ -296,11 +296,18 @@ fn main() {
         println("         {script_describe(srun)}");
     }
 
-    if !gl_create_window(VIEW_W, VIEW_H, "dryopea editor — {map_label}") {
+    win_opened = open_window(VIEW_W, VIEW_H, "dryopea editor — {map_label}");
+    if win_opened == null {
         println("dryopea: failed to open window");
         return;
     }
-    painter = create_painter_2d(VIEW_W as float, VIEW_H as float);
+    win = win_opened;
+    painter_made = win.painter();
+    if painter_made == null {
+        println("dryopea: the 2-D painter's shaders did not compile");
+        return;
+    }
+    painter = painter_made;
 
     println("dryopea: editor open map=[{map_label}] ({painted_count(s.pw)} hexes, {marker_count(s.mw)} markers loaded)");
     println("         paths: {save_path} + {marker_save_path}");
@@ -311,7 +318,7 @@ fn main() {
     // camera / hover / mode / picker / placement changes set
     // s.render_needed.  Idle frames just redraw the cached texture —
     // no per-frame full recompute (the sluggishness fix).
-    cur_tex:       integer = 0;           // 0 = no texture uploaded yet
+    cur_tex:       Texture? = null;       // null = no texture uploaded yet
     last_hover_q:  integer = 0;
     last_hover_r:  integer = 0;
 
@@ -340,11 +347,11 @@ fn main() {
     // The live world's GPU side (plan 19 P6).  ⚠ THREE SIBLINGS rather
     // than one object with the other two inside it: a struct stored in a
     // field of another struct is a COPY in loft, and both caches carry a
-    // `vector<GroupVboSet>` of live GL handles.  `play_view.loft` takes
+    // `vector<GroupMeshes>` of live GL handles.  `play_view.loft` takes
     // them as parameters, which is the form that aliases.
     watch = mesh_watch_new();
-    gg    = ground_gl_new(len(palette));
-    eg    = entity_gl_new();
+    gg    = ground_gl_new(win, len(palette));
+    eg    = entity_gl_new(win);
     if !ground_gl_ready(gg) || !entity_gl_ready(eg) {
         println("dryopea: the world shader did not link — play mode will draw an empty sky");
     }
@@ -357,8 +364,8 @@ fn main() {
     last_frame_us: integer = ticks();
 
     for _ in 0..1000000 {
-        if !gl_poll_events() { break; }
-        if gl_key_pressed(graphics::KEY_ESCAPE) { break; }
+        if !win.poll() { break; }
+        if win.key_down(graphics::KEY_ESCAPE) { break; }
 
         tnow = ticks();
 
@@ -383,12 +390,12 @@ fn main() {
         // key means is `src/bindings.loft`'s to say — including the
         // five Ctrl combos, which ride on the table as `ea_ctrl`
         // rather than as `&& !ctrl_held` repeated here.
-        input_source_poll(isrc);
+        input_source_poll(isrc, win, win.events());
 
         // Mouse — hover follows the cursor; the button goes through
         // the resolver with everything else.
-        mx = gl_mouse_x() as integer;
-        my = gl_mouse_y() as integer;
+        mx = win.mouse_x() as integer;
+        my = win.mouse_y() as integer;
         // ⚠ `view_ppm`, never a base scale — this INVERTS a pointer
         // position back to a hex, so it has to be the exact number the
         // frame below was drawn at or a click lands on the wrong hex
@@ -511,17 +518,16 @@ fn main() {
             // unusual number of tiles, because a re-bake is the one
             // thing here that can be felt (`@M028`: a tile is ~335 ms
             // interpreted at the shipped 32x32).
-            pv_baked = play_view_sync(watch, gg, eg, ps, s, palette);
+            pv_baked = play_view_sync(win, watch, gg, eg, ps, s, palette);
             if pv_baked > 0 {
                 println("dryopea: re-baked {pv_baked} ground tile(s) at t{ps.ticks}");
             }
-            play_view_draw(gg, eg, ps, painter, VIEW_W, VIEW_H);
-            gl_swap_buffers();
+            play_view_draw(win, gg, eg, ps, painter, VIEW_W, VIEW_H);
+            win.swap();
             // ⚠ The editor's cached texture is dropped, so the frame
             // after P is drawn from scratch rather than from a picture
             // of wherever the camera used to be.
-            if cur_tex != 0 { gl_delete_texture(cur_tex); }
-            cur_tex = 0;
+            cur_tex = null;
             s.render_needed = true;
             continue;
         }
@@ -530,7 +536,7 @@ fn main() {
         // `play_view.loft` § The ground moves while the game is running:
         // a paint the player is about to do is a change the height-layer
         // diff cannot see.
-        play_view_sync(watch, gg, eg, ps, s, palette);
+        play_view_sync(win, watch, gg, eg, ps, s, palette);
 
         // What the frame CONTAINS is `render_editor_frame`
         // (src/editor_view.loft), shared with the script runner's
@@ -543,9 +549,9 @@ fn main() {
         if do_render {
             cv = render_editor_frame(s, VIEW_W, VIEW_H, view_ppm(s.cam));
 
-            // Swap the cached GL texture (free the old one first).
-            if cur_tex != 0 { gl_delete_texture(cur_tex); }
-            cur_tex = gl_upload_canvas(cv.data, cv.width, cv.height);
+            // Swap the cached GL texture (the old one is freed as it
+            // is replaced).
+            cur_tex = win.texture_from(cv);
             s.render_needed = false;
             chunks_clear(s.cf);
             last_hover_q = hovered.q;
@@ -554,12 +560,14 @@ fn main() {
 
         // Present the cached texture every frame (cheap GPU blit +
         // swap); only the rasterise + upload above are gated.
-        gl_clear(rgb(0, 0, 0));
-        draw_texture_at(painter, cur_tex, 0.0, 0.0, VIEW_W as float, VIEW_H as float);
-        gl_swap_buffers();
+        win.clear(rgb(0, 0, 0));
+        if cur_tex != null {
+            painter.image(cur_tex, 0.0, 0.0, VIEW_W as float, VIEW_H as float);
+        }
+        win.swap();
     }
 
-    if cur_tex != 0 { gl_delete_texture(cur_tex); }
+    cur_tex = null;
     entity_gl_destroy(eg);
     ground_gl_destroy(gg);
 
@@ -581,5 +589,5 @@ fn main() {
         println("dryopea: nothing changed — {save_path} left alone");
     }
     println("dryopea: saved on exit map=[{map_label}] ({painted_count(s.pw)} hexes, {marker_count(s.mw)} markers)");
-    gl_destroy_window();
+    win.close();
 }

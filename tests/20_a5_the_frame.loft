@@ -634,7 +634,7 @@ fn test_the_baked_buffer_is_the_mesh_and_its_bounds_bracket_it() {
     assert(tb_tris > 0, "the vehicle emits triangles: {tb_tris}");
     // ⚠ `mesh_to_floats` emits one vertex per triangle CORNER, six floats
     // each (pos + normal) — which is what `GROUND_GL_STRIDE` says and
-    // what the VAO is built for.  A stride that disagreed would draw a
+    // what the GPU mesh is built for.  A stride that disagreed would draw a
     // sheared mess with every count healthy.
     assert(len(tb_v) == tb_tris * 3 * GROUND_GL_STRIDE,
            "the buffer is {tb_tris} x 3 x {GROUND_GL_STRIDE} floats: {len(tb_v)}");

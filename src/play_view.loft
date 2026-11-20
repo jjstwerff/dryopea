@@ -114,7 +114,7 @@ struct MeshSeen { q: integer, r: integer, metres: float, kind: u8 }
 // ⚠⚠ **It lives beside the GL caches rather than inside them**, and
 // that is a loft constraint as much as a design one: a struct STORED in
 // a field of another struct is a COPY, and `GroundGl` carries a
-// `vector<GroupVboSet>` whose handles must not be copied ([loft#969] is
+// `vector<GroupMeshes>` whose handles must not be copied ([loft#969] is
 // what a truncated `vector<Struct>` field costs).  So `main.loft` holds
 // three siblings and this file's functions take them as parameters,
 // which is the form loft aliases reliably.
@@ -311,7 +311,7 @@ pub fn play_view_units(ps: const PlayState) -> integer {
 // the ordinary one: a session that is not live throws the bake away, so
 // the paint the player is doing right now is picked up when P is
 // pressed.
-pub fn play_view_sync(w: MeshWatch, gg: GroundGl, eg: EntityGl,
+pub fn play_view_sync(win: const Window, w: MeshWatch, gg: GroundGl, eg: EntityGl,
                       ps: const PlayState, s: EditorState,
                       pal: vector<GroundType>) -> integer {
     if !play_mode(ps) {
@@ -324,12 +324,12 @@ pub fn play_view_sync(w: MeshWatch, gg: GroundGl, eg: EntityGl,
         // Cold: the whole world, because a paint in the editor moves
         // hexes the height layer never hears about.
         pvs_all = mesh_chunks_all(s.pw, ps.wave.heights);
-        ground_gl_upload_chunks(gg, pal, s.pw, ps.wave.heights, pvs_all);
+        ground_gl_upload_chunks(win, gg, pal, s.pw, ps.wave.heights, pvs_all);
         pvs_n = len(pvs_all);
     } else {
         pvs_t = mesh_watch_tiles(w, s.pw, ps.wave.heights);
         if len(pvs_t) > 0 {
-            ground_gl_upload_chunks(gg, pal, s.pw, ps.wave.heights, pvs_t);
+            ground_gl_upload_chunks(win, gg, pal, s.pw, ps.wave.heights, pvs_t);
             pvs_n = len(pvs_t);
         }
     }
@@ -349,7 +349,7 @@ pub fn play_view_sync(w: MeshWatch, gg: GroundGl, eg: EntityGl,
     // on every tick and there is no clean subset
     // (`entity_gl.loft` § The upload is every class, every frame).
     if w.roster != ps.ticks {
-        entity_gl_upload(eg, catalogue(), pal, s.pw, s.mw, ps.wave,
+        entity_gl_upload(win, eg, catalogue(), pal, s.pw, s.mw, ps.wave,
                          play_view_units(ps));
         w.roster = ps.ticks;
     }
@@ -366,27 +366,26 @@ pub fn play_view_sync(w: MeshWatch, gg: GroundGl, eg: EntityGl,
 // winding it never thought about, draws an empty window.  ⚠ A player
 // toggling P would see it and a gate never would, because the gate
 // draws one frame and exits.
-pub fn play_view_draw(gg: const GroundGl, eg: const EntityGl,
-                      ps: const PlayState, painter: const Painter2D,
+pub fn play_view_draw(win: const Window, gg: const GroundGl, eg: const EntityGl,
+                      ps: const PlayState, painter: const Painter,
                       w: integer, h: integer) {
     pvd_vp = camera_view_projection(ps.cam.cam, ((w as float) / (h as float)) ?? 1.0);
-    gl_clear(PLAY_SKY);
-    ground_gl_draw(gg, pvd_vp);
-    entity_gl_draw(eg, pvd_vp);
-    gl_disable(GL_CAP_DEPTH_TEST);
-    gl_disable(GL_CAP_CULL_FACE);
+    win.clear(PLAY_SKY);
+    ground_gl_draw(win, gg, pvd_vp);
+    entity_gl_draw(win, eg, pvd_vp);
+    win.disable(GL_CAP_DEPTH_TEST);
+    win.disable(GL_CAP_CULL_FACE);
 
     // ⚠ The HUD is built and uploaded EVERY frame, and it is cheap
     // enough to be measured rather than cached: the overlay is 68 x 24
     // pixels against the frame's 691 200, and the wallet drains
     // continuously while an enemy stands on the core, so a cache keyed
-    // on the number would miss almost nothing.  ⚠ The texture is
-    // deleted the same frame — a per-frame upload with no delete is a
-    // leak the window would show as a slow death.
+    // on the number would miss almost nothing.  ⚠ The texture lives
+    // for this call only: it is freed when `pvd_tex` goes out of scope,
+    // so a per-frame upload cannot leak.
     pvd_cv  = play_hud_canvas(ps);
-    pvd_tex = gl_upload_canvas(pvd_cv.data, pvd_cv.width, pvd_cv.height);
-    draw_texture_at(painter, pvd_tex,
-                    PLAY_HUD_MARGIN as float, PLAY_HUD_MARGIN as float,
-                    PLAY_HUD_W as float, PLAY_HUD_H as float);
-    gl_delete_texture(pvd_tex);
+    pvd_tex = win.texture_from(pvd_cv);
+    painter.image(pvd_tex,
+                  PLAY_HUD_MARGIN as float, PLAY_HUD_MARGIN as float,
+                  PLAY_HUD_W as float, PLAY_HUD_H as float);
 }
