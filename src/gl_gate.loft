@@ -498,7 +498,7 @@ fn gl_case_a_defended_base(rep: GlGateReport, cv: const Canvas, fc: const FrameC
 
 // ─── One case, end to end ───────────────────────────────────────
 
-fn gl_gate_one(w: const Window, rep: GlGateReport, name: text, scripts_dir: text,
+fn gl_gate_one(w: Window, rep: GlGateReport, name: text, scripts_dir: text,
                shots_dir: text, palette_path: text) -> text {
     if name != "the-ground" && name != "an-island" && name != "a-defended-base" {
         return "{name}{GL_GATE_EXT} has no case in `src/gl_gate.loft` — a fixture with no expectations is a fixture nobody measures";
@@ -590,7 +590,7 @@ fn gl_gate_one(w: const Window, rep: GlGateReport, name: text, scripts_dir: text
 // ⚠ A player toggling P twice would see it and no other gate could: the
 // fixtures above each draw ONE frame and exit, so a state leak has
 // nothing to leak into.  `@M041`.
-fn gl_gate_state_restored(w: const Window, rep: GlGateReport, shots_dir: text,
+fn gl_gate_state_restored(w: Window, rep: GlGateReport, shots_dir: text,
                           kinds: integer) -> text {
     // ⚠ The painter is built BEFORE the 3-D draws, which is what
     // `main.loft` does (it opens one for the session) — and what the
@@ -625,7 +625,7 @@ fn gl_gate_state_restored(w: const Window, rep: GlGateReport, shots_dir: text,
     gsr_cv = canvas(GL_GATE_W, GL_GATE_H, rgb(0xff, 0x00, 0xff));
     gsr_t  = w.texture_from(gsr_cv);
     w.clear(rgb(0, 0, 0));
-    gsr_p.image(gsr_t, 0.0, 0.0, GL_GATE_W as float, GL_GATE_H as float);
+    gsr_p.image(w, gsr_t, 0.0, 0.0, GL_GATE_W as float, GL_GATE_H as float);
 
     gsr_shot = "{shots_dir}/gl-state-restored.png";
     gsr_ok   = w.capture().save_png(gsr_shot);
@@ -653,7 +653,7 @@ fn gl_gate_state_restored(w: const Window, rep: GlGateReport, shots_dir: text,
 // canvas rather than against a number: the ink on screen is exactly the
 // ink in the canvas (the blit is 1:1 at native size), and every other
 // pixel inside the overlay's box is still the frame that was under it.
-fn gl_gate_hud_overlays(w: const Window, rep: GlGateReport, shots_dir: text) -> text {
+fn gl_gate_hud_overlays(w: Window, rep: GlGateReport, shots_dir: text) -> text {
     ggh_p  = w.painter() ?? return "the 2-D painter's shaders did not compile";
     ggh_ps = play_state_new();
     ggh_cv = play_hud_canvas(ggh_ps);
@@ -678,7 +678,7 @@ fn gl_gate_hud_overlays(w: const Window, rep: GlGateReport, shots_dir: text) -> 
     // transparent half has something recognisable to fail to cover.
     w.clear(GL_GATE_CLEAR);
     ggh_tex = w.texture_from(ggh_cv);
-    ggh_p.image(ggh_tex,
+    ggh_p.image(w, ggh_tex,
                 PLAY_HUD_MARGIN as float, PLAY_HUD_MARGIN as float,
                 PLAY_HUD_W as float, PLAY_HUD_H as float);
     ggh_shot = "{shots_dir}/gl-hud.png";
