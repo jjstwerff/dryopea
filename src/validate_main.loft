@@ -21,6 +21,7 @@
 #cwd
 
 use dryopea;
+use validate::*;
 
 fn main() {
     // One optional argument: the name of a single script to play,

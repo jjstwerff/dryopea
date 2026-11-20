@@ -18,6 +18,7 @@
 #cwd
 
 use dryopea;
+use gl_gate::*;
 
 fn main() {
     gm_only = arguments()[0] ?? "";

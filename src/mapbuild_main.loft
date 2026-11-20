@@ -19,6 +19,8 @@
 #cwd
 
 use dryopea;
+use maps::*;
+use validate::*;
 
 fn main() {
     // One optional argument: the name of a single map to build,
