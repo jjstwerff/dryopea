@@ -119,7 +119,7 @@ pub const ENT_TOWER_TOP:  integer = 9;
 // the ground, or riding on whoever is carrying it (`plans/33` E1).
 pub const ENT_CARGO:      integer = 10;
 
-// How many drawn classes there are.  ⚠ One `GroupVboSet` and one draw
+// How many drawn classes there are.  ⚠ One `GroupMeshes` and one draw
 // call each (`entity_gl.loft`), so this is a cost as well as a count.
 pub const ENT_CLASSES:    integer = 11;
 

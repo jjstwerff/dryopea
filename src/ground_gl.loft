@@ -5,7 +5,7 @@
 //
 // M0-M2 made the world into triangles and proved two builds of it
 // agree.  This is the half that puts them on a screen: one shader, one
-// `GroupVboSet` per palette kind, and the kind's colour as a uniform.
+// `GroupMeshes` per palette kind, and the kind's colour as a uniform.
 //
 // The decisions are `plans/25-the-terrain-mesh/README.md` § M3.
 //
@@ -25,7 +25,7 @@
 // buffer — never a loosened lookup.
 //
 // ⚠ **Measured, not assumed** (`probe/m3/`): a palette colour written
-// by this shader comes back through `gl_screenshot` → PNG →
+// by this shader comes back through `Window.capture` → PNG →
 // `imaging::png` → `classify_canvas` **bit-exact**, over 691 200
 // pixels, with `unknown` = 0.  R0 had measured that for a canvas BLIT,
 // which is a different path — a float colour through a fragment stage
@@ -54,11 +54,11 @@
 // must still stand in front of it, and the kind-at-a-time upload order
 // means the draw order is a palette order rather than a depth one.
 //
-// ── ⚠ One `GroupVboSet` per KIND, keyed by chunk ────────────────
+// ── ⚠ One `GroupMeshes` per KIND, keyed by chunk ────────────────
 //
 // The set is `graphics`' published dirty-upload cache — *"call this
 // only for the DIRTY groups each edit; untouched groups keep their
-// cached VBOs"* — and the group key is the tile.  The per-kind split is
+// cached buffers"* — and the group key is the tile.  The per-kind split is
 // forced by the uniform: one draw call may carry one colour, so a kind
 // is a draw call and a tile is a buffer inside it.
 //
@@ -82,11 +82,12 @@ use mesh3d::*;
 use graphics::*;
 use gridmesh::*;
 
-// ⚠ `graphics` declares these file-scope and NOT `pub`, so they do not
-// cross the package boundary.  Mirrored from `graphics.loft` § GL state
-// and § Draw modes.  A wrong value here is silent — `gl_enable` of an
-// unknown capability does nothing — which is why `ground_gl_draw` is
-// the only caller and the gate asserts the picture rather than the flag.
+// ⚠ The same values `graphics` publishes as `GL_DEPTH_TEST`,
+// `GL_CULL_FACE` and `DRAW_TRIANGLES` (it did not before 0.10, which is
+// why dryopea has its own names for them).  A wrong value here is
+// silent — `Window.enable` of an unknown capability does nothing —
+// which is why `ground_gl_draw` is the only caller and the gate asserts
+// the picture rather than the flag.
 pub const GL_CAP_DEPTH_TEST: integer = 1;
 pub const GL_CAP_CULL_FACE:  integer = 3;
 pub const GL_MODE_TRIANGLES: integer = 0;
@@ -124,28 +125,28 @@ void main() {{ FragColor = vec4(uColor, 1.0); }}
 `;
 
 // The shader's uniform names, in one place — a misspelling is silent
-// (`gl_set_uniform_*` looks the name up and returns quietly when it is
+// (`Shader.set_*` looks the name up and returns quietly when it is
 // not found), so the two sites that must agree are named once.
 pub const GROUND_GL_U_VP:    text = "uVP";
 pub const GROUND_GL_U_COLOR: text = "uColor";
 
 // The GPU-side ground: the program, and one upload cache per kind.
 pub struct GroundGl {
-    program: integer,
-    sets:    vector<GroupVboSet>,
+    program: Shader?,
+    sets:    vector<GroupMeshes>,
 }
 
 // Compile the shader and open one cache per palette kind.
 //
-// ⚠ `program` is 0 when the link failed, and every draw is then a quiet
+// ⚠ `program` is null when the link failed, and every draw is then a quiet
 // no-op — `ground_gl_ready` is what a caller asks instead of assuming.
-pub fn ground_gl_new(kinds: integer) -> GroundGl {
+pub fn ground_gl_new(w: const Window, kinds: integer) -> GroundGl {
     ggn = GroundGl {
-        program: gl_create_shader(GROUND_GL_VERT, GROUND_GL_FRAG),
+        program: w.shader(GROUND_GL_VERT, GROUND_GL_FRAG),
         sets:    [],
     };
     for _ in 0..kinds {
-        ggn.sets += [group_vbos_new(GROUND_GL_STRIDE, GL_MODE_TRIANGLES)];
+        ggn.sets += [group_meshes(GROUND_GL_STRIDE, GL_MODE_TRIANGLES)];
     }
     ggn
 }
@@ -154,7 +155,7 @@ pub fn ground_gl_new(kinds: integer) -> GroundGl {
 // and a black frame satisfies `other == 0` perfectly — which is the
 // trap `plans/25` § M3 names, so the gate asks this out loud.
 pub fn ground_gl_ready(gg: const GroundGl) -> boolean {
-    gg.program != 0 && len(gg.sets) > 0
+    gg.program != null && len(gg.sets) > 0
 }
 
 // One palette kind's colour, as the three 0..1 floats the uniform takes.
@@ -180,7 +181,7 @@ pub fn ground_gl_colour(kind: integer) -> (float, float, float) {
 
 // One tile's world bounds, for the set's stored cull box.
 //
-// ⚠ `group_vbos_upsert` names its four `min_x / min_z / max_x / max_z`
+// ⚠ `GroupMeshes.upsert` names its four `min_x / min_z / max_x / max_z`
 // — a Y-up, ground-in-XZ frame, which is moros's and not dryopea's.
 // dryopea's ground lies in XY with `+z` up (`lat_to_world`), so the
 // `_z` arguments take dryopea's **y**.  The bounds are only stored (for
@@ -202,7 +203,7 @@ fn ground_gl_bounds(cx: integer, cy: integer) -> (float, float, float, float) {
     )
 }
 
-// One tile's one kind, meshed and flattened for `gl_upload_vertices`.
+// One tile's one kind, meshed and flattened for `Window.upload`.
 //
 // ⚠⚠ **This exists so the cost gate measures the code the renderer
 // runs.**  `ground_gl_upload_chunks` cannot be called from `loft test`
@@ -231,12 +232,12 @@ pub fn ground_gl_bake(pal: vector<GroundType>, pw: PaintedWorld,
 // stays on the GPU and the wall goes on being drawn after the map says
 // it is gone — a stale frame that no state assertion can see.  So a
 // kind the tile no longer holds is upserted with zero vertices, which
-// `group_vbos_draw_all` skips.
+// `GroupMeshes.draw_all` draws as nothing.
 //
 // ⚠ It is skipped where the set has nothing for that tile anyway, so a
 // first build costs one upload per kind that is actually there rather
 // than twelve per tile.
-pub fn ground_gl_upload_chunks(gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
+pub fn ground_gl_upload_chunks(w: const Window, gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
                                hl: const HeightLayer, cks: vector<ChunkKey>) {
     for ggu_k in cks {
         ggu_have = ground_chunk_kinds(pal, pw, hl, ggu_k.cx, ggu_k.cy);
@@ -252,29 +253,29 @@ pub fn ground_gl_upload_chunks(gg: GroundGl, pal: vector<GroundType>, pw: Painte
             if !ggu_present {
                 // Nothing of this kind here.  Clear the tile's group
                 // only if it HAS one — an upsert of nothing still makes
-                // a VAO, so clearing a group that never existed is pure
+                // a buffer, so clearing a group that never existed is pure
                 // cost on every tile of every empty kind.
-                if ggu_set.slots[ggu_k.ck] != null {
+                if ggu_set.has(ggu_k.ck) {
                     ggu_empty: vector<single> = [];
-                    group_vbos_upsert(ggu_set, ggu_k.ck, ggu_empty,
-                                      ggu_b.0 as single, ggu_b.1 as single,
-                                      ggu_b.2 as single, ggu_b.3 as single);
+                    ggu_set.upsert(w, ggu_k.ck, ggu_empty,
+                                   ggu_b.0 as single, ggu_b.1 as single,
+                                   ggu_b.2 as single, ggu_b.3 as single);
                 }
                 continue;
             }
 
-            group_vbos_upsert(ggu_set, ggu_k.ck,
-                              ground_gl_bake(pal, pw, hl, ggu_k.cx, ggu_k.cy, ggu_i),
-                              ggu_b.0 as single, ggu_b.1 as single,
-                              ggu_b.2 as single, ggu_b.3 as single);
+            ggu_set.upsert(w, ggu_k.ck,
+                           ground_gl_bake(pal, pw, hl, ggu_k.cx, ggu_k.cy, ggu_i),
+                           ggu_b.0 as single, ggu_b.1 as single,
+                           ggu_b.2 as single, ggu_b.3 as single);
         }
     }
 }
 
 // Every tile the world has anything to draw in — a cold build.
-pub fn ground_gl_upload_all(gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
+pub fn ground_gl_upload_all(w: const Window, gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
                             hl: const HeightLayer) {
-    ground_gl_upload_chunks(gg, pal, pw, hl, mesh_chunks_all(pw, hl));
+    ground_gl_upload_chunks(w, gg, pal, pw, hl, mesh_chunks_all(pw, hl));
 }
 
 // Re-upload everything ONE edit can have moved.
@@ -282,9 +283,9 @@ pub fn ground_gl_upload_all(gg: GroundGl, pal: vector<GroundType>, pw: PaintedWo
 // ⚠ The tile list is `mesh_chunks_touched`, which is the same mechanism
 // the build rule sums over — deriving the two separately is how a tile
 // edge goes stale (`mesh_chunks.loft` § There is no ChunkField here).
-pub fn ground_gl_upload_edit(gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
+pub fn ground_gl_upload_edit(w: const Window, gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
                              hl: const HeightLayer, q: integer, r: integer) {
-    ground_gl_upload_chunks(gg, pal, pw, hl, mesh_chunks_touched(q, r));
+    ground_gl_upload_chunks(w, gg, pal, pw, hl, mesh_chunks_touched(q, r));
 }
 
 // Draw every uploaded tile, one palette kind at a time.
@@ -293,37 +294,31 @@ pub fn ground_gl_upload_edit(gg: GroundGl, pal: vector<GroundType>, pw: PaintedW
 // order is the sets' order, which is the palette's: an upload order and
 // a draw order that are both the palette's are one fact, and the depth
 // buffer is what makes the picture independent of it.
-pub fn ground_gl_draw(gg: const GroundGl, vp: const Mat4) {
-    if !ground_gl_ready(gg) { return; }
+pub fn ground_gl_draw(w: const Window, gg: const GroundGl, vp: const Mat4) {
+    if len(gg.sets) == 0 { return; }
+    ggd_sh = gg.program ?? return;
 
-    gl_enable(GL_CAP_DEPTH_TEST);
-    gl_enable(GL_CAP_CULL_FACE);
-    gl_cull_face(GL_CULL_BACK);
+    w.enable(GL_CAP_DEPTH_TEST);
+    w.enable(GL_CAP_CULL_FACE);
+    w.cull(GL_CULL_BACK);
 
-    gl_use_shader(gg.program);
-    gl_set_uniform_mat4(gg.program, GROUND_GL_U_VP, vp.m);
+    ggd_sh.set_mat4(GROUND_GL_U_VP, vp.m);
 
     for ggd_i in 0..len(gg.sets) {
         ggd_set = gg.sets[ggd_i];
         if ggd_set == null { continue; }
-        if len(ggd_set.slots) == 0 { continue; }
+        if ggd_set.count() == 0 { continue; }
         ggd_c = ground_gl_colour(ggd_i);
-        gl_set_uniform_vec3(gg.program, GROUND_GL_U_COLOR, ggd_c.0, ggd_c.1, ggd_c.2);
-        group_vbos_draw_all(ggd_set);
+        ggd_sh.set_vec3(GROUND_GL_U_COLOR, ggd_c.0, ggd_c.1, ggd_c.2);
+        ggd_set.draw_all(ggd_sh);
     }
 }
 
-// Free every VAO and the program.  ⚠ The sets are emptied rather than
-// dropped, so a caller may upload into the same `GroundGl` again after
-// a world reset.
+// Free every buffer and the program, while the window that made them is
+// still open.  ⚠ `graphics` frees a GPU value when its owner lets it go,
+// so letting go IS the free: the sets and the program are dropped here
+// and `ground_gl_ready` answers false afterwards.
 pub fn ground_gl_destroy(gg: GroundGl) {
-    for ggx_i in 0..len(gg.sets) {
-        ggx_set = gg.sets[ggx_i];
-        if ggx_set == null { continue; }
-        group_vbos_destroy(ggx_set);
-    }
-    if gg.program != 0 {
-        gl_delete_shader(gg.program);
-        gg.program = 0;
-    }
+    gg.sets = [];
+    gg.program = null;
 }

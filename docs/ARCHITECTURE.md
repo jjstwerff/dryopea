@@ -703,7 +703,7 @@ src/
                    too, which is two).  Trigger to move it: a
                    second non-test caller, or plan 20's entities.
   ground_gl.loft   THE GROUND, DRAWN (plan 25 M3) — one shader,
-                   one `graphics::GroupVboSet` per palette kind
+                   one `graphics::GroupMeshes` per palette kind
                    keyed by chunk, and the kind's colour as a
                    UNIFORM.  `ground_gl_new` / `_upload_all` /
                    `_upload_edit` / `_draw` / `_destroy`.
@@ -825,7 +825,7 @@ src/
                    ⚠ No interpolation: an entity is drawn on its hex,
                    and @M035 has already priced the fix.
   entity_gl.loft   THE ENTITIES, DRAWN (plan 20 A5) — one
-                   `GroupVboSet` per drawn class, re-upserted WHOLE
+                   `GroupMeshes` per drawn class, re-upserted WHOLE
                    every frame.  entity_gl_new / _ready / _bake /
                    _upload / _draw / _destroy.
                    ⚠ It compiles `ground_gl.loft`'s OWN shader source:
@@ -2424,20 +2424,19 @@ src/
                    and contradicts § 15 as written, so it is the
                    owner's ruling and not this file's
   font.loft        THE FONT — the ONE seam to graphics::draw_text
-                   (BACKLOG B1) — TEXT_FONT_FILE, Font { handle, path,
+                   (BACKLOG B1) — TEXT_FONT_FILE, TextFont { face, path,
                    loaded }, font_load / font_load_from / font_ready /
                    text_fault / text_width / text_line_height /
                    text_draw.  dryopea rasterises NOTHING: `graphics`
                    owns the glyphs, and this owns which font, where it
                    lives, and what one that did not load may do.
                    ⚠⚠ THE PATH IS ABSOLUTE, and that is a requirement
-                   rather than a tidiness: `gl_load_font` resolves a
-                   RELATIVE path against the process CWD in the pinned
-                   graphics 0.5.2 and against `source_dir()` in 0.8.0,
-                   so `loft install graphics` would silently stop the
-                   font loading (@X268).  `{source_dir()}/../assets/…`
-                   is the one form both pass through verbatim, and it
-                   resolves from BOTH entry shapes — `tests/` and
+                   rather than a tidiness: `graphics::load_font`
+                   resolves a RELATIVE path against `source_dir()`, the
+                   entry's directory, while `is_file` under `#cwd` reads
+                   it from the repo root (@X268).
+                   `{source_dir()}/../assets/…` is the one form both
+                   agree on, and it resolves from BOTH entry shapes — `tests/` and
                    `src/`.  ⚠ `#cwd` does NOT move `source_dir()`.
                    ⚠⚠ `font_load_from` REFUSES a relative path rather
                    than documenting against one: `is_file` answers TRUE

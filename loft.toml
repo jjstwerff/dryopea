@@ -17,7 +17,7 @@ entry = "src/dryopea.loft"
 # save_png (works without a GL context — see the library's own
 # tests/canvas.loft for the pattern).  GL window functions also live
 # in this lib for the live renderer.
-graphics = ">=0.5.0"
+graphics = ">=0.13.3"
 
 # Plan 07 — shared world substrate.  `gridmesh` is the standalone,
 # zero-dependency chunk + dirty + mesh-pipeline toolkit (axial).
@@ -50,7 +50,7 @@ hex_grid = ">=0.1.0"
 # distance.  Zero dependencies of its own.
 mesh3d = ">=0.1.1"
 
-# Plan 25 M3 — the GL gate.  `gl_screenshot` writes a PNG and
+# Plan 25 M3 — the GL gate.  It writes each captured frame as a PNG and
 # `imaging::png` is the only decoder in the registry, so this is what
 # closes docs/RENDERER.md § R4's chain: GL → capture → decode →
 # `classify_canvas`, the SAME instrument every software band in this

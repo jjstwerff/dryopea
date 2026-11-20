@@ -28,7 +28,7 @@ if ! command -v "$LOFT" >/dev/null 2>&1; then
 fi
 
 # ⚠ A clear message rather than a GL failure twelve seconds later: with
-# no X server `gl_create_window` answers false, and the gate's own
+# no X server `open_window` answers null, and the gate's own
 # precondition then says so — but only after paying the whole compile.
 if ! command -v xvfb-run >/dev/null 2>&1; then
     echo "ERROR: xvfb-run not found — this gate needs a GL context." >&2
@@ -42,7 +42,7 @@ mkdir -p "$ROOT"/shots
 # Drop last run's captures, the way validate.sh does.  ⚠ It matters more
 # here: this gate DECODES the PNG it just wrote, so a stale one from a
 # previous run would be classified as if it were current the moment
-# gl_screenshot silently failed.
+# the capture silently failed.
 rm -f "$ROOT"/shots/gl-*.png
 
 cd "$ROOT"
