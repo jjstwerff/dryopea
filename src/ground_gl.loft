@@ -140,7 +140,7 @@ pub struct GroundGl {
 //
 // ⚠ `program` is null when the link failed, and every draw is then a quiet
 // no-op — `ground_gl_ready` is what a caller asks instead of assuming.
-pub fn ground_gl_new(w: const Window, kinds: integer) -> GroundGl {
+pub fn ground_gl_new(w: Window, kinds: integer) -> GroundGl {
     ggn = GroundGl {
         program: w.shader(GROUND_GL_VERT, GROUND_GL_FRAG),
         sets:    [],
@@ -237,7 +237,7 @@ pub fn ground_gl_bake(pal: vector<GroundType>, pw: PaintedWorld,
 // ⚠ It is skipped where the set has nothing for that tile anyway, so a
 // first build costs one upload per kind that is actually there rather
 // than twelve per tile.
-pub fn ground_gl_upload_chunks(w: const Window, gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
+pub fn ground_gl_upload_chunks(w: Window, gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
                                hl: const HeightLayer, cks: vector<ChunkKey>) {
     for ggu_k in cks {
         ggu_have = ground_chunk_kinds(pal, pw, hl, ggu_k.cx, ggu_k.cy);
@@ -273,7 +273,7 @@ pub fn ground_gl_upload_chunks(w: const Window, gg: GroundGl, pal: vector<Ground
 }
 
 // Every tile the world has anything to draw in — a cold build.
-pub fn ground_gl_upload_all(w: const Window, gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
+pub fn ground_gl_upload_all(w: Window, gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
                             hl: const HeightLayer) {
     ground_gl_upload_chunks(w, gg, pal, pw, hl, mesh_chunks_all(pw, hl));
 }
@@ -283,7 +283,7 @@ pub fn ground_gl_upload_all(w: const Window, gg: GroundGl, pal: vector<GroundTyp
 // ⚠ The tile list is `mesh_chunks_touched`, which is the same mechanism
 // the build rule sums over — deriving the two separately is how a tile
 // edge goes stale (`mesh_chunks.loft` § There is no ChunkField here).
-pub fn ground_gl_upload_edit(w: const Window, gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
+pub fn ground_gl_upload_edit(w: Window, gg: GroundGl, pal: vector<GroundType>, pw: PaintedWorld,
                              hl: const HeightLayer, q: integer, r: integer) {
     ground_gl_upload_chunks(w, gg, pal, pw, hl, mesh_chunks_touched(q, r));
 }
@@ -294,7 +294,7 @@ pub fn ground_gl_upload_edit(w: const Window, gg: GroundGl, pal: vector<GroundTy
 // order is the sets' order, which is the palette's: an upload order and
 // a draw order that are both the palette's are one fact, and the depth
 // buffer is what makes the picture independent of it.
-pub fn ground_gl_draw(w: const Window, gg: const GroundGl, vp: const Mat4) {
+pub fn ground_gl_draw(w: Window, gg: GroundGl, vp: const Mat4) {
     if len(gg.sets) == 0 { return; }
     ggd_sh = gg.program ?? return;
 
@@ -310,7 +310,7 @@ pub fn ground_gl_draw(w: const Window, gg: const GroundGl, vp: const Mat4) {
         if ggd_set.count() == 0 { continue; }
         ggd_c = ground_gl_colour(ggd_i);
         ggd_sh.set_vec3(GROUND_GL_U_COLOR, ggd_c.0, ggd_c.1, ggd_c.2);
-        ggd_set.draw_all(ggd_sh);
+        ggd_set.draw_all(w, ggd_sh);
     }
 }
 

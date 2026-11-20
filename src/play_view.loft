@@ -311,7 +311,7 @@ pub fn play_view_units(ps: const PlayState) -> integer {
 // the ordinary one: a session that is not live throws the bake away, so
 // the paint the player is doing right now is picked up when P is
 // pressed.
-pub fn play_view_sync(win: const Window, w: MeshWatch, gg: GroundGl, eg: EntityGl,
+pub fn play_view_sync(win: Window, w: MeshWatch, gg: GroundGl, eg: EntityGl,
                       ps: const PlayState, s: EditorState,
                       pal: vector<GroundType>) -> integer {
     if !play_mode(ps) {
@@ -366,8 +366,8 @@ pub fn play_view_sync(win: const Window, w: MeshWatch, gg: GroundGl, eg: EntityG
 // winding it never thought about, draws an empty window.  ⚠ A player
 // toggling P would see it and a gate never would, because the gate
 // draws one frame and exits.
-pub fn play_view_draw(win: const Window, gg: const GroundGl, eg: const EntityGl,
-                      ps: const PlayState, painter: const Painter,
+pub fn play_view_draw(win: Window, gg: GroundGl, eg: EntityGl,
+                      ps: const PlayState, painter: Painter,
                       w: integer, h: integer) {
     pvd_vp = camera_view_projection(ps.cam.cam, ((w as float) / (h as float)) ?? 1.0);
     win.clear(PLAY_SKY);
@@ -385,7 +385,7 @@ pub fn play_view_draw(win: const Window, gg: const GroundGl, eg: const EntityGl,
     // so a per-frame upload cannot leak.
     pvd_cv  = play_hud_canvas(ps);
     pvd_tex = win.texture_from(pvd_cv);
-    painter.image(pvd_tex,
+    painter.image(win, pvd_tex,
                   PLAY_HUD_MARGIN as float, PLAY_HUD_MARGIN as float,
                   PLAY_HUD_W as float, PLAY_HUD_H as float);
 }

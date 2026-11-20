@@ -73,7 +73,7 @@ pub struct EntityGl {
 //
 // ⚠ `program` is null when the link failed, and every draw is then a quiet
 // no-op — `entity_gl_ready` is what a caller asks instead of assuming.
-pub fn entity_gl_new(w: const Window) -> EntityGl {
+pub fn entity_gl_new(w: Window) -> EntityGl {
     egn = EntityGl {
         program: w.shader(GROUND_GL_VERT, GROUND_GL_FRAG),
         sets:    [],
@@ -142,7 +142,7 @@ pub fn entity_gl_bounds(verts: vector<single>) -> (float, float, float, float) {
 // ⚠ See § The upload is every class, every frame: there is no dirty
 // subset here and an absent class is uploaded EMPTY rather than left
 // alone.
-pub fn entity_gl_upload(w: const Window, eg: EntityGl, ps: PartSet, pal: vector<GroundType>,
+pub fn entity_gl_upload(w: Window, eg: EntityGl, ps: PartSet, pal: vector<GroundType>,
                         pw: PaintedWorld, mw: const MarkerWorld,
                         ws: const WaveState, units: integer) {
     for egu_i in 0..len(eg.sets) {
@@ -171,7 +171,7 @@ pub fn entity_gl_upload(w: const Window, eg: EntityGl, ps: PartSet, pal: vector<
 // normal` is the gate; culling is what makes a relapse loud.
 //
 // Example: @DRY-062
-pub fn entity_gl_draw(w: const Window, eg: const EntityGl, vp: const Mat4) {
+pub fn entity_gl_draw(w: Window, eg: EntityGl, vp: const Mat4) {
     if len(eg.sets) == 0 { return; }
     egd_sh = eg.program ?? return;
 
@@ -187,7 +187,7 @@ pub fn entity_gl_draw(w: const Window, eg: const EntityGl, vp: const Mat4) {
         if egd_set.count() == 0 { continue; }
         egd_c = entity_colour_rgb(egd_i);
         egd_sh.set_vec3(GROUND_GL_U_COLOR, egd_c.0, egd_c.1, egd_c.2);
-        egd_set.draw_all(egd_sh);
+        egd_set.draw_all(w, egd_sh);
     }
 }
 

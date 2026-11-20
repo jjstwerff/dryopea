@@ -15,9 +15,11 @@ entry = "src/dryopea.loft"
 #
 # `graphics` provides the headless Canvas software rasterizer +
 # save_png (works without a GL context — see the library's own
-# tests/canvas.loft for the pattern).  GL window functions also live
-# in this lib for the live renderer.
-graphics = ">=0.13.3"
+# tests/canvas.loft for the pattern).  The window and the GPU drawing of
+# the live renderer live in this lib too; since 0.14 it draws through
+# `gpu`, and a call that reads or changes the window's state takes the
+# `Window` (not `const`): a draw names its window and its textures.
+graphics = ">=0.14.0"
 
 # Plan 07 — shared world substrate.  `gridmesh` is the standalone,
 # zero-dependency chunk + dirty + mesh-pipeline toolkit (axial).

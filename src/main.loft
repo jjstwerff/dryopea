@@ -562,7 +562,7 @@ fn main() {
         // swap); only the rasterise + upload above are gated.
         win.clear(rgb(0, 0, 0));
         if cur_tex != null {
-            painter.image(cur_tex, 0.0, 0.0, VIEW_W as float, VIEW_H as float);
+            painter.image(win, cur_tex, 0.0, 0.0, VIEW_W as float, VIEW_H as float);
         }
         win.swap();
     }
