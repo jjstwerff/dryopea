@@ -387,11 +387,22 @@ pub fn test_the_per_kind_walk_is_priced_against_the_total() {
 
     // ONE filter walk of the tile: `mesh_hex_drawn` + `hex_surface_index`
     // per hex, and no mesh building at all.
-    tpk_t0 = ticks();
-    for _ in 0..2 { ground_chunk_kinds(tpk_pal, tpk_pw, tpk_hl, 0, 0); }
-    tpk_walk = ((ticks() - tpk_t0) / 2) ?? 0;
-
-    tpk_shipped = us_to_bake(tpk_pal, tpk_pw, tpk_hl, one_tile(0, 0), 2);
+    //
+    // ⚠ Both sides are the FASTEST of several rounds.  A walk is tens of
+    // microseconds, so one round the scheduler stalls moves the ratio by
+    // ten points: a single timed pair read 17 % to 32 % on the same build
+    // and tripped the trigger on a quiet day.  The fastest round is the
+    // work itself; a stall only ever adds.
+    tpk_walk = 0;
+    tpk_shipped = 0;
+    for _ in 0..8 {
+        tpk_t0 = ticks();
+        for _ in 0..2 { ground_chunk_kinds(tpk_pal, tpk_pw, tpk_hl, 0, 0); }
+        tpk_w = ((ticks() - tpk_t0) / 2) ?? 0;
+        if tpk_walk == 0 || tpk_w < tpk_walk { tpk_walk = tpk_w; }
+        tpk_b = us_to_bake(tpk_pal, tpk_pw, tpk_hl, one_tile(0, 0), 2);
+        if tpk_shipped == 0 || tpk_b < tpk_shipped { tpk_shipped = tpk_b; }
+    }
     assert(tpk_walk > 0 && tpk_shipped > 0,
            "the clock said something: {tpk_walk} / {tpk_shipped} us");
 
